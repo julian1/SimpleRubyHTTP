@@ -1,0 +1,7 @@
+*.o
+*.exe
+*.swp
+*.swo
+*.a
+*.iml
+safe/*.txt

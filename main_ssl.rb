@@ -63,12 +63,12 @@ def write_redirect_message( socket )
   EOS
  
   socket.print "HTTP/1.1 302 Found\r\n" + 
-  "Date: Sun, 21 Sep 2014 09:02:16 GMT\r\n" + 
-  "Server: Apache\r\n" +
-  "Location: https://imos.aodn.org.au/imos123\r\n" + 
-  "Vary: Accept-Encoding\r\n" + 
-  "Content-Length: 282\r\n" +
-  "Content-Type: text/html; charset=iso-8859-1\r\n"
+    "Date: Sun, 21 Sep 2014 09:02:16 GMT\r\n" + 
+    "Server: Apache\r\n" +
+    "Location: https://imos.aodn.org.au/imos123\r\n" + 
+    "Vary: Accept-Encoding\r\n" + 
+    "Content-Length: 282\r\n" +
+    "Content-Type: text/html; charset=iso-8859-1\r\n"
 
 #    https://localhost:1443/
  
@@ -139,7 +139,6 @@ threads << Thread.new {
       write_hello_message( socket )
         # write_redirect_message( socket )
       end
-
 
   rescue
     $stderr.puts $!

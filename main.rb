@@ -12,9 +12,14 @@ server = TCPServer.new('localhost', 2345)
 puts "listening on 2345"
 
 count = 0
+
+
+
 # loop infinitely, processing one incoming
 # connection at a time.
 loop do
+
+  # not sharing connections makes it much e lot asier to write the code ...
 
   # Wait until a client connects, then return a TCPSocket
   # that can be used in a similar fashion to other Ruby
@@ -22,21 +27,30 @@ loop do
   socket = server.accept
 
 
+
   # what's the terminator of the message...
   # should parse this into key value pairs... 
+  # Decode message
   puts "--------------------"
-  lines = []
+  i = 0
+  keys = {}
   while line = socket.gets# Read lines from socket
-    puts escape(line) #line.length
     break if line == "\r\n"
-    lines << line         
+    if i == 0 
+  		keys['request'] = line.strip
+	  else 
+		s = line.split(':')
+		keys[ s[0].strip] = s[1].strip 
+    end
+	  i += 1
   end
 
+	puts keys
   puts "here2"
 
   #puts lines.join("")
   # Read the first line of the request (the Request-Line)
-  request = line[0]#socket.gets
+  request = keys['request']#line[0]#socket.gets
 
 # Log the request to the console for debugging
   STDERR.puts request
@@ -63,7 +77,7 @@ loop do
 
   # Close the socket, terminating the connection
   # do we really need to do this ??
-  socket.close
+  # socket.close
 
   count+= 1
 end

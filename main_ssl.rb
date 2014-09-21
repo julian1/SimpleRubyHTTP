@@ -48,6 +48,36 @@ def write_hello_message( socket )
 end
 
 
+def write_redirect_message( socket )
+
+  response = <<-EOS  
+    <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+    <html><head>
+    <title>302 Found</title>
+    </head><body>
+    <h1>Found</h1>
+    <p>The document has moved <a href="https://imos.aodn.org.au/imos123">here</a>.</p>
+    <hr>
+    <address>Apache Server at imos.aodn.org.au Port 80</address>
+    </body></html>
+  EOS
+ 
+  socket.print "HTTP/1.1 302 Found\r\n" + 
+  "Date: Sun, 21 Sep 2014 09:02:16 GMT\r\n" + 
+  "Server: Apache\r\n" +
+  "Location: https://imos.aodn.org.au/imos123\r\n" + 
+  "Vary: Accept-Encoding\r\n" + 
+  "Content-Length: 282\r\n" +
+  "Content-Type: text/html; charset=iso-8859-1\r\n"
+ 
+    socket.print "\r\n"
+
+      # Print the actual response body, which is just "Hello World!\n"
+      socket.print response
+
+end
+
+
 # it would be nice to be able to process both ssl and non ssl with the same 
 # decode loop 
 
@@ -65,7 +95,8 @@ def process_accept( server )
         keys = decode_message( socket) 
         puts keys
 
-        write_hello_message( socket )
+        write_redirect_message( socket )
+        #write_hello_message( socket )
 
         # Close the socket, terminating the connection
         # do we really need to do this ??

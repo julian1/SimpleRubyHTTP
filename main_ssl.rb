@@ -38,12 +38,15 @@ def write_hello_message( keys, socket )
       # contained in the response. Note that HTTP is whitespace
       # sensitive, and expects each header line to end with CRLF (i.e. "\r\n")
 
+    # In HTTP 1.1, all connections are considered persistent unless declared otherwise.
+
 #                   "Connection: close\r\n"
 
       socket.print "HTTP/1.1 200 OK\r\n" +
                    "Content-Type: text/plain\r\n" +
                    "Content-Length: #{response.bytesize}\r\n" +
                     "Set-Cookie: name=whoot\r\n" +
+                    "Connection: Keep-Alive\r\n" +
                     "\r\n"
 
       # Print the actual response body, which is just "Hello World!\n"
@@ -92,8 +95,13 @@ end
 def process_accept( server, &code )
   loop do
     socket = server.accept
+
+    puts "--------------------"
+    puts "** new connection"
+
       # if we don't spawn the thread then we get a broken pipe which is weird
     Thread.new {
+      loop do
       begin
   
         # we can decode the keys in here, ? we should do this
@@ -102,7 +110,6 @@ def process_accept( server, &code )
         # what's the terminator of the message...
         # should parse this into key value pairs... 
         # Decode message
-        puts "--------------------"
         keys = decode_message( socket) 
         # puts keys
 
@@ -114,15 +121,15 @@ def process_accept( server, &code )
         # Close the socket, terminating the connection
         # do we really need to do this ??
 
-        puts "before socket close"
-
-        socket.close
-
-        puts "after socket close"
-
+#         puts "before socket close"
+#         socket.close
+#         puts "after socket close"
+# 
       rescue
         $stderr.puts $!
       end
+      end
+    
     }
   end
 end

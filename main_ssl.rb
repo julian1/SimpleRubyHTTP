@@ -7,18 +7,6 @@ require "socket"
 require "openssl"
 require "thread"
 
-listeningPort = 1443 #Integer(ARGV[0])
-
-server = TCPServer.new(listeningPort)
-sslContext = OpenSSL::SSL::SSLContext.new
-#sslContext.cert = OpenSSL::X509::Certificate.new(File.open("cert.pem"))
-#sslContext.key = OpenSSL::PKey::RSA.new(File.open("priv.pem"))
-sslContext.cert = OpenSSL::X509::Certificate.new(File.open("server.crt"))
-sslContext.key = OpenSSL::PKey::RSA.new(File.open("server.key"))
-sslServer = OpenSSL::SSL::SSLServer.new(server, sslContext)
-
-puts "Listening on port #{listeningPort}"
-
 
 
 def decode_message( socket )
@@ -94,19 +82,35 @@ end
 
 threads = []
 
+
+
 threads << Thread.new {
   begin
+    listeningPort = 1443 #Integer(ARGV[0])
+
+    server = TCPServer.new(listeningPort)
+    sslContext = OpenSSL::SSL::SSLContext.new
+    #sslContext.cert = OpenSSL::X509::Certificate.new(File.open("cert.pem"))
+    #sslContext.key = OpenSSL::PKey::RSA.new(File.open("priv.pem"))
+    sslContext.cert = OpenSSL::X509::Certificate.new(File.open("server.crt"))
+    sslContext.key = OpenSSL::PKey::RSA.new(File.open("server.key"))
+    sslServer = OpenSSL::SSL::SSLServer.new(server, sslContext)
+
+    puts "Listening on port #{listeningPort}"
+
     process_accept( sslServer )
   rescue
     $stderr.puts $!
   end
 }
 
+# ok, it works, but doesn't terminate cleanly if do ssl on 2345 
 
-
-server2 = TCPServer.new('localhost', 2345)
 threads << Thread.new {
   begin
+    listeningPort = 2345 #Integer(ARGV[0])
+    server2 = TCPServer.new('localhost', listeningPort)
+    puts "Listening on port #{listeningPort}"
     process_accept( server2 )
   rescue
     $stderr.puts $!

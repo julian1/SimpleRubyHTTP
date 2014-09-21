@@ -40,8 +40,8 @@ def write_hello_message( keys, socket )
       socket.print "HTTP/1.1 200 OK\r\n" +
                    "Content-Type: text/plain\r\n" +
                    "Content-Length: #{response.bytesize}\r\n" +
-                    "Set-Cookie: name=whoot\r\n" +
-                   "Connection: close\r\n"
+                    "Set-Cookie: name=whoot\r\n" #+
+#                   "Connection: close\r\n"
 
       # Print a blank line to separate the header from the response body,
       # as required by the protocol.

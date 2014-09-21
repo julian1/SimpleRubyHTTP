@@ -1,5 +1,8 @@
 
-# Simple example, connection keep alive, cookies, https and redirection 
+# Simple webserver example, 
+# supports connection keep alive, cookies, https and redirection 
+# need cache control
+# websockets,
 
 #require 'socket' # Provides TCPServer and TCPSocket classes
 #require 'openssl' 
@@ -28,11 +31,22 @@ def decode_message( socket )
   keys
 end
 
+def ignore_exception
+   begin
+     yield  
+   rescue Exception
+  end
+end
 
 def write_hello_message( keys, socket )
 
       puts "write_hello keys"
       puts keys
+
+      cookie = 0
+      cookie = ignore_exception {  keys[ 'Cookie'].to_i + 1 }
+
+      puts "setting cookie to #{cookie}"
 
       response = "- Hello World!\n"
 
@@ -48,7 +62,7 @@ def write_hello_message( keys, socket )
       socket.print "HTTP/1.1 200 OK\r\n" +
                    "Content-Type: text/plain\r\n" +
                    "Content-Length: #{response.bytesize}\r\n" +
-                    "Set-Cookie: name=whoot\r\n" +
+                    "Set-Cookie: #{cookie}\r\n" +
                     "Connection: Keep-Alive\r\n" +
                     "\r\n"
 
@@ -132,6 +146,8 @@ def process_accept( server, &code )
         # Exception Broken pipe is normal when client disconnects - eg. when 302 disconnect 
         $stderr.puts "Exception #{$!}"
         $stderr.puts "dropping conection"
+        # call close, just in case
+        socket.close
         break
       end
       end

@@ -38,20 +38,8 @@ def decode_message( socket )
 end
 
 
-loop do
-  socket = sslServer.accept
-  Thread.new {
-    begin
-
-      # what's the terminator of the message...
-      # should parse this into key value pairs... 
-      # Decode message
-      puts "--------------------"
-      keys = decode_message( socket) 
-
-      puts keys
-
-      response = "Hello World!\n"
+def write_hello_message( socket )
+      response = "- Hello World!\n"
 
       # We need to include the Content-Type and Content-Length headers
       # to let the client know the size and type of data
@@ -69,21 +57,54 @@ loop do
 
       # Print the actual response body, which is just "Hello World!\n"
       socket.print response
-
-      # Close the socket, terminating the connection
-      # do we really need to do this ??
-      socket.close
-
-      #       while (lineIn = connection.gets)
-      #         lineIn = lineIn.chomp
-      #         $stdout.puts "=> " + lineIn
-      #         lineOut = "You said: " + lineIn
-      #         $stdout.puts "<= " + lineOut
-      #         connection.puts lineOut
-      #       end
-    rescue
-      $stderr.puts $!
-    end
-  }
 end
+
+
+# it would be nice to be able to process both ssl and non ssl with the same 
+# decode loop 
+
+def process_accept( server )
+  loop do
+    socket = server.accept
+      # if we don't spawn the thread then we get a broken pipe which is weird
+    Thread.new {
+      begin
+
+        # what's the terminator of the message...
+        # should parse this into key value pairs... 
+        # Decode message
+        puts "--------------------"
+        keys = decode_message( socket) 
+        puts keys
+
+        write_hello_message( socket )
+
+        # Close the socket, terminating the connection
+        # do we really need to do this ??
+        socket.close
+
+      rescue
+        $stderr.puts $!
+      end
+    }
+  end
+end
+
+
+
+threads = []
+threads << Thread.new {
+  begin
+    process_accept( sslServer )
+  rescue
+    $stderr.puts $!
+  end
+}
+
+
+# wait for threads to finish
+threads.each() do |t|
+  t.join()
+end
+
 

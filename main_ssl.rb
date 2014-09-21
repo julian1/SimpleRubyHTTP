@@ -69,6 +69,8 @@ def write_redirect_message( socket )
   "Vary: Accept-Encoding\r\n" + 
   "Content-Length: 282\r\n" +
   "Content-Type: text/html; charset=iso-8859-1\r\n"
+
+#    https://localhost:1443/
  
     socket.print "\r\n"
 
@@ -81,7 +83,9 @@ end
 # it would be nice to be able to process both ssl and non ssl with the same 
 # decode loop 
 
-def process_accept( server )
+## ugh.. how do we do this we want to pass a block ...
+
+def process_accept( server, &code )
   loop do
     socket = server.accept
       # if we don't spawn the thread then we get a broken pipe which is weird
@@ -95,7 +99,9 @@ def process_accept( server )
         keys = decode_message( socket) 
         puts keys
 
-        write_redirect_message( socket )
+        code.call( socket )
+
+#        write_redirect_message( socket )
         #write_hello_message( socket )
 
         # Close the socket, terminating the connection
@@ -129,7 +135,12 @@ threads << Thread.new {
 
     puts "Listening on port #{listeningPort}"
 
-    process_accept( sslServer )
+    process_accept sslServer do |socket| 
+      write_hello_message( socket )
+        # write_redirect_message( socket )
+      end
+
+
   rescue
     $stderr.puts $!
   end
@@ -142,7 +153,9 @@ threads << Thread.new {
     listeningPort = 2345 #Integer(ARGV[0])
     server2 = TCPServer.new('localhost', listeningPort)
     puts "Listening on port #{listeningPort}"
-    process_accept( server2 )
+    process_accept server2 do  |socket| 
+        write_redirect_message( socket )
+      end
   rescue
     $stderr.puts $!
   end

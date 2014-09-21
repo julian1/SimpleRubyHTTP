@@ -1,3 +1,6 @@
+
+# Simple example, connection keep alive, cookies, https and redirection 
+
 #require 'socket' # Provides TCPServer and TCPSocket classes
 #require 'openssl' 
 
@@ -126,7 +129,10 @@ def process_accept( server, &code )
 #         puts "after socket close"
 # 
       rescue
-        $stderr.puts $!
+        # Exception Broken pipe is normal when client disconnects - eg. when 302 disconnect 
+        $stderr.puts "Exception #{$!}"
+        $stderr.puts "dropping conection"
+        break
       end
       end
     
@@ -173,8 +179,8 @@ threads << Thread.new {
     puts "Listening on port #{listeningPort}"
     process_accept server2 do  |keys, socket| 
 
-        write_hello_message( keys, socket )
-        #write_redirect_message( keys, socket )
+        # write_hello_message( keys, socket )
+        write_redirect_message( keys, socket )
       end
   rescue
     $stderr.puts $!

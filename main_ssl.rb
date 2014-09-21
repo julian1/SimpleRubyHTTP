@@ -93,6 +93,7 @@ end
 
 
 threads = []
+
 threads << Thread.new {
   begin
     process_accept( sslServer )
@@ -100,6 +101,20 @@ threads << Thread.new {
     $stderr.puts $!
   end
 }
+
+
+
+server2 = TCPServer.new('localhost', 2345)
+threads << Thread.new {
+  begin
+    process_accept( server2 )
+  rescue
+    $stderr.puts $!
+  end
+}
+
+
+
 
 
 # wait for threads to finish

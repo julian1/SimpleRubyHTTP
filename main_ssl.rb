@@ -37,15 +37,14 @@ def write_hello_message( keys, socket )
       # to let the client know the size and type of data
       # contained in the response. Note that HTTP is whitespace
       # sensitive, and expects each header line to end with CRLF (i.e. "\r\n")
+
+#                   "Connection: close\r\n"
+
       socket.print "HTTP/1.1 200 OK\r\n" +
                    "Content-Type: text/plain\r\n" +
                    "Content-Length: #{response.bytesize}\r\n" +
-                    "Set-Cookie: name=whoot\r\n" #+
-#                   "Connection: close\r\n"
-
-      # Print a blank line to separate the header from the response body,
-      # as required by the protocol.
-      socket.print "\r\n"
+                    "Set-Cookie: name=whoot\r\n" +
+                    "\r\n"
 
       # Print the actual response body, which is just "Hello World!\n"
       socket.print response
@@ -74,11 +73,10 @@ def write_redirect_message( keys, socket )
     "Location: https://localhost:1443\r\n" + 
     "Vary: Accept-Encoding\r\n" + 
     "Content-Length: 282\r\n" +
-    "Content-Type: text/html; charset=iso-8859-1\r\n"
+    "Content-Type: text/html; charset=iso-8859-1\r\n" +
+    "\r\n"
 
 #    https://localhost:1443/
- 
-    socket.print "\r\n"
 
       # Print the actual response body, which is just "Hello World!\n"
       socket.print response

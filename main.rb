@@ -5,6 +5,7 @@ require './webserver'
 threads = []
 
 Webserver.start_https( threads, 1443) do |keys, socket|
+  # puts keys
   Webserver.write_hello_message( keys, socket )
 end
 
@@ -18,5 +19,4 @@ threads.each() do |t|
   t.join()
 end
 
-# fuck ruby is complicated with it's argument passing.
 

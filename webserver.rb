@@ -48,8 +48,8 @@ end
 
 def Webserver.write_hello_message( keys, socket )
 
-      puts "write_hello keys"
-      puts keys
+      #puts "write_hello keys"
+      # puts keys
 
       cookie = 0
       cookie = ignore_exception {  keys[ 'Cookie'].to_i + 1 }
@@ -127,39 +127,27 @@ def Webserver.process_accept( server, &code )
       # if we don't spawn the thread then we get a broken pipe which is weird
     Thread.new {
       loop do
-      begin
-  
-        # we can decode the keys in here, ? we should do this
-        # so we can abstract session management
-
-        # what's the terminator of the message...
-        # should parse this into key value pairs... 
-        # Decode message
-        keys = decode_message( socket) 
-        # puts keys
-
-        code.call( keys, socket )
-
-#        write_redirect_message( socket )
-        #write_hello_message( socket )
-
-        # Close the socket, terminating the connection
-        # do we really need to do this ??
-
-#         puts "before socket close"
-#         socket.close
-#         puts "after socket close"
-# 
-      rescue
-        # Exception Broken pipe is normal when client disconnects - eg. when 302 disconnect 
-        $stderr.puts "Exception #{$!}"
-        $stderr.puts "dropping conection"
-        # call close, just in case
-        socket.close
-        break
-      end
-      end
+        begin
     
+          # we can decode the keys in here, ? we should do this
+          # so we can abstract session management
+
+          # what's the terminator of the message...
+          # should parse this into key value pairs... 
+          # Decode message
+          keys = decode_message( socket) 
+          # puts keys
+
+          code.call( keys, socket )
+        rescue
+          # Exception Broken pipe is normal when client disconnects - eg. when 302 disconnect 
+          $stderr.puts "Exception #{$!}"
+          $stderr.puts "dropping conection"
+          # call close, just in case
+          socket.close
+          break
+        end
+      end
     }
   end
 end

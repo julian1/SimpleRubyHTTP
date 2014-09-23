@@ -24,17 +24,13 @@ require "thread"
 module Webserver
 
 def Webserver.decode_message( socket )
-  i = 0
   keys = {}
+
+  keys['request'] = socket .gets
   while line = socket .gets# Read lines from socket
     break if line == "\r\n"
-    if i == 0 
-      keys['request'] = line.strip
-    else 
-      s = line.split(':')
-      keys[ s[0].strip] = s[1].strip 
-    end
-    i += 1
+    s = line.split(':')
+    keys[ s[0].strip] = s[1].strip 
   end
   keys
 end

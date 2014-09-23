@@ -45,6 +45,7 @@ def Webserver.ignore_exception
   end
 end
 
+# we want to separate out the networking, from message routing/redirect, from file stuff. 
 
 def Webserver.requested_file(request_line)
   request_uri  = request_line.split(" ")[1]

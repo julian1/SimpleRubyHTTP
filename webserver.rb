@@ -1,3 +1,4 @@
+#!/usr/bin/ruby
 
 # Simple webserver example, 
 # supports connection keep alive, cookies, https and redirection 
@@ -20,8 +21,9 @@ require "openssl"
 require "thread"
 
 
+module Webserver
 
-def decode_message( socket )
+def Webserver.decode_message( socket )
   i = 0
   keys = {}
   while line = socket .gets# Read lines from socket
@@ -37,14 +39,14 @@ def decode_message( socket )
   keys
 end
 
-def ignore_exception
+def Webserver.ignore_exception
    begin
      yield  
    rescue Exception
   end
 end
 
-def write_hello_message( keys, socket )
+def Webserver.write_hello_message( keys, socket )
 
       puts "write_hello keys"
       puts keys
@@ -77,7 +79,7 @@ def write_hello_message( keys, socket )
 end
 
 
-def write_redirect_message( keys, socket )
+def Webserver.write_redirect_message( keys, socket )
 
   response = <<-EOS  
     <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
@@ -115,7 +117,7 @@ end
 
 ## ugh.. how do we do this we want to pass a block ...
 
-def process_accept( server, &code )
+def Webserver.process_accept( server, &code )
   loop do
     socket = server.accept
 
@@ -166,7 +168,7 @@ end
 
 
 # we want to abstract the starting of the servers ...
-def start_https( threads, listeningPort)
+def Webserver.start_https( threads, listeningPort)
   threads << Thread.new {
     begin
       # listeningPort = 1443 #Integer(ARGV[0])
@@ -196,7 +198,7 @@ end
 # ok, it works, but doesn't terminate cleanly if do ssl on 2345 
 
 
-def start_http( threads, listeningPort)
+def Webserver.start_http( threads, listeningPort)
   threads << Thread.new {
     begin
       # listeningPort = 2345 #Integer(ARGV[0])
@@ -214,15 +216,6 @@ def start_http( threads, listeningPort)
 end
 
 
-
-threads = []
-
-start_https( threads, 1443)
-start_http( threads , 2345)
-
-# wait for threads to finish
-threads.each() do |t|
-  t.join()
 end
 
 

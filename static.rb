@@ -5,7 +5,7 @@
 
 module Static
 
-# we want to separate out the networking, from message routing/redirect, from file stuff. 
+# we want to  separate out the networking, from message routing/redirect, from file stuff. 
 
 def Static.requested_file(request_line)
 

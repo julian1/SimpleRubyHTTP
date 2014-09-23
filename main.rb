@@ -3,11 +3,15 @@
 # which means accessing file system - and cleaning path
 
 require './webserver'
+require './static'
 
 threads = []
 
 Webserver.start_https( threads, 1443) do |keys, socket|
-  Webserver.serve_file( keys, socket)
+
+  #request = keys['request']
+  Static.serve_file( keys, socket)
+
 #   request = keys['request']
 #   puts "request #{request}"
 # 

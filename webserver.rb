@@ -115,12 +115,24 @@ def Webserver.process_accept( server, &code )
           keys = decode_message( socket) 
           # puts keys
           code.call( keys, socket )
+
+		# i think we get a broken pipe if we can't read anything
+		rescue Errno::EPIPE 
+          $stderr.puts "*** EPIPE "
+          socket.close
+			break;
+
+		rescue IOError => e
+          $stderr.puts "*** IOError #{e.message} "
+          socket.close
+			break
+
         rescue
           # Exception Broken pipe is normal when client disconnects - eg. when 302 disconnect 
-          $stderr.puts "Exception #{$!}"
+          $stderr.puts "Unknown Exception #{$!}"
           $stderr.puts "dropping conection"
           # call close, just in case
-          socket.close
+          #socket.close
           break
         end
       end

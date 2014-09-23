@@ -5,7 +5,7 @@ require './webserver'
 threads = []
 
 Webserver.start_https( threads, 1443) do |keys, socket|
-  # puts keys
+  puts keys['request']
   Webserver.write_hello_message( keys, socket )
 end
 

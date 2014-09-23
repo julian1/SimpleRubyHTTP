@@ -177,8 +177,8 @@ def Webserver.start_https( threads, listeningPort)
       sslContext = OpenSSL::SSL::SSLContext.new
       #sslContext.cert = OpenSSL::X509::Certificate.new(File.open("cert.pem"))
       #sslContext.key = OpenSSL::PKey::RSA.new(File.open("priv.pem"))
-      sslContext.cert = OpenSSL::X509::Certificate.new(File.open("server.crt"))
-      sslContext.key = OpenSSL::PKey::RSA.new(File.open("server.key"))
+      sslContext.cert = OpenSSL::X509::Certificate.new(File.open("certs/server.crt"))
+      sslContext.key = OpenSSL::PKey::RSA.new(File.open("certs/server.key"))
       sslServer = OpenSSL::SSL::SSLServer.new(server, sslContext)
 
       puts "https listening on port #{listeningPort}"

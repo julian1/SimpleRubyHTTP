@@ -35,6 +35,7 @@ def Webserver.decode_message( socket )
     s = line.split(':')
     keys[ s[0].strip] = s[1].strip 
   end
+  #puts keys
   keys
 end
 
@@ -48,7 +49,7 @@ end
 
 
 def Webserver.write_hello_message( keys, socket )
-
+  puts "here0"
   cookie = 0
   cookie = ignore_exception {  keys[ 'Cookie'].to_i + 1 }
   puts "setting cookie to #{cookie}"
@@ -79,7 +80,7 @@ def Webserver.write_redirect_message( keys, socket )
     <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
     <html><head>
     <title>302 Found</title>
-    </head><body>
+    </head><body>redirect
     <h1>Found</h1>
     <p>The document has moved</a>.</p>
     <hr>
@@ -116,6 +117,8 @@ def Webserver.process_accept( server, &code )
           # so we can abstract session management
 
           keys = decode_message( socket) 
+          # next if keys['request'].nil?
+
           # puts keys
           code.call( keys, socket )
 
@@ -130,12 +133,18 @@ def Webserver.process_accept( server, &code )
           socket.close
           break
 
-        rescue
+        #rescue
           # Exception Broken pipe is normal when client disconnects - eg. when 302 disconnect 
+
+          
+        rescue => e
+          puts "Error during processing: #{$!}"
+          puts "Backtrace:\n\t#{e.backtrace.join("\n\t")}"
+
           $stderr.puts "Unknown Exception #{$!}"
           $stderr.puts "dropping conection"
           # call close, just in case
-          #socket.close
+          socket.close
           break
         end
       end

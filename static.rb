@@ -6,10 +6,17 @@ module Static
 # we want to separate out the networking, from message routing/redirect, from file stuff. 
 
 def Static.requested_file(request_line)
+
+	puts "-----------------"
+	puts "request_line -> #{request_line}"
   request_uri  = request_line.split(" ")[1]
+
   path         = URI.unescape(URI(request_uri).path)
   clean = []
   # Split the path into components
+
+
+
   parts = path.split("/")
   parts.each do |part|
     # skip any empty or current directory (".") path components
@@ -56,8 +63,8 @@ def Static.serve_file( keys, socket )
     File.open(path, "rb") do |file|
       socket.print "HTTP/1.1 200 OK\r\n" +
                    "Content-Type: #{content_type(file)}\r\n" +
-                   "Content-Length: #{file.size}\r\n" +
-                   "Connection: close\r\n"
+                   "Content-Length: #{file.size}\r\n" #+
+#                   "Connection: close\r\n"
 
       socket.print "\r\n"
 
@@ -70,8 +77,8 @@ def Static.serve_file( keys, socket )
     # respond with a 404 error code to indicate the file does not exist
     socket.print "HTTP/1.1 404 Not Found\r\n" +
                  "Content-Type: text/plain\r\n" +
-                 "Content-Length: #{message.size}\r\n" +
-                 "Connection: close\r\n"
+                 "Content-Length: #{message.size}\r\n" #+
+#                 "Connection: close\r\n"
 
     socket.print "\r\n"
 

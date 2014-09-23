@@ -198,17 +198,19 @@ end
 # ok, it works, but doesn't terminate cleanly if do ssl on 2345 
 
 
-def Webserver.start_http( threads, listeningPort)
+def Webserver.start_http( threads, listeningPort, &code)
   threads << Thread.new {
     begin
       # listeningPort = 2345 #Integer(ARGV[0])
       server2 = TCPServer.new('localhost', listeningPort)
       puts "http listening on port #{listeningPort}"
-      process_accept server2 do  |keys, socket| 
+      process_accept( server2,  &code)
 
-          # write_hello_message( keys, socket )
-          write_redirect_message( keys, socket )
-        end
+# 		do  |keys, socket| 
+# 
+#           # write_hello_message( keys, socket )
+#           write_redirect_message( keys, socket )
+#         end
     rescue
       $stderr.puts "http exception #{$!}"
     end

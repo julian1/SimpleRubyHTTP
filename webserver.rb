@@ -25,9 +25,10 @@ module Webserver
 
 def Webserver.decode_message( socket )
   keys = {}
-
-  keys['request'] = socket .gets
-  while line = socket .gets# Read lines from socket
+  # probably should structure this differenly...
+  # if it's a post, then we will want to slurp a lot more...
+  keys['request'] = socket.gets
+  while line = socket.gets
     break if line == "\r\n"
     s = line.split(':')
     keys[ s[0].strip] = s[1].strip 
@@ -42,36 +43,30 @@ def Webserver.ignore_exception
   end
 end
 
+
 def Webserver.write_hello_message( keys, socket )
 
-      #puts "write_hello keys"
-      # puts keys
+  cookie = 0
+  cookie = ignore_exception {  keys[ 'Cookie'].to_i + 1 }
+  puts "setting cookie to #{cookie}"
 
-      cookie = 0
-      cookie = ignore_exception {  keys[ 'Cookie'].to_i + 1 }
+  response = "Hello World!\n"
 
-      puts "setting cookie to #{cookie}"
+  # We need to include the Content-Type and Content-Length headers
+  # to let the client know the size and type of data
+  # contained in the response. Note that HTTP is whitespace
+  # sensitive, and expects each header line to end with CRLF (i.e. "\r\n")
 
-      response = "- Hello World!\n"
+  # In HTTP 1.1, all connections are considered persistent unless declared otherwise.
+  socket.print "HTTP/1.1 200 OK\r\n" +
+    "Content-Type: text/plain\r\n" +
+    "Content-Length: #{response.bytesize}\r\n" +
+    "Set-Cookie: #{cookie}\r\n" +
+    "Connection: Keep-Alive\r\n" +
+    "\r\n"
 
-      # We need to include the Content-Type and Content-Length headers
-      # to let the client know the size and type of data
-      # contained in the response. Note that HTTP is whitespace
-      # sensitive, and expects each header line to end with CRLF (i.e. "\r\n")
-
-    # In HTTP 1.1, all connections are considered persistent unless declared otherwise.
-
-#                   "Connection: close\r\n"
-
-      socket.print "HTTP/1.1 200 OK\r\n" +
-                   "Content-Type: text/plain\r\n" +
-                   "Content-Length: #{response.bytesize}\r\n" +
-                    "Set-Cookie: #{cookie}\r\n" +
-                    "Connection: Keep-Alive\r\n" +
-                    "\r\n"
-
-      # Print the actual response body, which is just "Hello World!\n"
-      socket.print response
+  # Print the actual response body, which is just "Hello World!\n"
+  socket.print response
 end
 
 
@@ -83,14 +78,12 @@ def Webserver.write_redirect_message( keys, socket )
     <title>302 Found</title>
     </head><body>
     <h1>Found</h1>
-    <p>The document has moved <a href="https://imos.aodn.org.au/imos123">here</a>.</p>
+    <p>The document has moved</a>.</p>
     <hr>
     <address>Apache Server at imos.aodn.org.au Port 80</address>
     </body></html>
   EOS
  
-#    "Location: https://imos.aodn.org.au/imos123\r\n" + 
-
   socket.print "HTTP/1.1 302 Found\r\n" + 
     "Date: Sun, 21 Sep 2014 09:02:16 GMT\r\n" + 
     "Server: Apache\r\n" +
@@ -100,18 +93,10 @@ def Webserver.write_redirect_message( keys, socket )
     "Content-Type: text/html; charset=iso-8859-1\r\n" +
     "\r\n"
 
-#    https://localhost:1443/
-
-      # Print the actual response body, which is just "Hello World!\n"
-      socket.print response
-
+  # Print the actual response body, which is just "Hello World!\n"
+  socket.print response
 end
 
-
-# it would be nice to be able to process both ssl and non ssl with the same 
-# decode loop 
-
-## ugh.. how do we do this we want to pass a block ...
 
 def Webserver.process_accept( server, &code )
   loop do
@@ -124,16 +109,11 @@ def Webserver.process_accept( server, &code )
     Thread.new {
       loop do
         begin
-    
           # we can decode the keys in here, ? we should do this
           # so we can abstract session management
 
-          # what's the terminator of the message...
-          # should parse this into key value pairs... 
-          # Decode message
           keys = decode_message( socket) 
           # puts keys
-
           code.call( keys, socket )
         rescue
           # Exception Broken pipe is normal when client disconnects - eg. when 302 disconnect 
@@ -149,62 +129,36 @@ def Webserver.process_accept( server, &code )
 end
 
 
-
-
-# we want to abstract the starting of the servers ...
 def Webserver.start_https( threads, listeningPort, &code)
   threads << Thread.new {
     begin
-      # listeningPort = 1443 #Integer(ARGV[0])
-
       server = TCPServer.new(listeningPort)
       sslContext = OpenSSL::SSL::SSLContext.new
-      #sslContext.cert = OpenSSL::X509::Certificate.new(File.open("cert.pem"))
-      #sslContext.key = OpenSSL::PKey::RSA.new(File.open("priv.pem"))
       sslContext.cert = OpenSSL::X509::Certificate.new(File.open("certs/server.crt"))
       sslContext.key = OpenSSL::PKey::RSA.new(File.open("certs/server.key"))
       sslServer = OpenSSL::SSL::SSLServer.new(server, sslContext)
 
       puts "https listening on port #{listeningPort}"
-
-
-      process_accept( sslServer,  &code)
-
-#       process_accept sslServer do |keys, socket| 
-#         write_hello_message( keys, socket )
-#           # write_redirect_message( socket )
-#         end
+      process_accept( sslServer, &code)
     rescue
       $stderr.puts "https exception #{$!}"
     end
   }
 end
 
-# so we want to be able to abstract this a bit...
-
-# ok, it works, but doesn't terminate cleanly if do ssl on 2345 
-
 
 def Webserver.start_http( threads, listeningPort, &code)
   threads << Thread.new {
     begin
-      # listeningPort = 2345 #Integer(ARGV[0])
-      server2 = TCPServer.new('localhost', listeningPort)
-      puts "http listening on port #{listeningPort}"
-      process_accept( server2,  &code)
+      server = TCPServer.new('localhost', listeningPort)
 
-# 		do  |keys, socket| 
-# 
-#           # write_hello_message( keys, socket )
-#           write_redirect_message( keys, socket )
-#         end
+      puts "http listening on port #{listeningPort}"
+      process_accept( server,  &code)
     rescue
       $stderr.puts "http exception #{$!}"
     end
   }
 end
 
-
 end
-
 

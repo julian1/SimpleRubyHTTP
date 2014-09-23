@@ -116,16 +116,16 @@ def Webserver.process_accept( server, &code )
           # puts keys
           code.call( keys, socket )
 
-		# i think we get a broken pipe if we can't read anything
-		rescue Errno::EPIPE 
+        # i think we get a broken pipe if we can't read anything
+        rescue Errno::EPIPE 
           $stderr.puts "*** EPIPE "
           socket.close
-			break;
+          break;
 
-		rescue IOError => e
+        rescue IOError => e
           $stderr.puts "*** IOError #{e.message} "
           socket.close
-			break
+          break
 
         rescue
           # Exception Broken pipe is normal when client disconnects - eg. when 302 disconnect 

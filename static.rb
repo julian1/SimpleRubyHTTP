@@ -1,5 +1,7 @@
 #!/usr/bin/ruby
 
+# adapted from, https://practicingruby.com/articles/implementing-an-http-file-server
+
 
 module Static
 

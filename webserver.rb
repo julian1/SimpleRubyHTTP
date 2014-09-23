@@ -117,25 +117,30 @@ def Webserver.process_accept( server, &code )
           # so we can abstract session management
 
           keys = decode_message( socket) 
-          # next if keys['request'].nil?
+
+          # if the connection was closed by remote
+          if keys['request'].nil?
+            $stderr.puts "*** remote closed"
+            break
+          end
 
           # puts keys
           code.call( keys, socket )
 
-        # i think we get a broken pipe if we can't read anything
-        rescue Errno::EPIPE 
-          $stderr.puts "*** EPIPE "
-          socket.close
-          break;
-
-        rescue IOError => e
-          $stderr.puts "*** IOError #{e.message} "
-          socket.close
-          break
-
-        #rescue
-          # Exception Broken pipe is normal when client disconnects - eg. when 302 disconnect 
-
+#         # i think we get a broken pipe if we can't read anything
+#         rescue Errno::EPIPE 
+#           $stderr.puts "*** EPIPE "
+#           socket.close
+#           break;
+# 
+#         rescue IOError => e
+#           $stderr.puts "*** IOError #{e.message} "
+#           socket.close
+#           break
+# 
+#         #rescue
+#           # Exception Broken pipe is normal when client disconnects - eg. when 302 disconnect 
+# 
           
         rescue => e
           puts "Error during processing: #{$!}"

@@ -4,6 +4,12 @@
 # need cache control
 # websockets,
 
+
+# there's an issue - if try http on 1443 - it goes into unknown state
+# https://localhost:1443/
+
+# wget --no-check-certificate 'http://localhost:2345'
+
 #require 'socket' # Provides TCPServer and TCPSocket classes
 #require 'openssl' 
 
@@ -158,54 +164,61 @@ end
 
 
 
-threads = []
 
 # we want to abstract the starting of the servers ...
+def start_https( threads, listeningPort)
+  threads << Thread.new {
+    begin
+      # listeningPort = 1443 #Integer(ARGV[0])
 
-threads << Thread.new {
-  begin
-    listeningPort = 1443 #Integer(ARGV[0])
+      server = TCPServer.new(listeningPort)
+      sslContext = OpenSSL::SSL::SSLContext.new
+      #sslContext.cert = OpenSSL::X509::Certificate.new(File.open("cert.pem"))
+      #sslContext.key = OpenSSL::PKey::RSA.new(File.open("priv.pem"))
+      sslContext.cert = OpenSSL::X509::Certificate.new(File.open("server.crt"))
+      sslContext.key = OpenSSL::PKey::RSA.new(File.open("server.key"))
+      sslServer = OpenSSL::SSL::SSLServer.new(server, sslContext)
 
-    server = TCPServer.new(listeningPort)
-    sslContext = OpenSSL::SSL::SSLContext.new
-    #sslContext.cert = OpenSSL::X509::Certificate.new(File.open("cert.pem"))
-    #sslContext.key = OpenSSL::PKey::RSA.new(File.open("priv.pem"))
-    sslContext.cert = OpenSSL::X509::Certificate.new(File.open("server.crt"))
-    sslContext.key = OpenSSL::PKey::RSA.new(File.open("server.key"))
-    sslServer = OpenSSL::SSL::SSLServer.new(server, sslContext)
+      puts "https listening on port #{listeningPort}"
 
-    puts "Listening on port #{listeningPort}"
+      process_accept sslServer do |keys, socket| 
+        write_hello_message( keys, socket )
+          # write_redirect_message( socket )
+        end
+    rescue
+      $stderr.puts "https exception #{$!}"
+    end
+  }
+end
 
-    process_accept sslServer do |keys, socket| 
-      write_hello_message( keys, socket )
-        # write_redirect_message( socket )
-      end
-
-  rescue
-    $stderr.puts $!
-  end
-}
+# so we want to be able to abstract this a bit...
 
 # ok, it works, but doesn't terminate cleanly if do ssl on 2345 
 
-threads << Thread.new {
-  begin
-    listeningPort = 2345 #Integer(ARGV[0])
-    server2 = TCPServer.new('localhost', listeningPort)
-    puts "Listening on port #{listeningPort}"
-    process_accept server2 do  |keys, socket| 
 
-        # write_hello_message( keys, socket )
-        write_redirect_message( keys, socket )
-      end
-  rescue
-    $stderr.puts $!
-  end
-}
+def start_http( threads, listeningPort)
+  threads << Thread.new {
+    begin
+      # listeningPort = 2345 #Integer(ARGV[0])
+      server2 = TCPServer.new('localhost', listeningPort)
+      puts "http listening on port #{listeningPort}"
+      process_accept server2 do  |keys, socket| 
+
+          # write_hello_message( keys, socket )
+          write_redirect_message( keys, socket )
+        end
+    rescue
+      $stderr.puts "http exception #{$!}"
+    end
+  }
+end
 
 
 
+threads = []
 
+start_https( threads, 1443)
+start_http( threads , 2345)
 
 # wait for threads to finish
 threads.each() do |t|

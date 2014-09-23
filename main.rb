@@ -1,12 +1,22 @@
 
+# ok, we want to try to serve files. 
+# which means accessing file system - and cleaning path
 
 require './webserver'
 
 threads = []
 
 Webserver.start_https( threads, 1443) do |keys, socket|
-  puts keys['request']
-  Webserver.write_hello_message( keys, socket )
+  Webserver.serve_file( keys, socket)
+#   request = keys['request']
+#   puts "request #{request}"
+# 
+# 
+#   path = Webserver.requested_file( request)
+# 
+#   puts "path is #{path}"
+# 
+#   Webserver.write_hello_message( keys, socket )
 end
 
 Webserver.start_http( threads , 2345 ) do |keys,socket|   

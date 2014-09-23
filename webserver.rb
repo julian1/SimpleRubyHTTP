@@ -168,7 +168,7 @@ end
 
 
 # we want to abstract the starting of the servers ...
-def Webserver.start_https( threads, listeningPort)
+def Webserver.start_https( threads, listeningPort, &code)
   threads << Thread.new {
     begin
       # listeningPort = 1443 #Integer(ARGV[0])
@@ -183,10 +183,13 @@ def Webserver.start_https( threads, listeningPort)
 
       puts "https listening on port #{listeningPort}"
 
-      process_accept sslServer do |keys, socket| 
-        write_hello_message( keys, socket )
-          # write_redirect_message( socket )
-        end
+
+      process_accept( sslServer,  &code)
+
+#       process_accept sslServer do |keys, socket| 
+#         write_hello_message( keys, socket )
+#           # write_redirect_message( socket )
+#         end
     rescue
       $stderr.puts "https exception #{$!}"
     end

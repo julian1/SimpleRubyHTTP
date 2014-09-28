@@ -2,14 +2,14 @@
 # ok, we want to try to serve files. 
 # which means accessing file system - and cleaning path
 
-require './webserver'
+require './server'
 require './static'
 require './helper'
 
 threads = []
 
-Webserver.start_https( threads, 1443) do | socket|
-  #Webserver.write_hello_message( keys, socket )
+Server.start_https( threads, 1443) do | socket|
+  #Server.write_hello_message( keys, socket )
 
     keys = Helper.decode_message( socket) 
 
@@ -28,7 +28,7 @@ Webserver.start_https( threads, 1443) do | socket|
 end
 
 
-Webserver.start_http( threads , 2345 ) do |socket|   
+Server.start_http( threads , 2345 ) do |socket|   
 
     keys = Helper.decode_message( socket) 
 

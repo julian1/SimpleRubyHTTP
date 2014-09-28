@@ -11,21 +11,15 @@
 
 # wget --no-check-certificate 'http://localhost:2345'
 
-#require 'socket' # Provides TCPServer and TCPSocket classes
-#require 'openssl' 
-
-
 
 require "socket"
 require "openssl"
 require "thread"
-require "uri"
-#require "dir"
 
 
-module Webserver
+module Server
 
-def Webserver.process_accept( server, &code )
+def Server.process_accept( server, &code )
   loop do
     socket = server.accept
 
@@ -57,12 +51,9 @@ def Webserver.process_accept( server, &code )
 # 
           
         rescue => e
-          puts "Error during processing: #{$!}"
-          puts "Backtrace:\n\t#{e.backtrace.join("\n\t")}"
-
+          $stderr.puts "Error during processing: #{$!}"
+          $stderr.puts "Backtrace:\n\t#{e.backtrace.join("\n\t")}"
           $stderr.puts "Unknown Exception #{$!}"
-          $stderr.puts "dropping conection"
-          # call close, just in case
           break
         end
       end
@@ -76,7 +67,7 @@ def Webserver.process_accept( server, &code )
 end
 
 
-def Webserver.start_https( threads, listeningPort, &code)
+def Server.start_https( threads, listeningPort, &code)
   threads << Thread.new {
     begin
       server = TCPServer.new(listeningPort)
@@ -94,7 +85,7 @@ def Webserver.start_https( threads, listeningPort, &code)
 end
 
 
-def Webserver.start_http( threads, listeningPort, &code)
+def Server.start_http( threads, listeningPort, &code)
   threads << Thread.new {
     begin
       server = TCPServer.new('localhost', listeningPort)

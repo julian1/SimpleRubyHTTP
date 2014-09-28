@@ -1,0 +1,9 @@
+
+ok, we want to pull out the key parsing from webserver.
+
+and change the name.
+
+then create a web_root dir to some html 
+
+
+change name keys to message or similar

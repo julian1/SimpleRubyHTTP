@@ -6,9 +6,10 @@ require './server'
 require './static'
 require './helper'
 
-threads = []
+server = Server::Processor.new() 
 
-Server.start_https( threads, 1443) do | socket|
+
+server.start_ssl(  1443) do | socket|
   #Server.write_hello_message( keys, socket )
 
     keys = Helper.decode_message( socket) 
@@ -28,7 +29,7 @@ Server.start_https( threads, 1443) do | socket|
 end
 
 
-Server.start_http( threads , 2345 ) do |socket|   
+server.start(  2345 ) do |socket|   
 
     keys = Helper.decode_message( socket) 
 
@@ -43,10 +44,5 @@ Server.start_http( threads , 2345 ) do |socket|
     true
 end
 
-
-# wait for threads to finish
-threads.each() do |t|
-  t.join()
-end
-
+server.run() 
 

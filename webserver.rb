@@ -29,7 +29,6 @@ def Webserver.process_accept( server, &code )
   loop do
     socket = server.accept
 
-    puts "--------------------"
     puts "** new connection"
 
       # if we don't spawn the thread then we get a broken pipe which is weird
@@ -69,7 +68,7 @@ def Webserver.process_accept( server, &code )
       end
 
       # the close should only be in one place
-      $stderr.puts "# really closing scoket "
+      $stderr.puts "** close connection"
       socket.close
 
     }

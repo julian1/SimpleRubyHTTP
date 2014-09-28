@@ -9,7 +9,6 @@ module Static
 
 def Static.requested_file(request_line)
 
-	puts "-----------------"
 	puts "request_line -> #{request_line}"
   request_uri  = request_line.split(" ")[1]
 

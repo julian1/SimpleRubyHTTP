@@ -15,14 +15,13 @@ Webserver.start_https( threads, 1443) do | socket|
 
     # if the connection was closed by remote
     if keys['request'].nil?
-      $stderr.puts "*** remote closing https"
+      $stderr.puts "eof on https"
       next nil
     end
 
 
   #
   # ok, we're getting null messages from firefox ?
-  puts "*************"
   Static.serve_file( keys, socket)
 
   true
@@ -35,7 +34,7 @@ Webserver.start_http( threads , 2345 ) do |socket|
 
     # if the connection was closed by remote
     if keys['request'].nil?
-      $stderr.puts "*** remote closed http "
+      $stderr.puts "eof on http "
       next nil
     end
 

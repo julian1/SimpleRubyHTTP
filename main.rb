@@ -10,6 +10,7 @@ threads = []
 Webserver.start_https( threads, 1443) do |keys, socket|
   #Webserver.write_hello_message( keys, socket )
 
+  #
   # ok, we're getting null messages from firefox ?
   puts "*************"
   Static.serve_file( keys, socket)

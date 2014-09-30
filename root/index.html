@@ -1,0 +1,217 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+ <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Whoot test </title>
+    <link href="layout.css" rel="stylesheet" type="text/css">
+    <!--[if lte IE 8]><script language="javascript" type="text/javascript" src="../excanvas.min.js"></script><![endif]-->
+    <script language="javascript" type="text/javascript" src="jquery.js"></script>
+    <script language="javascript" type="text/javascript" src="jquery.flot.js"></script>
+ </head>
+    <body>
+    <h1>Whoot test</h1>
+
+    <div id="mytime" style="width:100px;height:30px;"></div>
+
+    <div id="placeholder" style="width:800px;height:400px;"></div>
+
+    <p>Simple example. You don't need to specify much to get an
+       attractive look. Put in a placeholder, make sure you set its
+       dimensions (otherwise the plot library will barf) and call the
+       plot function with the data. The axes are automatically
+       scaled.</p>
+
+
+	<!-- ok, we want to try to load a json file --> 
+
+<script type="text/javascript">
+$(function () {
+
+	// how do we get the json data ? - can we specify it in the head. 
+	// or does it have to be httprequest from within ? 
+
+	// how can i get the file data ? 
+	// --  var p = JSON.parse(contact);
+
+	//PlainObject data, String textStatus, jqXHR jqXHR
+
+	//series = nil;
+
+	// http://www.jqueryflottutorial.com/how-to-make-jquery-flot-line-chart.html
+
+	// actually, we ought to be able to request how much data we want as a parameter
+	// and perhaps the tick interval.
+	// scrolling would be nice ...
+
+	// but we really want to be able to add another access.
+	// AHHH even if we can't then we can have two charts. 
+	// one on top of the other...
+	// Also getting the 5% bound - almost certainly wants to be put on the same graph. 
+
+
+
+
+			 var options = {
+				series: {
+					lines: {
+						show: true
+					}//,
+	//				points: {
+	//					radius: 5,
+	//					fill: true,
+	//					show: true
+	//				}
+				},
+
+				yaxes: [
+					{
+						position: "left"
+					}, 
+					{
+						position: "right"
+					} 
+					],  
+
+				xaxis: {
+					mode: "time",
+//					tickSize: [3, "minute"],
+					tickLength: 0,
+//					axisLabel: "2012",
+					axisLabelUseCanvas: true,
+					axisLabelFontSizePixels: 12,
+					axisLabelFontFamily: 'Verdana, Arial',
+					axisLabelPadding: 10,
+
+					tickFormatter: function (val, axis) {           
+						//return dayOfWeek[new Date(val).getDay()];
+						//return val.toLocaleTimeString() 
+						return new Date( val).toLocaleTimeString(); 
+					}
+
+				}
+			};
+
+		all_series = null;
+	
+		graph = null ; 
+
+		last_id = -1;
+
+	function update() {
+
+		// also rather than take - everything - we could just get the
+		// latest row...
+
+		console.log('calling update');
+
+		$.ajax({
+			dataType: "json",
+			url: "get_id.json",
+			success: function ( id, textStatus, jqXHR ) { 
+
+				console.log( "id is " + id + " last_id " + last_id );	
+				
+				if( id <= last_id ) { 
+
+					console.log( "nothing to update");
+				}
+				else {
+					console.log( "require update");
+
+					$.ajax({
+						dataType: "json",
+						url: "out.json",
+						//data: "whoot",
+						success: function ( datax, textStatus, jqXHR ) { 
+							console.log( 'whoot got data' ); 
+							//data = [[0, 3], [4, 8], [8, 5], [9, 13]];
+							var all_series = [  
+								{ 
+									label: "top ask", 
+									data: datax.map( function(x) { 
+											return [ new Date( x.time), x.top_ask ] 
+										} ),  
+									yaxis: 1 
+								},
+								{ 
+									label: "top bid", 
+									data: datax.map( function(x) { 
+											return [ new Date( x.time), x.top_bid ] 
+										} ), 
+									yaxis: 1 
+								},
+								{ 
+									label: "sum ratio", 
+									data: 
+										datax.map( function(x) { 
+											return [ new Date( x.time), x.sum_ratio ] 
+										} ), 
+									yaxis: 2, 
+									//points: { symbol: "circle", fillColor: "#7F7F7F", show: true },
+									lines: { color: "#7F7F7F" }
+								}
+							];
+
+							if( graph == null) {
+								graph = $.plot($("#placeholder"), all_series, options );
+
+								console.log( 'plotting graph')
+							}
+							else {
+								console.log( 'already have graph')
+								graph.setData( all_series );  // Replace oldData with newData
+								graph.setupGrid();       // Adjust axes to match new values
+								graph.draw();            // Update actual plot
+							}
+
+							// now we want to do update this thing 
+							x = datax.slice(-1)[0]; 
+							y = new Date( x.time).toLocaleTimeString()
+							$( "#mytime" ).html( "<p>" + y + "</p>" );
+
+
+							
+							last_id = x.id;	
+
+						} ,
+						error: function (jqXHR, textStatus, errorThrown ) { 
+							console.log(   textStatus  + errorThrown ); 
+						} 
+					});
+
+
+
+				}
+				}
+			}
+		);
+
+
+
+
+
+		setTimeout(update, 10 * 1000 );
+	}
+
+	update();
+
+
+
+	//console.log( 'hithere' );
+
+    //var d1 = [];
+    //for (var i = 0; i < 14; i += 0.5)
+     //   d1.push([i, Math.sin(i)]);
+
+    //var d2 = [[0, 3], [4, 8], [8, 5], [9, 13]];
+
+    // a null signifies separate line segments
+    //var d3 = [[0, 13], [7, 13], null, [7, 2.5], [14, 2.5]];
+    
+    //$.plot($("#placeholder"), [ d1, d2, d3 ]);
+    //$.plot($("#placeholder"), [ d3 ]);
+});
+</script>
+
+ </body>
+</html>

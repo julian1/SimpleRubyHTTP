@@ -8,7 +8,7 @@ module Static
 
   def Static.requested_file(request_line)
 
-    puts "request_line -> #{request_line}"
+    #puts "request_line -> #{request_line}"
     request_uri  = request_line.split(" ")[1]
 
     path         = URI.unescape(URI(request_uri).path)
@@ -58,6 +58,8 @@ module Static
     # Make sure the file exists and is not a directory
     # before attempting to open it.
     if File.exist?(path) && !File.directory?(path)
+
+      #puts " -> FOUND"
       File.open(path, "rb") do |file|
         socket.print "HTTP/1.1 200 OK\r\n" +
                "Content-Type: #{content_type(file)}\r\n" +
@@ -70,6 +72,8 @@ module Static
         IO.copy_stream(file, socket)
       end
     else
+      puts " -> NOT FOUND"
+
       message = "File not found\n"
 
       # respond with a 404 error code to indicate the file does not exist

@@ -5,7 +5,6 @@ require "openssl"
 require "thread"
 
 
-
 module Server
 
   class Processor
@@ -28,17 +27,17 @@ module Server
               # call handler block
               break if code.call( socket ).nil?
 
-    #         # i think we get a broken pipe if we can't read anything
-    #         rescue Errno::EPIPE 
-    #           $stderr.puts "*** EPIPE "
-    #           socket.close
-    #           break;
-    # 
-    #         rescue IOError => e
-    #           $stderr.puts "*** IOError #{e.message} "
-    #           socket.close
-    #           break
-    # 
+              # # i think we get a broken pipe if we can't read anything
+              # rescue Errno::EPIPE 
+              # $stderr.puts "*** EPIPE "
+              # socket.close
+              # break;
+              #
+              # rescue IOError => e
+              #   $stderr.puts "*** IOError #{e.message} "
+              #   socket.close
+              #   break
+
             rescue => e
               $stderr.puts "Error during processing: #{$!}"
               $stderr.puts "Backtrace:\n\t#{e.backtrace.join("\n\t")}"
@@ -50,11 +49,9 @@ module Server
           # the close should only be in one place
           $stderr.puts "** close connection"
           socket.close
-
         }
       end
     end
-
 
     def start_ssl(  listeningPort, &code)
         @threads << Thread.new {
@@ -72,7 +69,6 @@ module Server
         end
       }
     end
-
 
     def start(  listeningPort, &code)
       @threads << Thread.new {

@@ -4,18 +4,28 @@ require "uri"
 
 module Helper
 
-  def Helper.decode_message( socket )
-    keys = {}
+
+  def Helper.write_json( content, socket )
+    socket.print "HTTP/1.1 200 OK\r\n" +
+          "Content-Type: application/json\r\n" +
+          "Content-Length: #{content.bytesize}\r\n" 
+    socket.print "\r\n"
+    socket.print content
+  end
+
+
+  def Helper.decode_request( socket )
+    request = {}
     # probably should structure this differenly...
     # if it's a post, then we will want to slurp a lot more...
-    keys['request'] = socket.gets
+    request['request'] = socket.gets
     while line = socket.gets
       break if line == "\r\n"
       s = line.split(':')
-      keys[ s[0].strip] = s[1].strip 
+      request[ s[0].strip] = s[1].strip 
     end
-    #puts keys
-    keys
+    #puts request
+    request
   end
 
   def Helper.ignore_exception
@@ -26,10 +36,10 @@ module Helper
   end
 
 
-  def Helper.write_hello_message( keys, socket )
+  def Helper.write_hello_message( request, socket )
     puts "here0"
     cookie = 0
-    cookie = ignore_exception {  keys[ 'Cookie'].to_i + 1 }
+    cookie = ignore_exception {  request[ 'Cookie'].to_i + 1 }
     puts "setting cookie to #{cookie}"
 
     response = "Hello World!\n"
@@ -52,7 +62,7 @@ module Helper
   end
 
 
-  def Helper.write_redirect_message( keys, socket )
+  def Helper.write_redirect_message( request, socket )
 
     response = <<-EOS  
     <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">

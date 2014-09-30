@@ -1,9 +1,56 @@
 
-ok, we want to pull out the key parsing from webserver.
+- 369 - 375 USD/BTC  entered 8.00pm   ( actually bought aud at horrible spread)
+											ANX AUD spread is 422 - 438 = 16
 
-and change the name.
+
+
+- need to get real-time update. by polling or something.
+	- very basic - need to test whether new data, before
+	doing larger query or updating.
+
+- IMPORTANT compress data, when sending.
+
+- IMPORTANT cache control over resources jquery and jflot etc.
+
+
+
+	http://www.jqplot.com/  looks nice as well as flot.
+		supports multiple y axis also - http://www.jqplot.com/tests/zooming.php
+
+- think we should route the message cracking down into the controller / model class.
+- means there's just a single point to handle.
+	- then we don't have to separate out the routing...
+
+
+	- event_processor( model)
+	- controller( model)
+	- router( controller) 
+
+- we need dates. 
+
+
+- in place of web-sockets - it would be very easy to poll, requesting
+whether there was any more data in the last 10 secs.  and then doing
+an update.
+
+---
+done ok - , we want to pull out the key parsing from webserver.
+
+done and change the name.
 
 then create a web_root dir to some html 
 
+done - change name keys to message or similar
 
-change name keys to message or similar
+change the serve file - so it takes the request - and not all the
+	rest of the keys.
+
+ok. now we actually want to serve model data.
+----
+
+it's very close to being real time.
+
+ok, it would be nice to have real-time display of date 
+
+
+

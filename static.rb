@@ -9,6 +9,10 @@ module Static
   # a tuple is not as capable as this class if we
   # really want to pipeline
 
+  # we can just use a tuple if that's sufficient. 
+  # also full iostream implementation might be too much, because 
+  # we cannot copy it.
+
   # what if we want xml, rather than json?
   class Result
     def initialize( headers, io_content )
@@ -83,7 +87,14 @@ module Static
       CONTENT_TYPE_MAPPING.fetch(ext, DEFAULT_CONTENT_TYPE)
     end
 
+ 
+    # sending the Etag gives us
+    # we definitely need to construct a pipeline. 
+    # if-none-match
 
+    # Hmmm we can just append the file timestamp to the etag  ...
+	# and if it matches return 304
+	# or md5 ing the file
 
     def serve_file( request )
 
@@ -92,13 +103,23 @@ module Static
       # Make sure the file exists and is not a directory
       # before attempting to open it.
       if File.exist?(path) && !File.directory?(path)
-        Result.new(
-          {
-            'response' => "HTTP/1.1 200 OK\r\n",
-            'Content-Type:' => "#{content_type(path)}\r\n"
-          },
-          File.open(path, "rb")
-        )
+        if true
+          Result.new(
+            {
+              'response' => "HTTP/1.1 200 OK\r\n",
+              'Content-Type:' => "#{content_type(path)}\r\n",
+              'ETag:' => "\"#{path}\"\r\n"
+            },
+            File.open(path, "rb")
+          )
+        else
+          Result.new(
+            {
+              'response' => "HTTP/1.1 304 Not Modified\r\n"
+            },
+            StringIO.new("") 
+          )
+        end
       else
         Result.new(
           {

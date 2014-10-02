@@ -1,4 +1,35 @@
 
+	Think we may want a combined structure - not just peeling
+	off the request and dispatching it. 
+
+	request
+	response
+	entity  
+
+	Then we can have filters anywhere - to add/delete/modify headers .
+
+	filters are like cross cutting concerns.
+
+------
+
+Think there might be an issue that we need two \r\n fields 
+
+echo -e 'GET / HTTP/1.1\r\n\r\n' | nc localhost 2345 | less
+
+------
+
+We don't need the class, can just use a mash
+
+irb(main):001:0> x = { :a => File.new( 'jquery.js') } 
+=> {:a=>#<File:jquery.js>}
+irb(main):002:0> x.a.read
+NoMethodError: undefined method `a' for {:a=>#<File:jquery.js>}:Hash
+        from (irb):2
+        from /usr/bin/irb:12:in `<main>'
+irb(main):003:0> x[:a].read
+
+-----
+
 ok, i think we want to run the migration.
 	need a backup first
 

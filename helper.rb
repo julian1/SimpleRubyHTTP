@@ -35,7 +35,16 @@ module Helper
 
       # it would be really nice to support chunked streaming
 
-      if false 
+      # max-age=0
+      headers['Cache-Control:']= "no-cache\r\n"
+
+ #     headers['Cache-Control:']= "private,max-age=100000\r\n"
+
+  # firefox will send 'If-None-Match' nicely. dont have to set cache-control flags 
+
+
+
+      if true
         # don't compress
         content = content_io.read
         headers['Content-Length:'] =  "#{content.bytesize}\r\n" 
@@ -43,7 +52,7 @@ module Helper
 
       # we could actually read the header field to decide whether to compress or not
       # or the request object
-      if true
+      if false 
         # compress
         wio = StringIO.new("w")
         w_gz = Zlib::GzipWriter.new(wio)
@@ -86,15 +95,36 @@ module Helper
  
 
   def Helper.decode_request( socket )
+
+    # this is failing on, with new line behavior 
+    #  echo -e 'GET / HTTP/1.1\r\n' | nc localhost 2345 | less
+
     request = {}
     # probably should structure this differenly...
     # if it's a post, then we will want to slurp a lot more...
+
+    # ok, we have to avoid calling it twice,
+
+    # I don't think we can actually call gets, if we don't 
+    # know for certain ... whether more data should arrive...
+
+    # I don't see how we can know that we're finshed - if it's HTTP/1.0 
+    # and there are no headers. 
+
+    # no it will be terminated by another \r\n 
+
+    # i think it's correct - we have to block twice to know when http finishes.
+
     request['request'] = socket.gets
-    while line = socket.gets
+
+    while line = socket.gets("\r\n")  # this blocks, because there's nothing more to read after the first line.
+                                      # i think this is correct behavior
       break if line == "\r\n"
+      
       s = line.split(':')
       request[ s[0].strip] = s[1].strip 
     end
+
     #puts request
     request
   end

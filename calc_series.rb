@@ -218,10 +218,10 @@ module Model
       )
     end
 
-    def get_time()
-      "\"#{@model.last[:time]}\""
-    end
-
+#     def get_time()
+#       "\"#{@model.last[:time]}\""
+#     end
+# 
     def get_id()
       "\"#{@model.last[:id]}\""
     end

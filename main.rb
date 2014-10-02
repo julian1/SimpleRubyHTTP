@@ -10,7 +10,7 @@ def application( socket, model, fileContent)
 
   m = Helper.decode_request( socket) 
 
-  #puts m
+  puts m
 
   request = m['request']
 
@@ -24,6 +24,22 @@ def application( socket, model, fileContent)
   # so we have to do some message cracking
   #puts "-------------"
   puts "request is #{ request }"
+
+
+
+  if /POST .*$/.match(request)
+      puts "************ got post !!! ***********"
+      puts m
+
+      # we must read content , otherwise it gets muddled up
+      # it gets read at the next http request, when connection
+      # is keep alive. 
+
+      Helper.write_hello_message( m, socket )
+      return true
+  end
+
+
 
 
   # determine http request type
@@ -71,13 +87,13 @@ def application( socket, model, fileContent)
   end
 
 
-  if /GET \/get_time.json$/.match(request)
-      content_ = model.get_time()  
-      content_io = StringIO.new( content_, "r")
-      Helper.write_json( content_io, socket )
-      return true
-  end
-
+#   if /GET \/get_time.json$/.match(request)
+#       content_ = model.get_time()  
+#       content_io = StringIO.new( content_, "r")
+#       Helper.write_json( content_io, socket )
+#       return true
+#   end
+# 
   if /GET \/get_id.json$/.match(request)
       content_ = model.get_id()  
       content_io = StringIO.new( content_, "r")
@@ -85,6 +101,8 @@ def application( socket, model, fileContent)
       return true
   end
 
+
+  
 
   # head, post, etc. 
   Helper.write_hello_message( m, socket )

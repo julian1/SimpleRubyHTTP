@@ -36,7 +36,7 @@ module Helper
       # it would be really nice to support chunked streaming
 
       # max-age=0
-      headers['Cache-Control:']= "no-cache\r\n"
+      headers['Cache-Control:']= "private\r\n"
 
  #     headers['Cache-Control:']= "private,max-age=100000\r\n"
 

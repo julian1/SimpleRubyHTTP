@@ -182,10 +182,12 @@ module Model
 
       puts "$$ model length #{@model.length}"
 
-      # take last 20 ticks
-      m = @model[-500..-1]
-      #m = @model[-20..-1]
-      #m = @model[-10..-1]
+
+      # take up to 500 elts
+      take = 500
+      n = @model.length
+      m = @model[ (n - take > 0 ? n - take : 0) .. n - 1]
+      
 
       top_ask = m.map do |row| <<-EOF
           { 

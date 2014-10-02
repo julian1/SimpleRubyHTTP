@@ -1,14 +1,35 @@
 
 require "uri"
 
+require 'zlib'
+require 'stringio'
+require 'json'
+
 
 module Helper
 
 
+  def Helper.gzip(string)
+    wio = StringIO.new("w")
+    w_gz = Zlib::GzipWriter.new(wio)
+    w_gz.write(string)
+    w_gz.close
+    compressed = wio.string
+    compressed
+  end
+  
   def Helper.write_json( content, socket )
+
+# seems to be an issue when returning gzipped content for chromium and wget
+# but not firefox. we really need to see the headers...
+
+    content = gzip( content )
+
     socket.print "HTTP/1.1 200 OK\r\n" +
           "Content-Type: application/json\r\n" +
-          "Content-Length: #{content.bytesize}\r\n" 
+          "Content-Length: #{content.bytesize}\r\n" + 
+          "Content-Encoding: gzip\r\n"
+
     socket.print "\r\n"
     socket.print content
   end

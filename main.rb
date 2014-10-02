@@ -126,18 +126,20 @@ end
 
 
 
-conn = PG::Connection.open(:dbname => 'test', :user => 'meteo', :password => 'meteo' )
+conn = PG::Connection.open(:dbname => 'prod', :user => 'meteo', :password => 'meteo' )
 
 f = proc { |a,b,c,d| model.process_event(a,b,c,d) }
 
 
-# should set id for testing, to automatically do the lookup
-# and subtract 300 or somthing. 
 
-id = 28000
+id = -1 
+
+# start processing events at current less 500
+id = conn.exec_params( "select max(id) - 2000 as max_id from events" )[0]['max_id']
+
 puts "starting events at #{id}" 
 
-id = Model.process_events( conn, 28000, f )
+id = Model.process_events( conn, id, f )
 
 puts "done processing historic - id #{id}"
 

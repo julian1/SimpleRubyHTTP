@@ -1,7 +1,22 @@
 
+ok, i think we want to run the migration.
+	need a backup first
+
+----
+
+ok, now we want to start recording. 
+which means we actually need a test db. separate from the one we're using for
+real.
+
+we probably also want to integrate the code - into this project? 
+or keep the ends separate?
+
+----
+
 - 369 - 375 USD/BTC  entered 8.00pm   ( actually bought aud at horrible spread)
 											ANX AUD spread is 422 - 438 = 16
 
+- for btc we really need. to test ingestion with a test db. 
 
 
 - need to get real-time update. by polling or something.

@@ -39,7 +39,7 @@ module Model
     count = 0
     begin 
       # puts "retrieving events - from #{id}"
-      res = conn.exec_params( "select id, t, msg, data from events where id >= $1 order by id limit $2", [id, batch] )
+      res = conn.exec_params( "select id, t, msg, content from events where id >= $1 order by id limit $2", [id, batch] )
       count = 0
       res.each do |row|
         begin
@@ -48,10 +48,15 @@ module Model
           id = row['id'].to_i
           t = DateTime.parse( row['t'] ) 
           msg = row['msg']
-          data = JSON.parse( row['data'] )
-          f.call(id, msg, t, data)
+          begin
+            content = JSON.parse( row['content'] )
+          rescue
+            $stderr.puts "Error decoding json content: #{id} error: #{$!}"
+          end
+          f.call(id, msg, t, content)
         rescue
-          $stderr.puts "Exception id: #{id} error: #{$!}"
+          # for some reason we aer getting errors 
+          $stderr.puts "Error processing message id: #{id} error: #{$!}"
         end
       end
       # puts "count is #{count}"
@@ -102,22 +107,21 @@ module Model
       bids_sum.to_i
     end
 
-    # process an event 
-    def process_event( id, msg, t, data)
-       # puts "processing event #{id}"
-      if msg == 'order'
-        # puts "#{time} total bids:#{bids} asks:#{asks} ratio:#{ratio}  bids_sum:#{bids_sum} asks_sum:#{asks_sum}"
+    # we should be using different clases, for the 
+    # different event sources that we use.
 
-        time = Time.at(data['timestamp'].to_i).to_datetime
-        top_bid = data['bids'][0][0]
-        top_ask = data['asks'][0][0]
+    def process_bitstamp_orderbook_event( id, orderbook)
+      begin
+        time = Time.at(orderbook['timestamp'].to_i).to_datetime
+        top_bid = orderbook['bids'][0][0]
+        top_ask = orderbook['asks'][0][0]
 
-        bids = data['bids'].length
-        asks = data['asks'].length
+        bids = orderbook['bids'].length
+        asks = orderbook['asks'].length
         ratio = (bids.to_f / asks.to_f ).round(3) 
 
-        bids_sum = compute_sum(data['bids']) 
-        asks_sum = compute_sum(data['asks']) 
+        bids_sum = compute_sum(orderbook['bids']) 
+        asks_sum = compute_sum(orderbook['asks']) 
         sum_ratio = (bids_sum.to_f / asks_sum.to_f).round(3) 
 
         @model << { 
@@ -128,7 +132,40 @@ module Model
           :ratio => ratio, 
           :sum_ratio => sum_ratio
         } 
+      rescue
+          $stderr.puts "Failed to decode bitstamp orderbook orderbook error: #{$!}"
       end
+    end 
+
+
+    # process an event 
+    def process_event( id, msg, t, content)
+      case msg 
+        when "error"
+            puts "got event error type"
+
+        when 'order2'
+          # new style order event
+          # puts "url #{content['url']}"
+          case content['url'] 
+            when 'https://www.bitstamp.net/api/order_book/'
+              process_bitstamp_orderbook_event( id, content['data'] )
+            when 'https://www.bitstamp.net/api/ticker/'
+            when 'https://api.btcmarkets.net/market/BTC/AUD/orderbook'
+            when 'https://api.btcmarkets.net/market/BTC/AUD/trades'
+            else
+              puts "unknown url #{content['url']}"
+            end
+
+        when 'order'
+          # old style - order
+          process_bitstamp_orderbook_event( id, content )
+
+        when 'ticker'
+          # old style bitstamp ticker
+        else
+            puts "unknown event msg #{msg}"
+        end
     end
 
     # access the current model state  

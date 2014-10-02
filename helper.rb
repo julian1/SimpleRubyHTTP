@@ -22,8 +22,24 @@ module Helper
 
 # seems to be an issue when returning gzipped content for chromium and wget
 # but not firefox. we really need to see the headers...
+   
+    # how about chunked encoding and streaming? 
+    # should we be writing here, or should we be returning an object,  
 
+    # there's all these things that interact - cookies, compression, keep alives, cache-control, ssl 
+
+    # actually we could construct a pipeline that has two calls.
+    # content and headers. 
+
+    # that way we can abstract the filling in of the size. and compression. 
+    # lower levels - set response, 
+    # other levels - cookies. 
+    # top level compression, keep-alive etc.
+     
+    puts "size before compress #{content.bytesize}"
     content = gzip( content )
+
+    puts "size after #{content.bytesize}"
 
     socket.print "HTTP/1.1 200 OK\r\n" +
           "Content-Type: application/json\r\n" +

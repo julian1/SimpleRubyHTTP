@@ -17,6 +17,9 @@ model = Model::EventProcessor.new()
 server.start_ssl(1443) do |socket|
 
   m = Helper.decode_request( socket) 
+
+  puts m
+
   request = m['request']
 
   # if the connection was closed by remote
@@ -141,7 +144,7 @@ puts "starting events at #{id}"
 
 id = Model.process_events( conn, id, f )
 
-puts "done processing historic - id #{id}"
+puts "finished processing historic events, id now #{id}"
 
 Model.process_current_events( conn, id, f )
 

@@ -3,13 +3,6 @@ require 'json'
 require 'pg'
 require 'date'
 
-# what about a running service where we want updating ? 
-# a class ..
-# issue is the transition - from historic to updated.,
-# actually we can handle this. processed 
-# actually it's really simple --- we just take all event ids that are greater than the 
-# last one we processed... 
-
 # we can actually have multiple models if we want. or multiple event processors 
 
 
@@ -26,6 +19,21 @@ require 'date'
 
 
 module Model 
+
+  # what if we want xml, rather than json? 
+  class Result
+    def initialize( headers, io_content )
+      @headers = headers
+      @io_content = io_content
+    end
+    def headers
+      @headers
+    end
+    def io_content
+      @io_content
+    end
+  end
+
 
 
   # i think we should use >= as it's more logical 
@@ -85,12 +93,6 @@ module Model
     end
   end
 
-
-
-
-  # process_event = Proc.new do | msg, t, data | 
-  # end 
-   
 
   class EventProcessor
     def initialize()
@@ -176,7 +178,7 @@ module Model
     # so i think rather than do the formatting, it would be better to just send 
     # the series data, and handle presentation in javascript. 
 
-    def get()
+    def get_series()
       # to be fast, we should really use a stream 
       # should be a join, 
 
@@ -207,8 +209,13 @@ module Model
 
       EOF
 
-      #puts ret
-      ret
+      Result.new(  
+        {
+          'response' => "HTTP/1.1 200 OK\r\n", 
+          'Content-Type:' => "application/json\r\n"
+        },
+        StringIO.new( ret, "r")
+      )
     end
 
     def get_time()
@@ -220,24 +227,6 @@ module Model
     end
 
 
-
   end
-
-#   # the question is does the price we can buy at move - in relation 
-#   # we don't even need the ticker. 
-# 
-#   conn = PG::Connection.open(:dbname => 'test', :user => 'meteo', :password => 'meteo' )
-# 
-#   x = EventProcessor.new()
-#   f = proc { |a,b,c,d| x.process_event(a,b,c,d) }
-# 
-#   last = process_historic_events( conn, f )
-# 
-#   #process_current_events( conn, last , f )
-# 
-#   puts x.get()
-# 
-
 end
-
 

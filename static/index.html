@@ -3,7 +3,7 @@
  <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Whoot test </title>
-    <link href="layout.css" rel="stylesheet" type="text/css">
+    <!--link href="layout.css" rel="stylesheet" type="text/css"-->
     <!--[if lte IE 8]><script language="javascript" type="text/javascript" src="../excanvas.min.js"></script><![endif]-->
     <script language="javascript" type="text/javascript" src="jquery.js"></script>
     <script language="javascript" type="text/javascript" src="jquery.flot.js"></script>
@@ -120,7 +120,7 @@ $(function () {
 
 					$.ajax({
 						dataType: "json",
-						url: "out.json",
+						url: "get_series.json",
 						//data: "whoot",
 						success: function ( datax, textStatus, jqXHR ) { 
 							console.log( 'whoot got data' ); 

@@ -73,7 +73,8 @@ module Server
     def start(  listeningPort, &code)
       @threads << Thread.new {
         begin
-          server = TCPServer.new('localhost', listeningPort)
+          #server = TCPServer.new('localhost', listeningPort)
+          server = TCPServer.new('127.0.0.1', listeningPort)
 
           $stderr.puts "http listening on port #{listeningPort}"
           process_accept( server,  &code)

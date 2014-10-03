@@ -65,15 +65,17 @@ def static_resource( x, fileContent)
     puts "**** got request static resource "
 
     # resource = matches.captures[ 0]
-    result = fileContent.serve_file( x[:request] )
+    #result = fileContent.serve_file( x[:request] )
+    result = fileContent.serve_file( x )
 
     # ok, now we don't want to be writing the socket. instead we
     # want to just fill in some stuff...
     # Helper.write_response( result.headers, result.io_content, socket )
 
-    x[:body] = result.io_content 
-    x[:response_headers] = result.headers
-
+#     x[:response] = "HTTP/1.1 200 OK\r\n"
+#     x[:body] = result.io_content 
+#     x[:response_headers] = result.headers
+# 
     return true
   end
 end
@@ -101,10 +103,7 @@ def get_id( x, model )
 #       return true
 # 
 
-      result = model.get_id()
-    x[:body] = result.io_content 
-    x[:response_headers] = result.headers
-
+      result = model.get_id( x )
   end
 end
 
@@ -126,9 +125,10 @@ def application( socket, model, fileContent)
   # we can still use functions t
   x = {
     :request => m['request'],
-    :request_fields => m,
+    :request_headers => m,
     :socket => socket,
-    :response_headers => [],
+    :response => nil,
+    :response_headers => {},
     :body => nil
   }
 

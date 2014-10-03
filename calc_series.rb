@@ -222,18 +222,22 @@ module Model
 #       "\"#{@model.last[:time]}\""
 #     end
 # 
-    def get_id()
-      "\"#{@model.last[:id]}\""
+    def get_id( x )
+#       "\"#{@model.last[:id]}\""
+# 
+      x[:response] = "HTTP/1.1 200 OK\r\n"
+      x[:response_headers]['Content-Type:'] = "application/json\r\n"
+      x[:body] = StringIO.new( "\"#{@model.last[:id]}\"" )
 
 
-      Result.new(  
-        {
-          'response' => "HTTP/1.1 200 OK\r\n", 
-          'Content-Type:' => "application/json\r\n"
-        },
-        StringIO.new( "\"#{@model.last[:id]}\"" )
-      )
-
+#       Result.new(  
+#         {
+#           'response' => "HTTP/1.1 200 OK\r\n", 
+#           'Content-Type:' => "application/json\r\n"
+#         },
+#         StringIO.new( "\"#{@model.last[:id]}\"" )
+#       )
+# 
     end
 
 

@@ -36,13 +36,18 @@ module Helper
 
       # it would be really nice to support chunked streaming
 
-      headers = x[:response_headers]
 
-      if headers.nil? || headers.length == 0
-
-        puts "*** missing response headers !!!" 
+      if x[:response].nil? || x[:response] == ""
+        puts "*** missing response!!!" 
+        abort()
       end
-      puts "headers are #{headers}"
+
+      headers = x[:response_headers]
+      if headers.nil? || headers.length == 0
+        puts "*** missing response headers !!!" 
+        abort()
+      end
+      puts "response_headers are #{headers}"
 
 
       # max-age=0

@@ -88,18 +88,17 @@ def serve_static_resource( x, fileContent)
 end
 
 
-def get_series( x, model )
+def serve_model_resource( x, model )
+  # can be separate filters or the same
   if /GET \/get_series.json$/.match(x[:request])
       model.get_series( x)
   end
-end
-
-
-def get_id( x, model )
   if /GET \/get_id.json$/.match(x[:request])
       model.get_id( x )
   end
+
 end
+
 
 
 
@@ -184,9 +183,7 @@ def application( socket, model, fileContent)
 
   serve_static_resource( x, fileContent )
 
-  get_series( x, model )
-
-  get_id( x, model )
+  serve_model_resource( x, model )
 
 
   do_cookie_stuff( x)

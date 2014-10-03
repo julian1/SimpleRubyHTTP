@@ -4,34 +4,6 @@
 
 module Static
 
-  # do we really need this. or can we return
-  # just a tuple { headers, } ???
-  # a tuple is not as capable as this class if we
-  # really want to pipeline
-
-  # we can just use a tuple if that's sufficient. 
-  # also full iostream implementation might be too much, because 
-  # we cannot copy it.
-
-  # what if we want xml, rather than json?
-  class Result
-    def initialize( headers, io_content )
-      @headers = headers
-      @io_content = io_content
-    end
-    def headers
-      @headers
-    end
-    def io_content
-      @io_content
-    end
-  end
-
-
-  # we should be initalizing this with the web root in the constructor.
-  # we can then serve different roots with different cache control etc.
-  # we want to  separate out the networking, from message routing/redirect, from file stuff.
-
 
   class FileContent
 
@@ -109,7 +81,8 @@ module Static
 		      x[:body] = File.open(path, "rb")
         else
           abort( 'file not found 1 ' )
-
+          # It would be nice to implement egg stuff somewhere else 
+          # in the chain 
           #    'response' => "HTTP/1.1 304 Not Modified\r\n"
         end
       else
@@ -121,18 +94,6 @@ module Static
             file not found
           EOF
           )
-
-
-#         Result.new(
-#           {
-#             'response' => "HTTP/1.1 404 Not Found\r\n",
-#             'Content-Type:' => "text/plain\r\n"
-#           },
-#           StringIO.new( <<-EOF
-#             file not found
-#           EOF
-#           )
-#         )
       end
     end
 

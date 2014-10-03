@@ -20,21 +20,6 @@ require 'date'
 
 module Model 
 
-  # what if we want xml, rather than json? 
-  class Result
-    def initialize( headers, io_content )
-      @headers = headers
-      @io_content = io_content
-    end
-    def headers
-      @headers
-    end
-    def io_content
-      @io_content
-    end
-  end
-
-
 
   # i think we should use >= as it's more logical 
   # basically process from
@@ -212,37 +197,18 @@ module Model
       x[:response] = "HTTP/1.1 200 OK\r\n"
       x[:response_headers]['Content-Type:'] = "application/json\r\n"
       x[:body] = StringIO.new( ret, "r")
-
-
-#       Result.new(  
-#         {
-#           'response' => "HTTP/1.1 200 OK\r\n", 
-#           'Content-Type:' => "application/json\r\n"
-#         },
-#         StringIO.new( ret, "r")
-#       )
     end
+
 
 #     def get_time()
 #       "\"#{@model.last[:time]}\""
 #     end
-# 
+ 
+
     def get_id( x )
-#       "\"#{@model.last[:id]}\""
-# 
       x[:response] = "HTTP/1.1 200 OK\r\n"
       x[:response_headers]['Content-Type:'] = "application/json\r\n"
       x[:body] = StringIO.new( "\"#{@model.last[:id]}\"" )
-
-
-#       Result.new(  
-#         {
-#           'response' => "HTTP/1.1 200 OK\r\n", 
-#           'Content-Type:' => "application/json\r\n"
-#         },
-#         StringIO.new( "\"#{@model.last[:id]}\"" )
-#       )
-# 
     end
 
 

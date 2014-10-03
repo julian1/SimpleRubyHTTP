@@ -36,7 +36,7 @@ def log_request( x)
 end
 
 
-def handle_post_type( x)
+def handle_post_request( x)
   # should we inject the socket straight in here ?
   # it makes instantiating the graph harder...
   if /^POST .*$/.match(x[:request])
@@ -64,7 +64,7 @@ end
 
 
 
-def rewrite_index_html( x)
+def rewrite_index_get( x)
   # rewrite top level / to index.html
   if matches = /^GET \/$/.match(x[:request])
     x[:request] = "GET /index.html" 
@@ -74,9 +74,12 @@ end
 
 
 def serve_static_resource( x, fileContent)
-  # Don't think we have to handle 404 here.
+
   matches = /^GET (.*\.txt|.*\.html|.*\.css|.*\.js|.*\.jpeg|.*\.png|.*\.ico)$/.match(x[:request])
   if matches and matches.captures.length == 1
+
+    # Do Etag stuff around here,
+
     fileContent.serve_file( x )
   end
 end
@@ -85,11 +88,11 @@ end
 def serve_model_resource( x, model )
   # can be separate filters or the same
 
-  # this isn't working it should be matching new line
 
   if /^GET \/get_series.json$/.match(x[:request])
       model.get_series( x)
   end
+
   if /^GET \/get_id.json$/.match(x[:request])
       model.get_id( x )
   end
@@ -109,6 +112,27 @@ def do_cookie_stuff( x)
   x[:response_headers]['Set-Cookie'] = "#{cookie}"
 end
 
+
+# we ought to be able to hanlde 403 message and egg, by just doing it 
+# before normal resource
+# processing
+
+
+
+def do_cache_control( x)
+  # this may need to be combined with other resource handling, and egg stuff.
+  # caache constrol should be hanlded externally to this.
+  # max-age=0
+  
+  # it's possible this might vary depending on the user-agent 
+
+  unless x[:response_headers]['Cache-Control']
+    x[:response_headers]['Cache-Control']= "private"
+  end
+
+  # headers['Cache-Control:']= "private,max-age=100000"
+  # firefox will send 'If-None-Match' nicely. dont have to set cache-control flags 
+end
 
 
 def catch_all( x)
@@ -153,6 +177,7 @@ def send_response( x)
   Helper.write_response( x )
 end
 
+
 def log_response( x)
   puts "response '#{ x[:response].strip }'"
   puts "response_headers #{ x[:response_headers] }"
@@ -180,18 +205,17 @@ def process_request( socket, model, fileContent)
 
   # if the connection was closed by remote
   if x[:request].nil?
-    $stderr.puts "eof on https"
     return nil
   end
 
 
-  handle_post_type( x)
+  handle_post_request( x)
  
   strip_http_version( x)
 
 
   # main stuff here
-  rewrite_index_html( x) 
+  rewrite_index_get( x) 
 
   serve_static_resource( x, fileContent )
 
@@ -199,6 +223,8 @@ def process_request( socket, model, fileContent)
 
 
   do_cookie_stuff( x)
+
+  do_cache_control( x)
 
   catch_all( x)
 

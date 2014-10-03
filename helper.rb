@@ -18,24 +18,9 @@ module Helper
     compressed
   end
 
-
-#   def Helper.write_json( content_io, socket )
-#       headers = { 
-#           'response' => "HTTP/1.1 200 OK", 
-#           'Content-Type:' => "application/json"
-#       }
-#       Helper.write_response( headers, content_io, socket )
-#   end
-# 
-
-
-  #def Helper.write_response( headers, content_io, socket )
   def Helper.write_response( x )
 
-      # this stuff needs to be added to the pipeline
-
       # it would be really nice to support chunked streaming
-
 
       if x[:response].nil? || x[:response] == ""
         # should just raise an exception...
@@ -48,15 +33,6 @@ module Helper
         # should just raise an exception...
         abort( "*** missing response headers !!!"  )
       end
-
-
-      # max-age=0
-      headers['Cache-Control']= "private"
-
- #     headers['Cache-Control:']= "private,max-age=100000"
-
-  # firefox will send 'If-None-Match' nicely. dont have to set cache-control flags 
-
 
 
       if false 
@@ -75,8 +51,6 @@ module Helper
         w_gz.close
         content = wio.string
       
-        puts "*** content after compressing #{content.bytesize}" 
-
         headers['Content-Encoding'] = "gzip"
         headers['Content-Length'] =  "#{content.bytesize}" 
       end 
@@ -89,16 +63,14 @@ module Helper
       ### socket operations, could have exception if client disconnected
       ### without following http protocol
 
-      # write response...
+      # write http response
       socket.print x[:response]
-
 
       socket.print "\r\n"
 
       # write other header fields
       headers.keys.each do |key|
-        #next if key == 'response'
-        socket.print "#{key}:#{headers[key]}\r\n"
+        socket.print "#{key}: #{headers[key]}\r\n"
       end
 
       socket.print "\r\n"

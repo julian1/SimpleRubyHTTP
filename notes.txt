@@ -1,4 +1,10 @@
 
+
+we don't need db stuff to be atomic, because the model
+is purely in memory
+
+----
+
 we need matcher, and post filter operations. 
 
 	request

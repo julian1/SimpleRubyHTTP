@@ -18,6 +18,10 @@ require 'date'
 # this is very interesting. 
 
 
+# we don't need db stuff to be atomic, because the model
+# is purely in memory
+# 
+
 module Model 
 
 

@@ -68,6 +68,10 @@ module Static
 	# and if it matches return 304
 	# or md5 ing the file
 
+
+    # Don't think we have to handle 404 here.
+    # instead just leave everything ....
+
     def serve_file( x )
 
       path = requested_file( x[:request] )
@@ -85,15 +89,6 @@ module Static
           # in the chain 
           #    'response' => "HTTP/1.1 304 Not Modified\r\n"
         end
-      else
-          # abort( 'file not found 2 ' )
-
-          x[:response] = "HTTP/1.1 404 Not Found\r\n"
-          x[:response_headers]['Content-Type:'] = "text/plain\r\n"
-		      x[:body] = StringIO.new( <<-EOF
-            file not found
-          EOF
-          )
       end
     end
 

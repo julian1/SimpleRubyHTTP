@@ -55,6 +55,7 @@ end
 
 
 def static_resource( x, fileContent)
+  # Don't think we have to handle 404 here.
   matches = /GET (.*\.txt|.*\.html|.*\.css|.*\.js|.*\.jpeg|.*\.png|.*\.ico)$/.match(x[:request])
   if matches and matches.captures.length == 1
     fileContent.serve_file( x )
@@ -73,6 +74,22 @@ def get_id( x, model )
   if /GET \/get_id.json$/.match(x[:request])
       model.get_id( x )
   end
+end
+
+
+def everything_else( x)
+
+  if /GET.*$/.match(x[:request]) \
+    && x[:response].nil?
+
+    x[:response] = "HTTP/1.1 404 Not Found\r\n"
+    x[:response_headers]['Content-Type:'] = "text/plain\r\n"
+    x[:body] = StringIO.new( <<-EOF
+File not found!
+      EOF
+      )
+  end
+
 end
 
 
@@ -162,6 +179,7 @@ def application( socket, model, fileContent)
 
   get_id( x, model )
 
+  everything_else( x)
 
   send_response( x )
 

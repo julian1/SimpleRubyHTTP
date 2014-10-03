@@ -1,4 +1,22 @@
 
+we need matcher, and post filter operations. 
+
+	request
+	req_headers	
+
+	response
+	res_headers
+
+	body (stream)
+
+then a matcher, and filter. 
+
+Eg. if we have the request then we can add caching behavior.
+we can also communicate between filters if we need - using
+variables 
+
+
+
 	Think we may want a combined structure - not just peeling
 	off the request and dispatching it. 
 
@@ -9,6 +27,9 @@
 	Then we can have filters anywhere - to add/delete/modify headers .
 
 	filters are like cross cutting concerns.
+
+
+entity is everything except the response.
 
 ------
 

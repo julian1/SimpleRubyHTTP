@@ -178,7 +178,7 @@ module Model
     # so i think rather than do the formatting, it would be better to just send 
     # the series data, and handle presentation in javascript. 
 
-    def get_series()
+    def get_series( x)
       # to be fast, we should really use a stream 
       # should be a join, 
 
@@ -209,13 +209,18 @@ module Model
 
       EOF
 
-      Result.new(  
-        {
-          'response' => "HTTP/1.1 200 OK\r\n", 
-          'Content-Type:' => "application/json\r\n"
-        },
-        StringIO.new( ret, "r")
-      )
+      x[:response] = "HTTP/1.1 200 OK\r\n"
+      x[:response_headers]['Content-Type:'] = "application/json\r\n"
+      x[:body] = StringIO.new( ret, "r")
+
+
+#       Result.new(  
+#         {
+#           'response' => "HTTP/1.1 200 OK\r\n", 
+#           'Content-Type:' => "application/json\r\n"
+#         },
+#         StringIO.new( ret, "r")
+#       )
     end
 
 #     def get_time()

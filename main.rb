@@ -84,10 +84,8 @@ end
 def get_series( x, model )
   # change name get_data or get series etc
   if /GET \/get_series.json$/.match(x[:request])
-      result = model.get_series()
+      model.get_series( x)
 
-    x[:body] = result.io_content 
-    x[:response_headers] = result.headers
   end
 end
 
@@ -103,7 +101,7 @@ def get_id( x, model )
 #       return true
 # 
 
-      result = model.get_id( x )
+      model.get_id( x )
   end
 end
 

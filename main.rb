@@ -5,6 +5,27 @@ require './helper'
 require './calc_series'
 
 
+# chain together transforms...
+
+
+def strip_http_type( x)
+
+  # determine http x[:request] type
+  # we ought to do a bit more here,
+  # and strip it.
+  matches = /(GET .*)\s(HTTP.*)/.match(x[:request])
+  if matches and matches.captures.length == 2
+    x[:request] = matches.captures[0] 
+    #puts "rewriting to #{x[:request]}" 
+  else
+    abort()
+    #Helper.write_hello_message( m, socket )
+    #return true
+  end
+
+end 
+
+
 
 def application( socket, model, fileContent)
 
@@ -48,18 +69,18 @@ def application( socket, model, fileContent)
       return true
   end
 
-
-  # determine http x[:request] type
-  # we ought to do a bit more here,
-  # and strip it.
-  matches = /(GET .*)\s(HTTP.*)/.match(x[:request])
-  if matches and matches.captures.length == 2
-    x[:request] = matches.captures[0] 
-    #puts "rewriting to #{x[:request]}" 
-  else
-    Helper.write_hello_message( m, socket )
-    return true
-  end
+  strip_http_type( x)
+#   # determine http x[:request] type
+#   # we ought to do a bit more here,
+#   # and strip it.
+#   matches = /(GET .*)\s(HTTP.*)/.match(x[:request])
+#   if matches and matches.captures.length == 2
+#     x[:request] = matches.captures[0] 
+#     #puts "rewriting to #{x[:request]}" 
+#   else
+#     Helper.write_hello_message( m, socket )
+#     return true
+#   end
 
   # rewrite top level / to index.html
   if matches = /GET \/$/.match(x[:request])

@@ -11,6 +11,13 @@ require './calc_series'
 # Ok aparently ruby blocks can reference their enclosing scope!
 # how are we going to pass a reference into into the processing block...
 
+
+def decode_request( x)
+  # OK. This decode should be part of the chain....
+  Helper.decode_request( x ) 
+end
+
+
 def log_request( x)
   puts "request '#{ x[:request] }'"
   puts "request_headers #{ x[:request_headers] }"
@@ -118,18 +125,17 @@ end
 
 def application( socket, model, fileContent)
 
-  # OK. This decode should be part of the chain....
-  m = Helper.decode_request( socket) 
-
   # we can still use functions t
   x = {
-    :request => m['request'],
-    :request_headers => m,
+    :request => nil,
+    :request_headers => {},
     :socket => socket,
     :response => nil,
     :response_headers => {},
     :body => nil
   }
+
+  decode_request( x) 
 
   log_request( x)
 

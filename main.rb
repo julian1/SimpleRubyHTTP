@@ -31,7 +31,7 @@ end
 
 
 def log_request( x)
-  puts "request '#{ x[:request] }'"
+  puts "request '#{ x[:request].strip }'"
   puts "request_headers #{ x[:request_headers] }"
 end
 
@@ -79,7 +79,7 @@ def rewrite_index_html( x)
 end
 
 
-def static_resource( x, fileContent)
+def serve_static_resource( x, fileContent)
   # Don't think we have to handle 404 here.
   matches = /GET (.*\.txt|.*\.html|.*\.css|.*\.js|.*\.jpeg|.*\.png|.*\.ico)$/.match(x[:request])
   if matches and matches.captures.length == 1
@@ -143,7 +143,7 @@ def send_response( x)
 end
 
 def log_response( x)
-  puts "response '#{ x[:response] }'"
+  puts "response '#{ x[:response].strip }'"
   puts "response_headers #{ x[:response_headers] }"
 end
 
@@ -182,7 +182,7 @@ def application( socket, model, fileContent)
   # main stuff here
   rewrite_index_html( x) 
 
-  static_resource( x, fileContent )
+  serve_static_resource( x, fileContent )
 
   get_series( x, model )
 

@@ -18,6 +18,8 @@ end
 
 
 def handle_post_type( x)
+  # should we inject the socket straight in here ?
+  # it makes instantiating the graph harder...
   if /POST .*$/.match(x[:request])
       puts "************ got post !!! ***********"
       puts m
@@ -105,6 +107,11 @@ def send_response( x)
   Helper.write_response( x )
 end
 
+def log_response( x)
+  puts "response '#{ x[:response] }'"
+  puts "response_headers #{ x[:response_headers] }"
+end
+
 
 
 
@@ -133,11 +140,6 @@ def application( socket, model, fileContent)
   end
 
 
-  # so we have to do some message cracking
-  #puts "-------------"
-  puts "request is #{ x[:request] }"
-
-
   handle_post_type( x)
  
   strip_http_type( x)
@@ -153,6 +155,8 @@ def application( socket, model, fileContent)
   everything_else( x)
 
   send_response( x )
+
+  log_response( x)
 
   true
 

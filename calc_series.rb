@@ -224,6 +224,16 @@ module Model
 # 
     def get_id()
       "\"#{@model.last[:id]}\""
+
+
+      Result.new(  
+        {
+          'response' => "HTTP/1.1 200 OK\r\n", 
+          'Content-Type:' => "application/json\r\n"
+        },
+        StringIO.new( "\"#{@model.last[:id]}\"" )
+      )
+
     end
 
 

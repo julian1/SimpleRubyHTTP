@@ -8,8 +8,27 @@ require './calc_series'
 # chain together transforms...
 
 
-def strip_http_type( x)
+# Ok aparently ruby blocks can reference their enclosing scope!
+# how are we going to pass a reference into into the processing block...
 
+
+
+def handle_post_type( x)
+  if /POST .*$/.match(x[:request])
+      puts "************ got post !!! ***********"
+      puts m
+
+      # we must read content , otherwise it gets muddled up
+      # it gets read at the next http x[:request], when connection
+      # is keep alive. 
+      abort()
+      Helper.write_hello_message( m, socket )
+      return true
+  end
+end
+
+
+def strip_http_type( x)
   # determine http x[:request] type
   # we ought to do a bit more here,
   # and strip it.
@@ -22,9 +41,82 @@ def strip_http_type( x)
     #Helper.write_hello_message( m, socket )
     #return true
   end
-
 end 
 
+
+
+def rewrite_index_html( x)
+  # rewrite top level / to index.html
+  if matches = /GET \/$/.match(x[:request])
+    x[:request] = "GET /index.html" 
+    #puts "rewriting to #{x[:request]}" 
+  end
+end
+
+
+def static_resource( x, fileContent)
+
+    puts "**** testing static resource request"
+
+ # static resource
+  matches = /GET (.*\.txt|.*\.html|.*\.css|.*\.js|.*\.jpeg|.*\.png)$/.match(x[:request])
+  if matches and matches.captures.length == 1
+
+    puts "**** got request static resource "
+
+    # resource = matches.captures[ 0]
+    result = fileContent.serve_file( x[:request] )
+
+    # ok, now we don't want to be writing the socket. instead we
+    # want to just fill in some stuff...
+    # Helper.write_response( result.headers, result.io_content, socket )
+
+    x[:body] = result.io_content 
+    x[:response_headers] = result.headers
+
+    return true
+  end
+end
+
+
+def get_series( x, model )
+  # change name get_data or get series etc
+  if /GET \/get_series.json$/.match(x[:request])
+      result = model.get_series()
+
+    x[:body] = result.io_content 
+    x[:response_headers] = result.headers
+  end
+end
+
+
+# ok, we need to bind lexically, or they need to be classes
+# or we could stuff things into the message !!! 
+
+def get_id( x, model )
+  if /GET \/get_id.json$/.match(x[:request])
+#       content_ = model.get_id()  
+#       content_io = StringIO.new( content_, "r")
+#       Helper.write_json( content_io, socket )
+#       return true
+# 
+
+      result = model.get_id()
+    x[:body] = result.io_content 
+    x[:response_headers] = result.headers
+
+  end
+end
+
+
+
+def send_response( x)
+  # do we have a body and response ?
+  
+  #Helper.write_response( x[:response_headers], x[:body], x[:socket] )
+  Helper.write_response( x )
+
+end
 
 
 def application( socket, model, fileContent)
@@ -36,7 +128,7 @@ def application( socket, model, fileContent)
     :request => m['request'],
     :request_fields => m,
     :socket => socket,
-    :response => [],
+    :response_headers => [],
     :body => nil
   }
 
@@ -56,39 +148,14 @@ def application( socket, model, fileContent)
   puts "request is #{ x[:request] }"
 
 
-
-  if /POST .*$/.match(x[:request])
-      puts "************ got post !!! ***********"
-      puts m
-
-      # we must read content , otherwise it gets muddled up
-      # it gets read at the next http x[:request], when connection
-      # is keep alive. 
-
-      Helper.write_hello_message( m, socket )
-      return true
-  end
-
+  handle_post_type( x)
+ 
   strip_http_type( x)
-#   # determine http x[:request] type
-#   # we ought to do a bit more here,
-#   # and strip it.
-#   matches = /(GET .*)\s(HTTP.*)/.match(x[:request])
-#   if matches and matches.captures.length == 2
-#     x[:request] = matches.captures[0] 
-#     #puts "rewriting to #{x[:request]}" 
-#   else
-#     Helper.write_hello_message( m, socket )
-#     return true
-#   end
 
-  # rewrite top level / to index.html
-  if matches = /GET \/$/.match(x[:request])
-    x[:request] = "GET /index.html" 
-    #puts "rewriting to #{x[:request]}" 
-  end
+  rewrite_index_html( x) 
 
-#   # rewrite rule / to web root,
+
+ #   # rewrite rule / to web root,
 #   # might be better to let the static file server handle this stuff...
 #   matches = /GET \/(.*)/.match(x[:request])
 #   if matches and matches.captures.length == 1
@@ -97,22 +164,40 @@ def application( socket, model, fileContent)
 #   end
 # 
   
-  # static resource
-  matches = /GET (.*\.txt|.*\.html|.*\.css|.*\.js|.*\.jpeg|.*\.png)$/.match(x[:request])
-  if matches and matches.captures.length == 1
-    # resource = matches.captures[ 0]
-    result = fileContent.serve_file( x[:request] )
-    Helper.write_response( result.headers, result.io_content, socket )
-    return true
-  end
+#   # static resource
+#   matches = /GET (.*\.txt|.*\.html|.*\.css|.*\.js|.*\.jpeg|.*\.png)$/.match(x[:request])
+#   if matches and matches.captures.length == 1
+#     # resource = matches.captures[ 0]
+#     result = fileContent.serve_file( x[:request] )
+#     Helper.write_response( result.headers, result.io_content, socket )
+#     return true
+#   end
+# 
+
+  static_resource( x, fileContent )
+
+#   # change name get_data or get series etc
+#   if /GET \/get_series.json$/.match(x[:request])
+#       result = model.get_series()
+#       Helper.write_response( result.headers, result.io_content, socket )
+#   end
+# 
+
+  get_series( x, model )
 
 
+#   if /GET \/get_id.json$/.match(x[:request])
+#       content_ = model.get_id()  
+#       content_io = StringIO.new( content_, "r")
+#       Helper.write_json( content_io, socket )
+#       return true
+#   end
 
-  # change name get_data or get series etc
-  if /GET \/get_series.json$/.match(x[:request])
-      result = model.get_series()
-      Helper.write_response( result.headers, result.io_content, socket )
-  end
+  get_id( x, model )
+
+
+  send_response( x )
+
 
 
 #   if /GET \/get_time.json$/.match(x[:request])
@@ -122,18 +207,11 @@ def application( socket, model, fileContent)
 #       return true
 #   end
 # 
-  if /GET \/get_id.json$/.match(x[:request])
-      content_ = model.get_id()  
-      content_io = StringIO.new( content_, "r")
-      Helper.write_json( content_io, socket )
-      return true
-  end
-
 
   
 
   # head, post, etc. 
-  Helper.write_hello_message( m, socket )
+#  Helper.write_hello_message( m, socket )
 
   true
 
@@ -141,12 +219,9 @@ end
 
 
 
+model = Model::EventProcessor.new()
 
 server = Server::Processor.new() 
-
-# Ok aparently ruby blocks can reference their enclosing scope!
-# how are we going to pass a reference into into the processing block...
-model = Model::EventProcessor.new()
 
 
 fileContent = Static::FileContent.new( "#{Dir.pwd}/static" )

@@ -37,7 +37,7 @@ def strip_http_type( x)
     x[:request] = matches.captures[0] 
     #puts "rewriting to #{x[:request]}" 
   else
-    abort()
+    abort('here777777')
     #Helper.write_hello_message( m, socket )
     #return true
   end
@@ -55,52 +55,22 @@ end
 
 
 def static_resource( x, fileContent)
-
-    puts "**** testing static resource request"
-
- # static resource
   matches = /GET (.*\.txt|.*\.html|.*\.css|.*\.js|.*\.jpeg|.*\.png)$/.match(x[:request])
   if matches and matches.captures.length == 1
-
-    puts "**** got request static resource "
-
-    # resource = matches.captures[ 0]
-    #result = fileContent.serve_file( x[:request] )
-    result = fileContent.serve_file( x )
-
-    # ok, now we don't want to be writing the socket. instead we
-    # want to just fill in some stuff...
-    # Helper.write_response( result.headers, result.io_content, socket )
-
-#     x[:response] = "HTTP/1.1 200 OK\r\n"
-#     x[:body] = result.io_content 
-#     x[:response_headers] = result.headers
-# 
-    return true
+    fileContent.serve_file( x )
   end
 end
 
 
 def get_series( x, model )
-  # change name get_data or get series etc
   if /GET \/get_series.json$/.match(x[:request])
       model.get_series( x)
-
   end
 end
 
 
-# ok, we need to bind lexically, or they need to be classes
-# or we could stuff things into the message !!! 
-
 def get_id( x, model )
   if /GET \/get_id.json$/.match(x[:request])
-#       content_ = model.get_id()  
-#       content_io = StringIO.new( content_, "r")
-#       Helper.write_json( content_io, socket )
-#       return true
-# 
-
       model.get_id( x )
   end
 end
@@ -108,12 +78,11 @@ end
 
 
 def send_response( x)
-  # do we have a body and response ?
-  
-  #Helper.write_response( x[:response_headers], x[:body], x[:socket] )
   Helper.write_response( x )
-
 end
+
+
+
 
 
 def application( socket, model, fileContent)
@@ -130,9 +99,9 @@ def application( socket, model, fileContent)
     :body => nil
   }
 
-  puts x[:request]
+  puts "request #{ x[:request] }"
+  puts "request_headers #{ x[:request_headers] }"
 
-#  request = x[:request]
 
   # if the connection was closed by remote
   if x[:request].nil?

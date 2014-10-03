@@ -38,14 +38,15 @@ module Helper
 
 
       if x[:response].nil? || x[:response] == ""
-        puts "*** missing response!!!" 
-        abort()
+        # should just raise an exception...
+        abort( "*** missing response!!!" )
       end
 
       headers = x[:response_headers]
       if headers.nil? || headers.length == 0
-        puts "*** missing response headers !!!" 
-        abort()
+
+        # should just raise an exception...
+        abort( "*** missing response headers !!!"  )
       end
       puts "response_headers are #{headers}"
 
@@ -115,12 +116,14 @@ module Helper
 #     
  
 
-  def Helper.decode_request( socket )
+  def Helper.decode_request( x )
+
+    socket = x[:socket]
 
     # this is failing on, with new line behavior 
     #  echo -e 'GET / HTTP/1.1\r\n' | nc localhost 2345 | less
 
-    request = {}
+    #request = {}
     # probably should structure this differenly...
     # if it's a post, then we will want to slurp a lot more...
 
@@ -136,18 +139,18 @@ module Helper
 
     # i think it's correct - we have to block twice to know when http finishes.
 
-    request['request'] = socket.gets
+    x[:request] = socket.gets
 
     while line = socket.gets("\r\n")  # this blocks, because there's nothing more to read after the first line.
                                       # i think this is correct behavior
       break if line == "\r\n"
       
       s = line.split(':')
-      request[ s[0].strip] = s[1].strip 
+      x[:request_headers] [ s[0].strip] = s[1].strip 
     end
 
     #puts request
-    request
+    #request
   end
 
   def Helper.ignore_exception

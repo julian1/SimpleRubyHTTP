@@ -75,7 +75,6 @@ module Static
     # instead just leave everything ....
 
     def digest_file( x)
-
       path = requested_file( x[:request] )
       if File.exist?(path) && !File.directory?(path)
         Digest::MD5.hexdigest(File.read(path))
@@ -87,23 +86,16 @@ module Static
 
     def serve_file( x )
 
-      # why don't we just return a valid stream descriptor here? 
+      # no because we're also doing why don't we just return a valid stream descriptor here? 
 
       path = requested_file( x[:request] )
 
       # Make sure the file exists and is not a directory
       # before attempting to open it.
       if File.exist?(path) && !File.directory?(path)
-        if true
           x[:response] = "HTTP/1.1 200 OK"
           x[:response_headers]['Content-Type'] = "#{content_type(path)}"#,
 		      x[:body] = File.open(path, "rb")
-        else
-          abort( 'file not found 1 ' )
-          # It would be nice to implement egg stuff somewhere else 
-          # in the chain 
-          #    'response' => "HTTP/1.1 304 Not Modified"
-        end
       end
     end
 

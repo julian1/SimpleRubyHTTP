@@ -14,7 +14,6 @@ require './calc_series'
 
 def decode_request( x)
 
-  puts "---------------"
 
   # OK. This decode should be part of the chain....
   #Helper.decode_request( x ) 
@@ -31,6 +30,8 @@ end
 
 
 def log_request( x)
+
+  puts "---------------"
   puts "request '#{ x[:request] ? x[:request].strip : "nil"  }'"
   puts "request_headers #{ x[:request_headers] }"
 end
@@ -82,8 +83,8 @@ def serve_static_resource( x, fileContent)
 
     digest = fileContent.digest_file( x ) 
 
-    none_match = x[:request_headers]['If-None-Match']
-    if none_match && none_match == digest
+    if_none_match = x[:request_headers]['If-None-Match']
+    if digest && if_none_match && if_none_match == digest
 		#	puts "**** got non match!!!"
 		x[:response] = "HTTP/1.1 304 Not Modified"
 	else
@@ -189,6 +190,7 @@ end
 
 
 def log_response( x)
+	puts "log response"
   puts "response '#{ x[:response].strip }'"
   puts "response_headers #{ x[:response_headers] }"
 end

@@ -43,16 +43,20 @@ module Helper
 
       # we could actually read the header field to decide whether to compress or not
       # or the request object
-      if true 
+      if x[:body]
         # compress
         wio = StringIO.new("w")
         w_gz = Zlib::GzipWriter.new(wio)
         IO.copy_stream( x[:body], w_gz )
         w_gz.close
+
         content = wio.string
-      
         headers['Content-Encoding'] = "gzip"
         headers['Content-Length'] =  "#{content.bytesize}" 
+
+      else
+
+        headers['Content-Length'] =  "0" 
       end 
 
       # Ok, we don't really have to wrap the stream to do chuncked encoding etc.
@@ -75,8 +79,11 @@ module Helper
 
       socket.print "\r\n"
 
-      # write content
-      socket.print content 
+      if x[:body] 
+
+        # write content
+        socket.print content 
+      end
 
   end
 

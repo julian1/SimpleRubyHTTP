@@ -80,7 +80,17 @@ def serve_static_resource( x, fileContent)
 
     # Do Etag stuff around here,
 
-    fileContent.serve_file( x )
+    digest = fileContent.digest_file( x ) 
+
+    none_match = x[:request_headers]['If-None-Match']
+    if none_match && none_match == digest
+		#	puts "**** got non match!!!"
+		x[:response] = "HTTP/1.1 304 Not Modified"
+	else
+		fileContent.serve_file( x )
+		x[:response_headers]['ETag'] = digest
+	end
+
   end
 end
 

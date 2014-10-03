@@ -1,5 +1,7 @@
 #!/usr/bin/ruby
 
+require 'digest/md5'
+
 # adapted from, https://practicingruby.com/articles/implementing-an-http-file-server
 
 module Static
@@ -72,7 +74,20 @@ module Static
     # Don't think we have to handle 404 here.
     # instead just leave everything ....
 
+    def digest_file( x)
+
+      path = requested_file( x[:request] )
+      if File.exist?(path) && !File.directory?(path)
+        Digest::MD5.hexdigest(File.read(path))
+      else
+        nil
+      end
+    end
+
+
     def serve_file( x )
+
+      # why don't we just return a valid stream descriptor here? 
 
       path = requested_file( x[:request] )
 

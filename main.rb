@@ -10,12 +10,21 @@ def application( socket, model, fileContent)
 
   m = Helper.decode_request( socket) 
 
-  puts m
+  # we can still use functions t
+  x = {
+    :request => m['request'],
+    :request_fields => m,
+    :socket => socket,
+    :response => [],
+    :body => nil
+  }
 
-  request = m['request']
+  puts x[:request]
+
+#  request = x[:request]
 
   # if the connection was closed by remote
-  if request.nil?
+  if x[:request].nil?
     $stderr.puts "eof on https"
     return nil
   end
@@ -23,16 +32,16 @@ def application( socket, model, fileContent)
 
   # so we have to do some message cracking
   #puts "-------------"
-  puts "request is #{ request }"
+  puts "request is #{ x[:request] }"
 
 
 
-  if /POST .*$/.match(request)
+  if /POST .*$/.match(x[:request])
       puts "************ got post !!! ***********"
       puts m
 
       # we must read content , otherwise it gets muddled up
-      # it gets read at the next http request, when connection
+      # it gets read at the next http x[:request], when connection
       # is keep alive. 
 
       Helper.write_hello_message( m, socket )
@@ -40,40 +49,38 @@ def application( socket, model, fileContent)
   end
 
 
-
-
-  # determine http request type
+  # determine http x[:request] type
   # we ought to do a bit more here,
   # and strip it.
-  matches = /(GET .*)\s(HTTP.*)/.match(request)
+  matches = /(GET .*)\s(HTTP.*)/.match(x[:request])
   if matches and matches.captures.length == 2
-    request = matches.captures[0] 
-    #puts "rewriting to #{request}" 
+    x[:request] = matches.captures[0] 
+    #puts "rewriting to #{x[:request]}" 
   else
     Helper.write_hello_message( m, socket )
     return true
   end
 
   # rewrite top level / to index.html
-  if matches = /GET \/$/.match(request)
-    request = "GET /index.html" 
-    #puts "rewriting to #{request}" 
+  if matches = /GET \/$/.match(x[:request])
+    x[:request] = "GET /index.html" 
+    #puts "rewriting to #{x[:request]}" 
   end
 
 #   # rewrite rule / to web root,
 #   # might be better to let the static file server handle this stuff...
-#   matches = /GET \/(.*)/.match(request)
+#   matches = /GET \/(.*)/.match(x[:request])
 #   if matches and matches.captures.length == 1
-#     request = "GET /root/#{matches.captures[0]}" 
-#     #puts "rewriting to #{request}" 
+#     x[:request] = "GET /root/#{matches.captures[0]}" 
+#     #puts "rewriting to #{x[:request]}" 
 #   end
 # 
   
   # static resource
-  matches = /GET (.*\.txt|.*\.html|.*\.css|.*\.js|.*\.jpeg|.*\.png)$/.match(request)
+  matches = /GET (.*\.txt|.*\.html|.*\.css|.*\.js|.*\.jpeg|.*\.png)$/.match(x[:request])
   if matches and matches.captures.length == 1
     # resource = matches.captures[ 0]
-    result = fileContent.serve_file( request )
+    result = fileContent.serve_file( x[:request] )
     Helper.write_response( result.headers, result.io_content, socket )
     return true
   end
@@ -81,20 +88,20 @@ def application( socket, model, fileContent)
 
 
   # change name get_data or get series etc
-  if /GET \/get_series.json$/.match(request)
+  if /GET \/get_series.json$/.match(x[:request])
       result = model.get_series()
       Helper.write_response( result.headers, result.io_content, socket )
   end
 
 
-#   if /GET \/get_time.json$/.match(request)
+#   if /GET \/get_time.json$/.match(x[:request])
 #       content_ = model.get_time()  
 #       content_io = StringIO.new( content_, "r")
 #       Helper.write_json( content_io, socket )
 #       return true
 #   end
 # 
-  if /GET \/get_id.json$/.match(request)
+  if /GET \/get_id.json$/.match(x[:request])
       content_ = model.get_id()  
       content_io = StringIO.new( content_, "r")
       Helper.write_json( content_io, socket )

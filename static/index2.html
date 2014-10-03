@@ -1,0 +1,62 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+ <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Reports</title>
+    <!--link href="layout.css" rel="stylesheet" type="text/css"-->
+    <!--[if lte IE 8]><script language="javascript" type="text/javascript" src="../excanvas.min.js"></script><![endif]-->
+    <script language="javascript" type="text/javascript" src="jquery.js"></script>
+
+ </head>
+<script type="text/javascript">
+</script>
+
+    <body>
+    <h2>Reports</h2>
+	
+	<textarea id="myresultform" rows="20" cols="80">
+My text 
+	</textarea>
+
+	<p>
+	<textarea id="myinputform" rows="3" cols="80">
+Query...
+	</textarea>
+
+	<span><input class="submit" type="button" value="Submit" onclick="submitTryit()"></span>
+
+	<!-- now we need a button --> 
+	
+    <p>Simple example.2 </p>
+
+	<!-- assume we're authenticated as an administrator -->
+	<!-- we want a text form to display the result -->
+	<!-- ok, we want to try to load a json file --> 
+
+
+<script type="text/javascript">
+$(function () {
+
+
+	console.log( 'hithere' );
+
+});
+
+	function submitTryit( x )
+	{
+		console.log( '--------------' );
+
+		var query = $('#myinputform')[0].value ;
+		console.log( query );
+
+		// console.log(  document.getElementById("myinputform").value );
+
+		$('#myresultform')[0].value = query;
+
+	}
+
+
+</script>
+
+ </body>
+</html>

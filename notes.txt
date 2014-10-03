@@ -1,7 +1,13 @@
 
+Be nice to get a view of events, errors etc - . 
+
+---
 
 we don't need db stuff to be atomic, because the model
 is purely in memory
+
+but if we want to do some queries against the db. eg. 
+for reporting? 
 
 ----
 

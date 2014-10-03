@@ -2,6 +2,8 @@
 
 require 'digest/md5'
 
+# change module name to Asset ? 
+
 # adapted from, https://practicingruby.com/articles/implementing-an-http-file-server
 
 module Static

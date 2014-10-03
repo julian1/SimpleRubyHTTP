@@ -64,7 +64,7 @@ def rewrite_index_get( x)
 end
 
 
-def serve_static_resource( x, fileContent)
+def serve_asset( x, fileContent)
 
   matches = /^GET (.*\.txt|.*\.html|.*\.css|.*\.js|.*\.jpeg|.*\.png|.*\.ico)$/.match(x[:request])
   if matches && matches.captures.length == 1
@@ -90,6 +90,8 @@ def serve_model_resource( x, model )
     model.get_series( x)
   end
 
+  # this whole id thing, where client submits id to check for change, is 
+  # almost equivalent to etag approach 
   if /^GET \/get_id.json$/.match(x[:request])
     model.get_id( x )
   end
@@ -122,12 +124,20 @@ def do_cache_control( x)
   # it's possible this might vary depending on the user-agent
 
   unless x[:response_headers]['Cache-Control']
-    x[:response_headers]['Cache-Control']= "private"
+    #x[:response_headers]['Cache-Control']= "private"
+    x[:response_headers]['Cache-Control']= "private, max-age=0"
   end
 
   # headers['Cache-Control:']= "private,max-age=100000"
   # firefox will send 'If-None-Match' nicely. dont have to set cache-control flags
 end
+
+
+# CEP, and ES Event Sourcing model running in javascript. It's actually not too much
+# data, if we have snapshots, running on the server. but then loose the power
+# of customizing locally which is the only reason to run locally.
+
+# what we're doing with checking for an id update - is very similar to ES. 
 
 
 def catch_all( x)
@@ -209,7 +219,7 @@ def process_request( socket, model, fileContent)
   # main stuff here
   rewrite_index_get( x)
 
-  serve_static_resource( x, fileContent )
+  serve_asset( x, fileContent )
 
   serve_model_resource( x, model )
 

@@ -41,6 +41,8 @@ module Helper
         headers['Content-Length'] =  "#{content.bytesize}" 
       end
 
+      ## We shouldnt be compressing already compressed assets like images. 
+
       # we could actually read the header field to decide whether to compress or not
       # or the request object
       if x[:body]

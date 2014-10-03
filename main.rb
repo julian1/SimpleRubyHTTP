@@ -11,6 +11,10 @@ require './calc_series'
 # Ok aparently ruby blocks can reference their enclosing scope!
 # how are we going to pass a reference into into the processing block...
 
+def log_request( x)
+  puts "request '#{ x[:request] }'"
+  puts "request_headers #{ x[:request_headers] }"
+end
 
 
 def handle_post_type( x)
@@ -93,8 +97,11 @@ File not found!
 end
 
 
-
 def send_response( x)
+  # note that we could pass in the socket here,
+  # rather than pass it about everywhere....
+  # issue is that if it's a post, then we want to read ...
+  # send response expects this ...
   Helper.write_response( x )
 end
 
@@ -104,6 +111,7 @@ end
 
 def application( socket, model, fileContent)
 
+  # OK. This decode should be part of the chain....
   m = Helper.decode_request( socket) 
 
   # we can still use functions t
@@ -116,9 +124,7 @@ def application( socket, model, fileContent)
     :body => nil
   }
 
-  puts "request '#{ x[:request] }'"
-  puts "request_headers #{ x[:request_headers] }"
-
+  log_request( x)
 
   # if the connection was closed by remote
   if x[:request].nil?
@@ -138,65 +144,15 @@ def application( socket, model, fileContent)
 
   rewrite_index_html( x) 
 
-
- #   # rewrite rule / to web root,
-#   # might be better to let the static file server handle this stuff...
-#   matches = /GET \/(.*)/.match(x[:request])
-#   if matches and matches.captures.length == 1
-#     x[:request] = "GET /root/#{matches.captures[0]}" 
-#     #puts "rewriting to #{x[:request]}" 
-#   end
-# 
-  
-#   # static resource
-#   matches = /GET (.*\.txt|.*\.html|.*\.css|.*\.js|.*\.jpeg|.*\.png)$/.match(x[:request])
-#   if matches and matches.captures.length == 1
-#     # resource = matches.captures[ 0]
-#     result = fileContent.serve_file( x[:request] )
-#     Helper.write_response( result.headers, result.io_content, socket )
-#     return true
-#   end
-# 
-
   static_resource( x, fileContent )
 
-#   # change name get_data or get series etc
-#   if /GET \/get_series.json$/.match(x[:request])
-#       result = model.get_series()
-#       Helper.write_response( result.headers, result.io_content, socket )
-#   end
-# 
-
   get_series( x, model )
-
-
-#   if /GET \/get_id.json$/.match(x[:request])
-#       content_ = model.get_id()  
-#       content_io = StringIO.new( content_, "r")
-#       Helper.write_json( content_io, socket )
-#       return true
-#   end
 
   get_id( x, model )
 
   everything_else( x)
 
   send_response( x )
-
-
-
-#   if /GET \/get_time.json$/.match(x[:request])
-#       content_ = model.get_time()  
-#       content_io = StringIO.new( content_, "r")
-#       Helper.write_json( content_io, socket )
-#       return true
-#   end
-# 
-
-  
-
-  # head, post, etc. 
-#  Helper.write_hello_message( m, socket )
 
   true
 

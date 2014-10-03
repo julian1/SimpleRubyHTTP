@@ -13,8 +13,20 @@ require './calc_series'
 
 
 def decode_request( x)
+
+  puts "---------------"
+
   # OK. This decode should be part of the chain....
-  Helper.decode_request( x ) 
+  #Helper.decode_request( x ) 
+    socket = x[:socket]
+    x[:request] = socket.gets
+    while line = socket.gets("\r\n")  # this blocks, because there's nothing more to read after the first line.
+                                      # i think this is correct behavior
+      break if line == "\r\n"
+      s = line.split(':')
+      x[:request_headers][ s[0].strip] = s[1].strip 
+    end
+
 end
 
 
@@ -90,6 +102,22 @@ def get_id( x, model )
 end
 
 
+
+def do_cookie_stuff( x)
+  begin
+    cookie = x[:request_headers]['Cookie'].to_i + 1
+  rescue
+    cookie = 0
+  end
+
+  puts "***** COOKIE  #{ cookie }"
+ 
+  x[:response_headers]['Set-Cookie:'] = "#{cookie}\r\n"
+
+end
+
+
+
 def everything_else( x)
 
   if /GET.*$/.match(x[:request]) \
@@ -150,6 +178,8 @@ def application( socket, model, fileContent)
  
   strip_http_type( x)
 
+
+  # main stuff here
   rewrite_index_html( x) 
 
   static_resource( x, fileContent )
@@ -157,6 +187,9 @@ def application( socket, model, fileContent)
   get_series( x, model )
 
   get_id( x, model )
+
+
+  do_cookie_stuff( x)
 
   everything_else( x)
 

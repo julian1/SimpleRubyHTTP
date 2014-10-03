@@ -19,14 +19,14 @@ module Helper
   end
 
 
-  def Helper.write_json( content_io, socket )
-      headers = { 
-          'response' => "HTTP/1.1 200 OK\r\n", 
-          'Content-Type:' => "application/json\r\n"
-      }
-      Helper.write_response( headers, content_io, socket )
-  end
-
+#   def Helper.write_json( content_io, socket )
+#       headers = { 
+#           'response' => "HTTP/1.1 200 OK\r\n", 
+#           'Content-Type:' => "application/json\r\n"
+#       }
+#       Helper.write_response( headers, content_io, socket )
+#   end
+# 
 
 
   #def Helper.write_response( headers, content_io, socket )
@@ -48,7 +48,6 @@ module Helper
         # should just raise an exception...
         abort( "*** missing response headers !!!"  )
       end
-      puts "response_headers are #{headers}"
 
 
       # max-age=0
@@ -83,7 +82,6 @@ module Helper
       end 
 
 
-      puts "here5"
       socket = x[:socket]
 
       # write response...
@@ -100,7 +98,6 @@ module Helper
       # write content
       socket.print content 
 
-      puts "here7"
   end
 
  
@@ -115,10 +112,6 @@ module Helper
 #     # top level compression, keep-alive etc.
 #     
  
-
-  def Helper.decode_request( x )
-
-    socket = x[:socket]
 
     # this is failing on, with new line behavior 
     #  echo -e 'GET / HTTP/1.1\r\n' | nc localhost 2345 | less
@@ -139,19 +132,17 @@ module Helper
 
     # i think it's correct - we have to block twice to know when http finishes.
 
-    x[:request] = socket.gets
-
-    while line = socket.gets("\r\n")  # this blocks, because there's nothing more to read after the first line.
-                                      # i think this is correct behavior
-      break if line == "\r\n"
-      
-      s = line.split(':')
-      x[:request_headers] [ s[0].strip] = s[1].strip 
-    end
-
-    #puts request
-    #request
-  end
+#   def Helper.decode_request( x )
+# 
+#     socket = x[:socket]
+#     x[:request] = socket.gets
+#     while line = socket.gets("\r\n")  # this blocks, because there's nothing more to read after the first line.
+#                                       # i think this is correct behavior
+#       break if line == "\r\n"
+#       s = line.split(':')
+#       x[:request_headers][ s[0].strip] = s[1].strip 
+#     end
+#   end
 
   def Helper.ignore_exception
      begin
@@ -160,31 +151,6 @@ module Helper
     end
   end
 
-
-  def Helper.write_hello_message( request, socket )
-
-    cookie = 0
-    cookie = ignore_exception {  request[ 'Cookie'].to_i + 1 }
-    puts "setting cookie to #{cookie}"
-
-    response = "Hello World!\n"
-
-    # We need to include the Content-Type and Content-Length headers
-    # to let the client know the size and type of data
-    # contained in the response. Note that HTTP is whitespace
-    # sensitive, and expects each header line to end with CRLF (i.e. "\r\n")
-
-    # In HTTP 1.1, all connections are considered persistent unless declared otherwise.
-    socket.print "HTTP/1.1 200 OK\r\n" +
-    "Content-Type: text/plain\r\n" +
-    "Content-Length: #{response.bytesize}\r\n" +
-    "Set-Cookie: #{cookie}\r\n" +
-    "Connection: Keep-Alive\r\n" +
-    "\r\n"
-
-    # Print the actual response body, which is just "Hello World!\n"
-    socket.print response
-  end
 
 
   def Helper.write_redirect_message( request, socket )

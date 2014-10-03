@@ -13,19 +13,13 @@ require './calc_series'
 
 
 def decode_request( x)
-
-
-  # OK. This decode should be part of the chain....
-  #Helper.decode_request( x ) 
-    socket = x[:socket]
-    x[:request] = socket.gets
-    while line = socket.gets("\r\n")  # this blocks, because there's nothing more to read after the first line.
-                                      # i think this is correct behavior
-      break if line == "\r\n"
-      s = line.split(':')
-      x[:request_headers][ s[0].strip] = s[1].strip 
-    end
-
+  socket = x[:socket]
+  x[:request] = socket.gets
+  while line = socket.gets("\r\n")
+    break if line == "\r\n"
+    s = line.split(':')
+    x[:request_headers][ s[0].strip] = s[1].strip
+  end
 end
 
 
@@ -41,35 +35,31 @@ def handle_post_request( x)
   # should we inject the socket straight in here ?
   # it makes instantiating the graph harder...
   if /^POST .*$/.match(x[:request])
-      puts "************ got post !!! ***********"
-      puts m
+    puts "************ got post !!! ***********"
+    puts m
 
-      # we must read content , otherwise it gets muddled up
-      # it gets read at the next http x[:request], when connection
-      # is keep alive. 
-      abort()
-      Helper.write_hello_message( m, socket )
-      return true
+    # we must read content , otherwise it gets muddled up
+    # it gets read at the next http x[:request], when connection
+    # is keep alive.
+    # abort()
   end
 end
 
 
 def strip_http_version( x)
-  # eases subsequent processing
+  # eases subsequent matching
   # should do this on other types also ?
   matches = /^(GET .*)\s(HTTP.*)/.match(x[:request])
   if matches and matches.captures.length == 2
-    x[:request] = matches.captures[0] 
+    x[:request] = matches.captures[0]
   end
-end 
-
+end
 
 
 def rewrite_index_get( x)
   # rewrite top level / to index.html
   if matches = /^GET \/$/.match(x[:request])
-    x[:request] = "GET /index.html" 
-    #puts "rewriting to #{x[:request]}" 
+    x[:request] = "GET /index.html"
   end
 end
 
@@ -77,40 +67,34 @@ end
 def serve_static_resource( x, fileContent)
 
   matches = /^GET (.*\.txt|.*\.html|.*\.css|.*\.js|.*\.jpeg|.*\.png|.*\.ico)$/.match(x[:request])
-  if matches and matches.captures.length == 1
+  if matches && matches.captures.length == 1
 
-    # Do Etag stuff around here,
-
-    digest = fileContent.digest_file( x ) 
-
+    digest = fileContent.digest_file( x )
     if_none_match = x[:request_headers]['If-None-Match']
-    if digest && if_none_match && if_none_match == digest
-		#	puts "**** got non match!!!"
-		x[:response] = "HTTP/1.1 304 Not Modified"
-	else
-		fileContent.serve_file( x )
-		x[:response_headers]['ETag'] = digest
-	end
 
+    if digest && if_none_match && if_none_match == digest
+      x[:response] = "HTTP/1.1 304 Not Modified"
+    else
+      # eg. serve normal 200 OK
+      fileContent.serve_file( x )
+      x[:response_headers]['ETag'] = digest
+    end
   end
 end
 
 
 def serve_model_resource( x, model )
-  # can be separate filters or the same
-
+  # can have separate filters or handle together etc
 
   if /^GET \/get_series.json$/.match(x[:request])
-      model.get_series( x)
+    model.get_series( x)
   end
 
   if /^GET \/get_id.json$/.match(x[:request])
-      model.get_id( x )
+    model.get_id( x )
   end
 
 end
-
-
 
 
 def do_cookie_stuff( x)
@@ -119,12 +103,12 @@ def do_cookie_stuff( x)
   rescue
     cookie = 0
   end
- 
+
   x[:response_headers]['Set-Cookie'] = "#{cookie}"
 end
 
 
-# we ought to be able to hanlde 403 message and egg, by just doing it 
+# we ought to be able to hanlde 403 message and egg, by just doing it
 # before normal resource
 # processing
 
@@ -134,15 +118,15 @@ def do_cache_control( x)
   # this may need to be combined with other resource handling, and egg stuff.
   # caache constrol should be hanlded externally to this.
   # max-age=0
-  
-  # it's possible this might vary depending on the user-agent 
+
+  # it's possible this might vary depending on the user-agent
 
   unless x[:response_headers]['Cache-Control']
     x[:response_headers]['Cache-Control']= "private"
   end
 
   # headers['Cache-Control:']= "private,max-age=100000"
-  # firefox will send 'If-None-Match' nicely. dont have to set cache-control flags 
+  # firefox will send 'If-None-Match' nicely. dont have to set cache-control flags
 end
 
 
@@ -151,9 +135,6 @@ def catch_all( x)
   # resource not found
   if x[:response].nil?
 
-    puts "**** catchall #{ x[:request]} "
-
-    # this is matching AGETA which is not what we want
     if /^GET.*$/.match(x[:request])
       # GET request
       x[:response] = "HTTP/1.1 404 Not Found"
@@ -190,7 +171,6 @@ end
 
 
 def log_response( x)
-	puts "log response"
   puts "response '#{ x[:response].strip }'"
   puts "response_headers #{ x[:response_headers] }"
 end
@@ -211,7 +191,7 @@ def process_request( socket, model, fileContent)
     :body => nil
   }
 
-  decode_request( x) 
+  decode_request( x)
 
   log_request( x)
 
@@ -222,12 +202,12 @@ def process_request( socket, model, fileContent)
 
 
   handle_post_request( x)
- 
+
   strip_http_version( x)
 
 
   # main stuff here
-  rewrite_index_get( x) 
+  rewrite_index_get( x)
 
   serve_static_resource( x, fileContent )
 
@@ -252,7 +232,7 @@ end
 
 model = Model::EventProcessor.new()
 
-server = Server::Processor.new() 
+server = Server::Processor.new()
 
 
 fileContent = Static::FileContent.new( "#{Dir.pwd}/static" )
@@ -266,7 +246,7 @@ server.start_ssl(1443) do |socket|
 end
 
 
-server.start(8000) do |socket|   
+server.start(8000) do |socket|
   process_request( socket, model, fileContent)
 end
 
@@ -278,12 +258,12 @@ conn = PG::Connection.open(:dbname => 'prod', :user => 'meteo', :password => 'me
 f = proc { |a,b,c,d| model.process_event(a,b,c,d) }
 
 
-id = -1 
+id = -1
 
 # start processing events at current less 500
 id = conn.exec_params( "select max(id) - 2000 as max_id from events" )[0]['max_id']
 
-puts "starting events at #{id}" 
+puts "starting events at #{id}"
 
 id = Model.process_events( conn, id, f )
 
@@ -294,5 +274,5 @@ Model.process_current_events( conn, id, f )
 #puts model.get()
 
 # should rename to wait
-server.run() 
+server.run()
 

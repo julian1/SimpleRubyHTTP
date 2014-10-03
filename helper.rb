@@ -21,8 +21,8 @@ module Helper
 
 #   def Helper.write_json( content_io, socket )
 #       headers = { 
-#           'response' => "HTTP/1.1 200 OK\r\n", 
-#           'Content-Type:' => "application/json\r\n"
+#           'response' => "HTTP/1.1 200 OK", 
+#           'Content-Type:' => "application/json"
 #       }
 #       Helper.write_response( headers, content_io, socket )
 #   end
@@ -51,46 +51,54 @@ module Helper
 
 
       # max-age=0
-      headers['Cache-Control:']= "private\r\n"
+      headers['Cache-Control']= "private"
 
- #     headers['Cache-Control:']= "private,max-age=100000\r\n"
+ #     headers['Cache-Control:']= "private,max-age=100000"
 
   # firefox will send 'If-None-Match' nicely. dont have to set cache-control flags 
 
 
 
-      if true
+      if false 
         # don't compress
         content = x[:body].read
-        headers['Content-Length:'] =  "#{content.bytesize}\r\n" 
+        headers['Content-Length'] =  "#{content.bytesize}" 
       end
 
       # we could actually read the header field to decide whether to compress or not
       # or the request object
-      if false 
+      if true 
         # compress
         wio = StringIO.new("w")
         w_gz = Zlib::GzipWriter.new(wio)
-        IO.copy_stream(content_io, w_gz )
+        IO.copy_stream( x[:body], w_gz )
         w_gz.close
         content = wio.string
       
         puts "*** content after compressing #{content.bytesize}" 
 
-        headers['Content-Encoding:'] = "gzip\r\n"
-        headers['Content-Length:'] =  "#{content.bytesize}\r\n" 
+        headers['Content-Encoding'] = "gzip"
+        headers['Content-Length'] =  "#{content.bytesize}" 
       end 
 
+      # Ok, we don't really have to wrap the stream to do chuncked encoding etc.
+      # instead we can localise the behavior here. 
 
       socket = x[:socket]
+
+      ### socket operations, could have exception if client disconnected
+      ### without following http protocol
 
       # write response...
       socket.print x[:response]
 
+
+      socket.print "\r\n"
+
       # write other header fields
       headers.keys.each do |key|
         #next if key == 'response'
-        socket.print "#{key} #{headers[key]}"
+        socket.print "#{key}:#{headers[key]}\r\n"
       end
 
       socket.print "\r\n"
@@ -114,7 +122,7 @@ module Helper
  
 
     # this is failing on, with new line behavior 
-    #  echo -e 'GET / HTTP/1.1\r\n' | nc localhost 2345 | less
+    #  echo -e 'GET / HTTP/1.1' | nc localhost 2345 | less
 
     #request = {}
     # probably should structure this differenly...
@@ -152,33 +160,33 @@ module Helper
   end
 
 
-
-  def Helper.write_redirect_message( request, socket )
-
-    response = <<-EOS  
-      <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
-      <html><head>
-      <title>302 Found</title>
-      </head><body>redirect
-      <h1>Found</h1>
-      <p>The document has moved</a>.</p>
-      <hr>
-      <address>Apache Server at imos.aodn.org.au Port 80</address>
-      </body></html>
-    EOS
-   
-    socket.print "HTTP/1.1 302 Found\r\n" + 
-      "Date: Sun, 21 Sep 2014 09:02:16 GMT\r\n" + 
-      "Server: Apache\r\n" +
-      "Location: https://localhost:1443\r\n" + 
-      "Vary: Accept-Encoding\r\n" + 
-      "Content-Length: 282\r\n" +
-      "Content-Type: text/html; charset=iso-8859-1\r\n" +
-      "\r\n"
-
-    # Print the actual response body, which is just "Hello World!\n"
-    socket.print response
-  end
-
+# 
+#   def Helper.write_redirect_message( request, socket )
+# 
+#     response = <<-EOS  
+#       <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+#       <html><head>
+#       <title>302 Found</title>
+#       </head><body>redirect
+#       <h1>Found</h1>
+#       <p>The document has moved</a>.</p>
+#       <hr>
+#       <address>Apache Server at imos.aodn.org.au Port 80</address>
+#       </body></html>
+#     EOS
+#    
+#     socket.print "HTTP/1.1 302 Found" + 
+#       "Date: Sun, 21 Sep 2014 09:02:16 GMT\r\n" + 
+#       "Server: Apache\r\n" +
+#       "Location: https://localhost:1443\r\n" + 
+#       "Vary: Accept-Encoding\r\n" + 
+#       "Content-Length: 282\r\n" +
+#       "Content-Type: text/html; charset=iso-8859-1\r\n" +
+#       "\r\n"
+# 
+#     # Print the actual response body, which is just "Hello World!\n"
+#     socket.print response
+#   end
+# 
 end
 

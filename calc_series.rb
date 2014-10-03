@@ -194,8 +194,8 @@ module Model
 
       EOF
 
-      x[:response] = "HTTP/1.1 200 OK\r\n"
-      x[:response_headers]['Content-Type:'] = "application/json\r\n"
+      x[:response] = "HTTP/1.1 200 OK"
+      x[:response_headers]['Content-Type'] = "application/json"
       x[:body] = StringIO.new( ret, "r")
     end
 
@@ -206,8 +206,8 @@ module Model
  
 
     def get_id( x )
-      x[:response] = "HTTP/1.1 200 OK\r\n"
-      x[:response_headers]['Content-Type:'] = "application/json\r\n"
+      x[:response] = "HTTP/1.1 200 OK"
+      x[:response_headers]['Content-Type'] = "application/json"
       x[:body] = StringIO.new( "\"#{@model.last[:id]}\"" )
     end
 

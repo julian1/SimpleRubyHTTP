@@ -31,7 +31,7 @@ end
 
 
 def log_request( x)
-  puts "request '#{ x[:request].strip }'"
+  puts "request '#{ x[:request] ? x[:request].strip : "nil"  }'"
   puts "request_headers #{ x[:request_headers] }"
 end
 
@@ -39,7 +39,7 @@ end
 def handle_post_type( x)
   # should we inject the socket straight in here ?
   # it makes instantiating the graph harder...
-  if /POST .*$/.match(x[:request])
+  if /^POST .*$/.match(x[:request])
       puts "************ got post !!! ***********"
       puts m
 
@@ -53,18 +53,12 @@ def handle_post_type( x)
 end
 
 
-def strip_http_type( x)
-  # determine http x[:request] type
-  # we ought to do a bit more here,
-  # and strip it.
-  matches = /(GET .*)\s(HTTP.*)/.match(x[:request])
+def strip_http_version( x)
+  # eases subsequent processing
+  # should do this on other types also ?
+  matches = /^(GET .*)\s(HTTP.*)/.match(x[:request])
   if matches and matches.captures.length == 2
     x[:request] = matches.captures[0] 
-    #puts "rewriting to #{x[:request]}" 
-  else
-    abort('here777777')
-    #Helper.write_hello_message( m, socket )
-    #return true
   end
 end 
 
@@ -72,7 +66,7 @@ end
 
 def rewrite_index_html( x)
   # rewrite top level / to index.html
-  if matches = /GET \/$/.match(x[:request])
+  if matches = /^GET \/$/.match(x[:request])
     x[:request] = "GET /index.html" 
     #puts "rewriting to #{x[:request]}" 
   end
@@ -81,7 +75,7 @@ end
 
 def serve_static_resource( x, fileContent)
   # Don't think we have to handle 404 here.
-  matches = /GET (.*\.txt|.*\.html|.*\.css|.*\.js|.*\.jpeg|.*\.png|.*\.ico)$/.match(x[:request])
+  matches = /^GET (.*\.txt|.*\.html|.*\.css|.*\.js|.*\.jpeg|.*\.png|.*\.ico)$/.match(x[:request])
   if matches and matches.captures.length == 1
     fileContent.serve_file( x )
   end
@@ -90,10 +84,13 @@ end
 
 def serve_model_resource( x, model )
   # can be separate filters or the same
-  if /GET \/get_series.json$/.match(x[:request])
+
+  # this isn't working it should be matching new line
+
+  if /^GET \/get_series.json$/.match(x[:request])
       model.get_series( x)
   end
-  if /GET \/get_id.json$/.match(x[:request])
+  if /^GET \/get_id.json$/.match(x[:request])
       model.get_id( x )
   end
 
@@ -108,28 +105,38 @@ def do_cookie_stuff( x)
   rescue
     cookie = 0
   end
-
-  puts "***** COOKIE  #{ cookie }"
  
-  x[:response_headers]['Set-Cookie:'] = "#{cookie}\r\n"
-
+  x[:response_headers]['Set-Cookie'] = "#{cookie}"
 end
 
 
 
-def everything_else( x)
+def catch_all( x)
 
-  if /GET.*$/.match(x[:request]) \
-    && x[:response].nil?
+  # resource not found
+  if x[:response].nil?
 
-    x[:response] = "HTTP/1.1 404 Not Found\r\n"
-    x[:response_headers]['Content-Type:'] = "text/plain\r\n"
-    x[:body] = StringIO.new( <<-EOF
+    puts "**** catchall #{ x[:request]} "
+
+    # this is matching AGETA which is not what we want
+    if /^GET.*$/.match(x[:request])
+      # GET request
+      x[:response] = "HTTP/1.1 404 Not Found"
+      x[:response_headers]['Content-Type'] = "text/plain"
+      x[:body] = StringIO.new( <<-EOF
 File not found!
-      EOF
-      )
+        EOF
+        )
+    else
+      # catch all, for non-implemented or badly formed request
+      x[:response] = "HTTP/1.1 400 Bad Request"
+      x[:response_headers]['Content-Type'] = "text/plain"
+      x[:body] = StringIO.new( <<-EOF
+Your browser sent a request that this server could not understand
+        EOF
+        )
+    end
   end
-
 end
 
 
@@ -138,6 +145,11 @@ def send_response( x)
   # rather than pass it about everywhere....
   # issue is that if it's a post, then we want to read ...
   # send response expects this ...
+
+  # we can have a few options about how we send the response.
+  # send chunked, etc.
+  # either separate methods, or something else ...
+
   Helper.write_response( x )
 end
 
@@ -150,7 +162,7 @@ end
 
 
 
-def application( socket, model, fileContent)
+def process_request( socket, model, fileContent)
 
   # we can still use functions t
   x = {
@@ -175,7 +187,7 @@ def application( socket, model, fileContent)
 
   handle_post_type( x)
  
-  strip_http_type( x)
+  strip_http_version( x)
 
 
   # main stuff here
@@ -188,7 +200,7 @@ def application( socket, model, fileContent)
 
   do_cookie_stuff( x)
 
-  everything_else( x)
+  catch_all( x)
 
   send_response( x )
 
@@ -219,7 +231,7 @@ fileContent = Static::FileContent.new( "#{Dir.pwd}/static" )
 
 server.start(  2345 ) do |socket|   
 
-  application( socket, model, fileContent)
+  process_request( socket, model, fileContent)
 
 end
 

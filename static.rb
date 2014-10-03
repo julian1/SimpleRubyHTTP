@@ -80,14 +80,14 @@ module Static
       # before attempting to open it.
       if File.exist?(path) && !File.directory?(path)
         if true
-          x[:response] = "HTTP/1.1 200 OK\r\n"
-          x[:response_headers]['Content-Type:'] = "#{content_type(path)}\r\n"#,
+          x[:response] = "HTTP/1.1 200 OK"
+          x[:response_headers]['Content-Type'] = "#{content_type(path)}"#,
 		      x[:body] = File.open(path, "rb")
         else
           abort( 'file not found 1 ' )
           # It would be nice to implement egg stuff somewhere else 
           # in the chain 
-          #    'response' => "HTTP/1.1 304 Not Modified\r\n"
+          #    'response' => "HTTP/1.1 304 Not Modified"
         end
       end
     end

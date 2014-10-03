@@ -20,21 +20,6 @@ require 'date'
 
 module Model 
 
-  # what if we want xml, rather than json? 
-  class Result
-    def initialize( headers, io_content )
-      @headers = headers
-      @io_content = io_content
-    end
-    def headers
-      @headers
-    end
-    def io_content
-      @io_content
-    end
-  end
-
-
 
   # i think we should use >= as it's more logical 
   # basically process from
@@ -178,7 +163,7 @@ module Model
     # so i think rather than do the formatting, it would be better to just send 
     # the series data, and handle presentation in javascript. 
 
-    def get_series()
+    def get_series( x)
       # to be fast, we should really use a stream 
       # should be a join, 
 
@@ -209,21 +194,21 @@ module Model
 
       EOF
 
-      Result.new(  
-        {
-          'response' => "HTTP/1.1 200 OK\r\n", 
-          'Content-Type:' => "application/json\r\n"
-        },
-        StringIO.new( ret, "r")
-      )
+      x[:response] = "HTTP/1.1 200 OK\r\n"
+      x[:response_headers]['Content-Type:'] = "application/json\r\n"
+      x[:body] = StringIO.new( ret, "r")
     end
+
 
 #     def get_time()
 #       "\"#{@model.last[:time]}\""
 #     end
-# 
-    def get_id()
-      "\"#{@model.last[:id]}\""
+ 
+
+    def get_id( x )
+      x[:response] = "HTTP/1.1 200 OK\r\n"
+      x[:response_headers]['Content-Type:'] = "application/json\r\n"
+      x[:body] = StringIO.new( "\"#{@model.last[:id]}\"" )
     end
 
 

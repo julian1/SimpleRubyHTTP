@@ -4,34 +4,6 @@
 
 module Static
 
-  # do we really need this. or can we return
-  # just a tuple { headers, } ???
-  # a tuple is not as capable as this class if we
-  # really want to pipeline
-
-  # we can just use a tuple if that's sufficient. 
-  # also full iostream implementation might be too much, because 
-  # we cannot copy it.
-
-  # what if we want xml, rather than json?
-  class Result
-    def initialize( headers, io_content )
-      @headers = headers
-      @io_content = io_content
-    end
-    def headers
-      @headers
-    end
-    def io_content
-      @io_content
-    end
-  end
-
-
-  # we should be initalizing this with the web root in the constructor.
-  # we can then serve different roots with different cache control etc.
-  # we want to  separate out the networking, from message routing/redirect, from file stuff.
-
 
   class FileContent
 
@@ -96,41 +68,27 @@ module Static
 	# and if it matches return 304
 	# or md5 ing the file
 
-    def serve_file( request )
 
-      path = requested_file( request )
+    # Don't think we have to handle 404 here.
+    # instead just leave everything ....
+
+    def serve_file( x )
+
+      path = requested_file( x[:request] )
 
       # Make sure the file exists and is not a directory
       # before attempting to open it.
       if File.exist?(path) && !File.directory?(path)
         if true
-          Result.new(
-            {
-              'response' => "HTTP/1.1 200 OK\r\n",
-              'Content-Type:' => "#{content_type(path)}\r\n",
-              'ETag:' => "\"#{path}\"\r\n"
-            },
-            File.open(path, "rb")
-          )
+          x[:response] = "HTTP/1.1 200 OK\r\n"
+          x[:response_headers]['Content-Type:'] = "#{content_type(path)}\r\n"#,
+		      x[:body] = File.open(path, "rb")
         else
-          Result.new(
-            {
-              'response' => "HTTP/1.1 304 Not Modified\r\n"
-            },
-            StringIO.new("") 
-          )
+          abort( 'file not found 1 ' )
+          # It would be nice to implement egg stuff somewhere else 
+          # in the chain 
+          #    'response' => "HTTP/1.1 304 Not Modified\r\n"
         end
-      else
-        Result.new(
-          {
-            'response' => "HTTP/1.1 404 Not Found\r\n",
-            'Content-Type:' => "text/plain\r\n"
-          },
-          StringIO.new( <<-EOF
-            file not found
-          EOF
-          )
-        )
       end
     end
 

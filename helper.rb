@@ -29,11 +29,26 @@ module Helper
 
 
 
-  def Helper.write_response( headers, content_io, socket )
+  #def Helper.write_response( headers, content_io, socket )
+  def Helper.write_response( x )
 
       # this stuff needs to be added to the pipeline
 
       # it would be really nice to support chunked streaming
+
+
+      if x[:response].nil? || x[:response] == ""
+        puts "*** missing response!!!" 
+        abort()
+      end
+
+      headers = x[:response_headers]
+      if headers.nil? || headers.length == 0
+        puts "*** missing response headers !!!" 
+        abort()
+      end
+      puts "response_headers are #{headers}"
+
 
       # max-age=0
       headers['Cache-Control:']= "private\r\n"
@@ -46,7 +61,7 @@ module Helper
 
       if true
         # don't compress
-        content = content_io.read
+        content = x[:body].read
         headers['Content-Length:'] =  "#{content.bytesize}\r\n" 
       end
 
@@ -66,12 +81,16 @@ module Helper
         headers['Content-Length:'] =  "#{content.bytesize}\r\n" 
       end 
 
+
+      puts "here5"
+      socket = x[:socket]
+
       # write response...
-      socket.print headers['response']
+      socket.print x[:response]
 
       # write other header fields
       headers.keys.each do |key|
-        next if key == 'response'
+        #next if key == 'response'
         socket.print "#{key} #{headers[key]}"
       end
 
@@ -79,6 +98,8 @@ module Helper
 
       # write content
       socket.print content 
+
+      puts "here7"
   end
 
  

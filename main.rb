@@ -5,107 +5,158 @@ require './helper'
 require './calc_series'
 
 
+# chain together transforms...
+
+
+# Ok aparently ruby blocks can reference their enclosing scope!
+# how are we going to pass a reference into into the processing block...
+
+def log_request( x)
+  puts "request '#{ x[:request] }'"
+  puts "request_headers #{ x[:request_headers] }"
+end
+
+
+def handle_post_type( x)
+  # should we inject the socket straight in here ?
+  # it makes instantiating the graph harder...
+  if /POST .*$/.match(x[:request])
+      puts "************ got post !!! ***********"
+      puts m
+
+      # we must read content , otherwise it gets muddled up
+      # it gets read at the next http x[:request], when connection
+      # is keep alive. 
+      abort()
+      Helper.write_hello_message( m, socket )
+      return true
+  end
+end
+
+
+def strip_http_type( x)
+  # determine http x[:request] type
+  # we ought to do a bit more here,
+  # and strip it.
+  matches = /(GET .*)\s(HTTP.*)/.match(x[:request])
+  if matches and matches.captures.length == 2
+    x[:request] = matches.captures[0] 
+    #puts "rewriting to #{x[:request]}" 
+  else
+    abort('here777777')
+    #Helper.write_hello_message( m, socket )
+    #return true
+  end
+end 
+
+
+
+def rewrite_index_html( x)
+  # rewrite top level / to index.html
+  if matches = /GET \/$/.match(x[:request])
+    x[:request] = "GET /index.html" 
+    #puts "rewriting to #{x[:request]}" 
+  end
+end
+
+
+def static_resource( x, fileContent)
+  # Don't think we have to handle 404 here.
+  matches = /GET (.*\.txt|.*\.html|.*\.css|.*\.js|.*\.jpeg|.*\.png|.*\.ico)$/.match(x[:request])
+  if matches and matches.captures.length == 1
+    fileContent.serve_file( x )
+  end
+end
+
+
+def get_series( x, model )
+  if /GET \/get_series.json$/.match(x[:request])
+      model.get_series( x)
+  end
+end
+
+
+def get_id( x, model )
+  if /GET \/get_id.json$/.match(x[:request])
+      model.get_id( x )
+  end
+end
+
+
+def everything_else( x)
+
+  if /GET.*$/.match(x[:request]) \
+    && x[:response].nil?
+
+    x[:response] = "HTTP/1.1 404 Not Found\r\n"
+    x[:response_headers]['Content-Type:'] = "text/plain\r\n"
+    x[:body] = StringIO.new( <<-EOF
+File not found!
+      EOF
+      )
+  end
+
+end
+
+
+def send_response( x)
+  # note that we could pass in the socket here,
+  # rather than pass it about everywhere....
+  # issue is that if it's a post, then we want to read ...
+  # send response expects this ...
+  Helper.write_response( x )
+end
+
+def log_response( x)
+  puts "response '#{ x[:response] }'"
+  puts "response_headers #{ x[:response_headers] }"
+end
+
+
+
+
 
 def application( socket, model, fileContent)
 
+  # OK. This decode should be part of the chain....
   m = Helper.decode_request( socket) 
 
-  puts m
+  # we can still use functions t
+  x = {
+    :request => m['request'],
+    :request_headers => m,
+    :socket => socket,
+    :response => nil,
+    :response_headers => {},
+    :body => nil
+  }
 
-  request = m['request']
+  log_request( x)
 
   # if the connection was closed by remote
-  if request.nil?
+  if x[:request].nil?
     $stderr.puts "eof on https"
     return nil
   end
 
 
-  # so we have to do some message cracking
-  #puts "-------------"
-  puts "request is #{ request }"
+  handle_post_type( x)
+ 
+  strip_http_type( x)
 
+  rewrite_index_html( x) 
 
+  static_resource( x, fileContent )
 
-  if /POST .*$/.match(request)
-      puts "************ got post !!! ***********"
-      puts m
+  get_series( x, model )
 
-      # we must read content , otherwise it gets muddled up
-      # it gets read at the next http request, when connection
-      # is keep alive. 
+  get_id( x, model )
 
-      Helper.write_hello_message( m, socket )
-      return true
-  end
+  everything_else( x)
 
+  send_response( x )
 
-
-
-  # determine http request type
-  # we ought to do a bit more here,
-  # and strip it.
-  matches = /(GET .*)\s(HTTP.*)/.match(request)
-  if matches and matches.captures.length == 2
-    request = matches.captures[0] 
-    #puts "rewriting to #{request}" 
-  else
-    Helper.write_hello_message( m, socket )
-    return true
-  end
-
-  # rewrite top level / to index.html
-  if matches = /GET \/$/.match(request)
-    request = "GET /index.html" 
-    #puts "rewriting to #{request}" 
-  end
-
-#   # rewrite rule / to web root,
-#   # might be better to let the static file server handle this stuff...
-#   matches = /GET \/(.*)/.match(request)
-#   if matches and matches.captures.length == 1
-#     request = "GET /root/#{matches.captures[0]}" 
-#     #puts "rewriting to #{request}" 
-#   end
-# 
-  
-  # static resource
-  matches = /GET (.*\.txt|.*\.html|.*\.css|.*\.js|.*\.jpeg|.*\.png)$/.match(request)
-  if matches and matches.captures.length == 1
-    # resource = matches.captures[ 0]
-    result = fileContent.serve_file( request )
-    Helper.write_response( result.headers, result.io_content, socket )
-    return true
-  end
-
-
-
-  # change name get_data or get series etc
-  if /GET \/get_series.json$/.match(request)
-      result = model.get_series()
-      Helper.write_response( result.headers, result.io_content, socket )
-  end
-
-
-#   if /GET \/get_time.json$/.match(request)
-#       content_ = model.get_time()  
-#       content_io = StringIO.new( content_, "r")
-#       Helper.write_json( content_io, socket )
-#       return true
-#   end
-# 
-  if /GET \/get_id.json$/.match(request)
-      content_ = model.get_id()  
-      content_io = StringIO.new( content_, "r")
-      Helper.write_json( content_io, socket )
-      return true
-  end
-
-
-  
-
-  # head, post, etc. 
-  Helper.write_hello_message( m, socket )
+  log_response( x)
 
   true
 
@@ -113,12 +164,9 @@ end
 
 
 
+model = Model::EventProcessor.new()
 
 server = Server::Processor.new() 
-
-# Ok aparently ruby blocks can reference their enclosing scope!
-# how are we going to pass a reference into into the processing block...
-model = Model::EventProcessor.new()
 
 
 fileContent = Static::FileContent.new( "#{Dir.pwd}/static" )

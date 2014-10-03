@@ -11,8 +11,27 @@ require './calc_series'
 # Ok aparently ruby blocks can reference their enclosing scope!
 # how are we going to pass a reference into into the processing block...
 
+
+def decode_request( x)
+
+  puts "---------------"
+
+  # OK. This decode should be part of the chain....
+  #Helper.decode_request( x ) 
+    socket = x[:socket]
+    x[:request] = socket.gets
+    while line = socket.gets("\r\n")  # this blocks, because there's nothing more to read after the first line.
+                                      # i think this is correct behavior
+      break if line == "\r\n"
+      s = line.split(':')
+      x[:request_headers][ s[0].strip] = s[1].strip 
+    end
+
+end
+
+
 def log_request( x)
-  puts "request '#{ x[:request] }'"
+  puts "request '#{ x[:request].strip }'"
   puts "request_headers #{ x[:request_headers] }"
 end
 
@@ -60,7 +79,7 @@ def rewrite_index_html( x)
 end
 
 
-def static_resource( x, fileContent)
+def serve_static_resource( x, fileContent)
   # Don't think we have to handle 404 here.
   matches = /GET (.*\.txt|.*\.html|.*\.css|.*\.js|.*\.jpeg|.*\.png|.*\.ico)$/.match(x[:request])
   if matches and matches.captures.length == 1
@@ -69,18 +88,33 @@ def static_resource( x, fileContent)
 end
 
 
-def get_series( x, model )
+def serve_model_resource( x, model )
+  # can be separate filters or the same
   if /GET \/get_series.json$/.match(x[:request])
       model.get_series( x)
   end
-end
-
-
-def get_id( x, model )
   if /GET \/get_id.json$/.match(x[:request])
       model.get_id( x )
   end
+
 end
+
+
+
+
+def do_cookie_stuff( x)
+  begin
+    cookie = x[:request_headers]['Cookie'].to_i + 1
+  rescue
+    cookie = 0
+  end
+
+  puts "***** COOKIE  #{ cookie }"
+ 
+  x[:response_headers]['Set-Cookie:'] = "#{cookie}\r\n"
+
+end
+
 
 
 def everything_else( x)
@@ -108,7 +142,7 @@ def send_response( x)
 end
 
 def log_response( x)
-  puts "response '#{ x[:response] }'"
+  puts "response '#{ x[:response].strip }'"
   puts "response_headers #{ x[:response_headers] }"
 end
 
@@ -118,18 +152,17 @@ end
 
 def application( socket, model, fileContent)
 
-  # OK. This decode should be part of the chain....
-  m = Helper.decode_request( socket) 
-
   # we can still use functions t
   x = {
-    :request => m['request'],
-    :request_headers => m,
+    :request => nil,
+    :request_headers => {},
     :socket => socket,
     :response => nil,
     :response_headers => {},
     :body => nil
   }
+
+  decode_request( x) 
 
   log_request( x)
 
@@ -144,13 +177,16 @@ def application( socket, model, fileContent)
  
   strip_http_type( x)
 
+
+  # main stuff here
   rewrite_index_html( x) 
 
-  static_resource( x, fileContent )
+  serve_static_resource( x, fileContent )
 
-  get_series( x, model )
+  serve_model_resource( x, model )
 
-  get_id( x, model )
+
+  do_cookie_stuff( x)
 
   everything_else( x)
 

@@ -13,9 +13,9 @@
 
     <body>
     <h2>Reports</h2>
-	
+
 	<textarea id="myresultform" rows="20" cols="80">
-My text 
+My text
 	</textarea>
 
 	<p>
@@ -23,22 +23,26 @@ My text
 Query...
 	</textarea>
 
+	<p>
 	<span><input class="submit" type="button" value="Submit" onclick="submitTryit()"></span>
 
-	<!-- now we need a button --> 
-	
+	<!-- now we need a button -->
+
     <p>Simple example.2 </p>
 
 	<!-- assume we're authenticated as an administrator -->
 	<!-- we want a text form to display the result -->
-	<!-- ok, we want to try to load a json file --> 
+	<!-- ok, we want to try to load a json file -->
 
 
 <script type="text/javascript">
 $(function () {
 
-
 	console.log( 'hithere' );
+
+	$('#myinputform')[0].value =  "select id, t,msg from events where msg = 'error' order by id desc limit 10";	
+
+	$('#myresultform')[0].value = '';
 
 });
 
@@ -50,9 +54,31 @@ $(function () {
 		console.log( query );
 
 		// console.log(  document.getElementById("myinputform").value );
+		//	var encoded_query = encodeURIComponent(query); 
 
-		$('#myresultform')[0].value = query;
+		// let javascript handle the encoding...
+		// except we'll fix spaces
 
+
+		// query = query.replace(/ /g, "%20");
+
+		//console.log( 'query now ' + query );
+
+
+		$.ajax({
+			dataType: "text",
+			url: "report.json",
+			//data: { field1: encoded_query },
+			//data: { field1: query },
+			data: { field1: query },
+			success: function ( value, textStatus, jqXHR ) {
+				console.log( "success value is: " + value );
+				$('#myresultform')[0].value = value;
+			},
+			error: function (jqXHR, textStatus, errorThrown ) {
+				console.log( textStatus + errorThrown );
+			}
+		})
 	}
 
 

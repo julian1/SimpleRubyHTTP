@@ -98,6 +98,53 @@ def serve_model_resource( x, model )
 
 end
 
+# require 'cgi'
+# require 'base64'
+# 
+# def decode_utf8_b64(string)
+#   URI.unescape(CGI::escape(Base64.decode64(string)))
+# end
+# 
+#    query = matches.captures[0]
+#query = URI.unescape( matches.captures[0] ) 
+#    query = decode_utf8_b64(  matches.captures[0]  )
+# ?field1=select+*+from+mytable+limit+1
+# what about handling + signs
+#query = query.gsub(/+/, ' ' ); 
+
+
+def serve_report_resource( x, report_conn )
+  # can have separate filters or handle together etc
+
+
+
+  puts "***1***************** got request #{x[:request]} " 
+
+  matches = /^GET \/report.json\?field1=(.*)$/.match( x[:request])
+  if matches and matches.captures.length == 1
+    
+    # so we replace the + with space and then decode 
+    query = URI.decode( matches.captures[0].gsub(/\+/,' ') ) 
+
+    puts "********************* got report! #{query} " 
+
+    # how do we print up the response ...
+    res = report_conn.exec_params( query )
+    w = StringIO.new() 
+    res.each do |row|
+        w.puts row 
+    end
+
+#    puts "result is #{ w.string } "
+
+    x[:response] = "HTTP/1.1 200 OK"
+    x[:response_headers]['Content-Type'] = "text/plain"
+    x[:body] = StringIO.new( w.string )  # we shouldn't need this double handling
+  end
+end
+
+
+
 
 def do_cookie_stuff( x)
   begin
@@ -189,7 +236,7 @@ end
 
 
 
-def process_request( socket, model, fileContent)
+def process_request( socket, model, fileContent, report_conn)
 
   # we can still use functions t
   x = {
@@ -222,7 +269,7 @@ def process_request( socket, model, fileContent)
   serve_asset( x, fileContent )
 
   serve_model_resource( x, model )
-
+serve_report_resource( x, report_conn )
 
   do_cookie_stuff( x)
 
@@ -248,16 +295,17 @@ server = Server::Processor.new()
 fileContent = Static::FileContent.new( "#{Dir.pwd}/static" )
 
 
+report_conn = PG::Connection.open(:dbname => 'prod', :user => 'meteo', :password => 'meteo' )
 
 
 
 server.start_ssl(1443) do |socket|
-  process_request( socket, model, fileContent)
+  process_request( socket, model, fileContent, report_conn)
 end
 
 
 server.start(8000) do |socket|
-  process_request( socket, model, fileContent)
+  process_request( socket, model, fileContent, report_conn)
 end
 
 

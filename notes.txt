@@ -1,4 +1,23 @@
 
+Lets aggregate the model, conn into services and then pass to all 
+the message cracker stuff.
+
+also get remote end - ip address for logging.  and port to determine if ssl
+
+and try to do some session management.
+
+and if not ssl - do a 302 right at the start of the chain.
+
+
+rather than use functions for the filter chain. make these methods of application class
+and have the server delegate.
+
+then inject conn and model into the application class.
+ 
+
+and compute real bollinger bands.
+
+
 Be nice to get a view of events, errors etc - . 
 
 ---

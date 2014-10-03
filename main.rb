@@ -249,16 +249,13 @@ fileContent = Static::FileContent.new( "#{Dir.pwd}/static" )
 
 
 
-# server.start_ssl(1443) do |socket|
-# 
-#   application( socket, model)
-# end
-# 
-
-server.start(  2345 ) do |socket|   
-
+server.start_ssl(1443) do |socket|
   process_request( socket, model, fileContent)
+end
 
+
+server.start(8000) do |socket|   
+  process_request( socket, model, fileContent)
 end
 
 

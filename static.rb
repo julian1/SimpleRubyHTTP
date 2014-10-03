@@ -107,41 +107,32 @@ module Static
           x[:response] = "HTTP/1.1 200 OK\r\n"
           x[:response_headers]['Content-Type:'] = "#{content_type(path)}\r\n"#,
 		      x[:body] = File.open(path, "rb")
-
-#           Result.new(
-#             {
-#               x[:response] => "HTTP/1.1 200 OK\r\n",
-#               x{:response_headers]['Content-Type:'] => "#{content_type(path)}\r\n"#,
-# #              'ETag:' => "\"#{path}\"\r\n"
-#             },
-#             File.open(path, "rb")
-#          )
         else
-
           abort( 'file not found 1 ' )
 
-          Result.new(
-            {
-              'response' => "HTTP/1.1 304 Not Modified\r\n"
-            },
-            StringIO.new("") 
-          )
+          #    'response' => "HTTP/1.1 304 Not Modified\r\n"
         end
       else
+          # abort( 'file not found 2 ' )
 
-
-          abort( 'file not found 2 ' )
-
-        Result.new(
-          {
-            'response' => "HTTP/1.1 404 Not Found\r\n",
-            'Content-Type:' => "text/plain\r\n"
-          },
-          StringIO.new( <<-EOF
+          x[:response] = "HTTP/1.1 404 Not Found\r\n"
+          x[:response_headers]['Content-Type:'] = "text/plain\r\n"
+		      x[:body] = StringIO.new( <<-EOF
             file not found
           EOF
           )
-        )
+
+
+#         Result.new(
+#           {
+#             'response' => "HTTP/1.1 404 Not Found\r\n",
+#             'Content-Type:' => "text/plain\r\n"
+#           },
+#           StringIO.new( <<-EOF
+#             file not found
+#           EOF
+#           )
+#         )
       end
     end
 

@@ -55,7 +55,7 @@ end
 
 
 def static_resource( x, fileContent)
-  matches = /GET (.*\.txt|.*\.html|.*\.css|.*\.js|.*\.jpeg|.*\.png)$/.match(x[:request])
+  matches = /GET (.*\.txt|.*\.html|.*\.css|.*\.js|.*\.jpeg|.*\.png|.*\.ico)$/.match(x[:request])
   if matches and matches.captures.length == 1
     fileContent.serve_file( x )
   end
@@ -99,7 +99,7 @@ def application( socket, model, fileContent)
     :body => nil
   }
 
-  puts "request #{ x[:request] }"
+  puts "request '#{ x[:request] }'"
   puts "request_headers #{ x[:request_headers] }"
 
 

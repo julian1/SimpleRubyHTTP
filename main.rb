@@ -16,17 +16,68 @@ require 'securerandom'
 
 # we can forget if user is logged in
 
+class AuthController
+
+  def initialize()
+    @secret = 'pineapple123'
+  end
+
+
+  def serve_response( x)
+    x[:body] = StringIO.new( <<-EOF
+        { "authenticated": #{ 
+          x[:session][:authenticated] \
+          && x[:session][:authenticated] == true \
+          ? "true" : "false" 
+        } }
+      EOF
+      )
+      x[:response] = "HTTP/1.1 200 OK"
+      x[:response_headers]['Content-Type'] = "text/plain"
+  end
+
+  def action( x)
+
+    puts "WHOOT here"
+
+    # two methods test whether authenticated and login
+    # these things are controllers - they ought to be classes
+
+    # should explicitly test for port 1443 again
+
+    matches = /^GET \/authenticated.json$/.match( x[:request])
+    if matches
+      serve_response( x)
+    end
+
+    matches = /^GET \/login.json\?field1=(.*)$/.match( x[:request])
+    if matches and matches.captures.length == 1
+
+      query = URI.decode( matches.captures[0].gsub(/\+/,' ') )
+      if( query == @secret)
+        x[:session][:authenticated] = true
+      end
+      serve_response( x)
+    end
+
+
+  end
+
+end
+
+
 class Application
 
   # model here is the event processor.
   # this is not well named at all
 
-  def initialize( log, model, assets_content, report_conn )
+  def initialize( log, model, assets_content, report_conn, auth_controller )
     @log = log
     @model = model
     @assets_content = assets_content
     # the report conn ought to be encapsulated and delegated to
     @report_conn = report_conn
+    @auth_controller = auth_controller
 
     @sessions = { }
 
@@ -65,6 +116,7 @@ class Application
     # could group all these together and delegate
     serve_asset( x, @assets_content )
     serve_model_resource( x, @model )
+    serve_authentification( x)
     serve_report_resource( x, @report_conn )
     do_cache_control( x)
     catch_all( x)
@@ -207,29 +259,46 @@ class Application
 
   end
 
+
+  def serve_authentification( x) 
+    return if x[:response] # eg. if not ssl 
+
+    @auth_controller.action( x) 
+
+  end
+
+
   def serve_report_resource( x, report_conn )
     return if x[:response]
     # can have separate filters or handle together etc
-    #puts "***1***************** got request #{x[:request]} "
+
 
     matches = /^GET \/report.json\?field1=(.*)$/.match( x[:request])
     if matches and matches.captures.length == 1
 
-      # so we replace the + with space and then decode
-      query = URI.decode( matches.captures[0].gsub(/\+/,' ') )
+      if x[:session][:authenticated] \
+        && x[:session][:authenticated] == true
 
-      @log.info( "got report query '#{query}'")
+        # so we replace the + with space and then decode
+        query = URI.decode( matches.captures[0].gsub(/\+/,' ') )
 
-      # how do we print up the response ...
-      res = report_conn.exec_params( query )
-      w = StringIO.new()
-      res.each do |row|
-          w.puts row
+        @log.info( "got report query '#{query}'")
+
+        # we should return json, or decode the json
+        res = report_conn.exec_params( query )
+        w = StringIO.new()
+        res.each do |row|
+            w.puts row
+        end
+        #   @log.info( "result is #{ w.string } ")
+        x[:response] = "HTTP/1.1 200 OK"
+        x[:response_headers]['Content-Type'] = "text/plain"
+        x[:body] = StringIO.new( w.string )  # we shouldn't need this double handling
+      else
+        x[:response] = "HTTP/1.1 200 OK"
+        x[:response_headers]['Content-Type'] = "text/plain"
+        x[:body] = StringIO.new( "Please login first!!" )
       end
-      #   @log.info( "result is #{ w.string } ")
-      x[:response] = "HTTP/1.1 200 OK"
-      x[:response_headers]['Content-Type'] = "text/plain"
-      x[:body] = StringIO.new( w.string )  # we shouldn't need this double handling
     end
   end
 
@@ -331,6 +400,25 @@ end
 log.formatter = myformatter
 http_log.formatter = myformatter
 
+# Ok, we want to show the total amount on the buy and sell side,
+# because it's so important. and to compare to other exchanges.
+
+# remember could be fictitious. but should be representative.
+# we can see how it changes over time (bollinger), to guague
+# if it's following the price, or supportive/resistive.
+
+# we could also do analysis - for example how long the order
+# has existed, indicating permanence,
+
+# it's interesting, to know why it's moving up (winklevoss)
+# or down (miners requiring settlement), we would have to find
+# out the reason of every gid in the list.
+
+# we really need, a non-increasing graph as well. of the orderbook
+# as well
+
+# we need to change the db, so the model presenter reader only connects on
+# a read only connection.
 
 model_data = []
 
@@ -346,7 +434,9 @@ report_conn = PG::Connection.open(:dbname => 'prod', :user => 'meteo', :password
 
 model_reader = Model::ModelReader.new( log, model_data )
 
-application = Application.new( http_log, model_reader, assets_content, report_conn )
+auth_controller = AuthController.new()
+
+application = Application.new( http_log, model_reader, assets_content, report_conn, auth_controller )
 
 server = Server::Processor.new(http_log)
 

@@ -52,8 +52,10 @@ $(function () {
 
 });
 
-	function submitTryit( x )
+	function  reallyDoIt( x )
 	{
+		// why doesn't the ajax fall through ? 
+
 		$('#myresultform')[0].value = '';
 		var query = $('#myinputform')[0].value ;
 		$.ajax({
@@ -67,7 +69,59 @@ $(function () {
 			error: function (jqXHR, textStatus, errorThrown ) {
 				console.log( textStatus + errorThrown );
 			}
-		})
+		});
+	}
+
+
+	function submitTryit( x )
+	{
+		// what we want is a loop to check that we are authenticated before doing the operation...
+		// acheck whether we are authenticated
+		$.ajax({
+			dataType: "json",
+			url: "authenticated.json",
+			success: function ( value, textStatus, jqXHR ) {
+				console.log( "authenticated value is: " );
+				console.log( value );
+				console.log( value.authenticated );
+
+				// if not prompt for user/ password
+				if( value.authenticated == false )  { 
+					var x = prompt( 'secret key?' );
+
+					// do the login
+					$.ajax({
+						dataType: "json",
+						url: "login.json",
+						data: { field1: x },
+						success: function ( value, textStatus, jqXHR ) {
+
+							// we should wait, until we've authenticated here
+							// before trying the actual operation... 
+
+							reallyDoIt(  ); 
+						},
+						error: function (jqXHR, textStatus, errorThrown ) {
+							console.log( textStatus + errorThrown );
+						}
+					})
+				}
+				else {
+
+							reallyDoIt(  ); 
+
+				}
+
+
+
+			},
+			error: function (jqXHR, textStatus, errorThrown ) {
+				console.log( textStatus + errorThrown );
+			}
+		}) ;
+
+
+
 	}
 
 

@@ -115,11 +115,11 @@ module Model
 
         bids = orderbook['bids'].length
         asks = orderbook['asks'].length
-        ratio = (bids.to_f / asks.to_f ).round(3)
+        ratio = (bids.to_f / asks.to_f * 100 ).round(1) # percent
 
         bids_sum = compute_sum(orderbook['bids'])
         asks_sum = compute_sum(orderbook['asks'])
-        sum_ratio = (bids_sum.to_f / asks_sum.to_f).round(3)
+        sum_ratio = ((bids_sum.to_f / asks_sum.to_f) * 100 ) .round(1) 
 
         @model << {
           :id => id,
@@ -172,6 +172,8 @@ module Model
 
 
   # cqrs, this is like a view - read only
+  # a model presentation class
+  # or a View Model.
   class ModelReader
 
     def initialize( log, model)

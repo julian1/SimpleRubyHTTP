@@ -88,15 +88,35 @@ class AssetsController
 end
 
 
+class ModelController
+
+  def initialize(model)
+    @model = model
+  end
+
+  def action(x )
+    if /^GET \/get_series.json$/.match(x[:request])
+      @model.get_series( x)
+    end
+
+    # this whole id thing, where client submits id to check for change, is
+    # almost equivalent to etag approach
+    if /^GET \/get_id.json$/.match(x[:request])
+      @model.get_id( x )
+    end
+  end
+end
+
+
 
 class Application
 
   # model here is the event processor.
   # this is not well named at all
 
-  def initialize( log, model, assets_controller, report_conn, auth_controller )
+  def initialize( log, model_controller, assets_controller, report_conn, auth_controller )
     @log = log
-    @model = model
+    @model_controller = model_controller
     @assets_controller = assets_controller
     # the report conn ought to be encapsulated and delegated to
     @report_conn = report_conn
@@ -138,7 +158,7 @@ class Application
     rewrite_index_get( x)
     # could group all these together and delegate
     serve_asset( x )
-    serve_model_resource( x, @model )
+    serve_model_resource( x)
     serve_authentification( x)
     serve_report_resource( x, @report_conn )
     do_cache_control( x)
@@ -252,19 +272,11 @@ class Application
     @assets_controller.action( x)
   end
 
-  def serve_model_resource( x, model )
+  def serve_model_resource( x )
     return if x[:response]
     # can have separate filters or handle together etc
 
-    if /^GET \/get_series.json$/.match(x[:request])
-      model.get_series( x)
-    end
-
-    # this whole id thing, where client submits id to check for change, is
-    # almost equivalent to etag approach
-    if /^GET \/get_id.json$/.match(x[:request])
-      model.get_id( x )
-    end
+	  @model_controller.action( x)
 
   end
 
@@ -445,9 +457,12 @@ report_conn = PG::Connection.open(:dbname => 'prod', :user => 'meteo', :password
 
 model_reader = Model::ModelReader.new( log, model_data )
 
+model_controller = ModelController.new( model_reader)
+
+
 auth_controller = AuthController.new()
 
-application = Application.new( http_log, model_reader, assets_controller, report_conn, auth_controller )
+application = Application.new( http_log, model_controller, assets_controller, report_conn, auth_controller )
 
 server = Server::Processor.new(http_log)
 

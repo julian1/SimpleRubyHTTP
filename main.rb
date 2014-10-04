@@ -88,7 +88,7 @@ class AssetsController
 end
 
 
-class ModelController
+class TimeSeriesController
   # I think that the model reader can actually be turned into this.
 
   def initialize(model)
@@ -100,7 +100,7 @@ class ModelController
       @model.get_series( x)
     end
 
-    # this whole id thing, where client submits id to check for change, is
+    # this whole id thing, where client submits id to check for state change, is
     # almost equivalent to etag approach
     if /^GET \/get_id.json$/.match(x[:request])
       @model.get_id( x )
@@ -158,9 +158,9 @@ class Application
   # model here is the event processor.
   # this is not well named at all
 
-  def initialize( log, model_controller, assets_controller, report_controller, auth_controller )
+  def initialize( log, time_series_controller, assets_controller, report_controller, auth_controller )
     @log = log
-    @model_controller = model_controller
+    @time_series_controller = time_series_controller
     @assets_controller = assets_controller
     @report_controller = report_controller
     @auth_controller = auth_controller
@@ -200,10 +200,11 @@ class Application
     strip_http_version( x)
     rewrite_index_get( x)
     # could group all these together and delegate
-    serve_asset( x )
-    serve_model_resource( x)
-    serve_authentification( x)
-    serve_report_resource( x )
+    do_assets_controller( x )
+    do_time_series_controller( x)
+    do_auth_controller( x)
+    do_report_controller( x )
+
     do_cache_control( x)
     catch_all( x)
     send_response( x )
@@ -222,6 +223,10 @@ class Application
       x[:request_headers][ s[0].strip] = s[1].strip
     end
   end
+
+  ## the Request response logger - ought to be factored out of here
+  ## as well...
+  ## have two methods...
 
   def log_request( x)
     # getpeername, and getsockname are better, but unsupported for sslsocket
@@ -310,22 +315,25 @@ class Application
     end
   end
 
-  def serve_asset( x)
+  # should we change the name of action to process_message
+  # to keep consistent? 
+
+  def do_assets_controller( x)
     return if x[:response]
     @assets_controller.action( x)
   end
 
-  def serve_model_resource( x )
+  def do_time_series_controller( x )
     return if x[:response]
-	  @model_controller.action( x)
+	  @time_series_controller.action( x)
   end
 
-  def serve_authentification( x) 
+  def do_auth_controller( x) 
     return if x[:response] # eg. if not ssl 
     @auth_controller.action( x) 
   end
 
-  def serve_report_resource( x)
+  def do_report_controller( x)
     return if x[:response]
     @report_controller.action( x)
   end
@@ -464,13 +472,13 @@ report_conn = PG::Connection.open(:dbname => 'prod', :user => 'meteo', :password
 
 model_reader = Model::ModelReader.new( log, model_data )
 
-model_controller = ModelController.new( model_reader)
+time_series_controller = TimeSeriesController.new( model_reader)
 
 auth_controller = AuthController.new()
 
 report_controller = ReportController.new( log, report_conn )
 
-application = Application.new( http_log, model_controller, assets_controller, report_controller, auth_controller )
+application = Application.new( http_log, time_series_controller, assets_controller, report_controller, auth_controller )
 
 server = Server::Processor.new(http_log)
 

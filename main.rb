@@ -33,7 +33,8 @@ class AuthController
       EOF
       )
       x[:response] = "HTTP/1.1 200 OK"
-      x[:response_headers]['Content-Type'] = "text/plain"
+      #x[:response_headers]['Content-Type'] = "text/plain"
+      x[:response_headers]['Content-Type'] = "application/json" 
   end
 
   def action( x)

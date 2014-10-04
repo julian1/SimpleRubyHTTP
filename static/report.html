@@ -14,17 +14,24 @@
     <body>
     <h2>Reports</h2>
 
-	<textarea id="myresultform" rows="20" cols="80">
+	<a href="/index.html">home</a> 
+	<br>
+	<textarea id="myresultform" rows="20" cols="100">
 My text
 	</textarea>
 
-	<p>
-	<textarea id="myinputform" rows="3" cols="80">
+	<br>
+	<textarea id="myinputform" rows="5" cols="80">
 Query...
 	</textarea>
 
 	<p>
 	<span><input class="submit" type="button" value="Submit" onclick="submitTryit()"></span>
+
+
+	<span><input class="submit" type="button" value="Show orders" onclick="submitShowOrders()"></span>
+	<span><input class="submit" type="button" value="Show errors" onclick="submitShowErrors()"></span>
+
 
 	<!-- now we need a button -->
 
@@ -40,45 +47,41 @@ $(function () {
 
 	console.log( 'hithere' );
 
-	$('#myinputform')[0].value =  "select id, t,msg from events where msg = 'error' order by id desc limit 10";
-
+	$('#myinputform')[0].value =  "select id, t, content->'url' as url\nfrom events\nwhere msg = 'order2'\norder by id desc limit 10";
 	$('#myresultform')[0].value = '';
 
 });
 
 	function submitTryit( x )
 	{
-		console.log( '--------------' );
-
+		//console.log( '--------------' );
 		var query = $('#myinputform')[0].value ;
 		console.log( query );
-
-		// console.log(  document.getElementById("myinputform").value );
-		//	var encoded_query = encodeURIComponent(query);
-
-		// let javascript handle the encoding...
-		// except we'll fix spaces
-
-
-		// query = query.replace(/ /g, "%20");
-
-		//console.log( 'query now ' + query );
-
-
 		$.ajax({
 			dataType: "text",
 			url: "report.json",
-			//data: { field1: encoded_query },
-			//data: { field1: query },
 			data: { field1: query },
 			success: function ( value, textStatus, jqXHR ) {
-				console.log( "success value is: " + value );
+				// console.log( "success value is: " + value );
 				$('#myresultform')[0].value = value;
 			},
 			error: function (jqXHR, textStatus, errorThrown ) {
 				console.log( textStatus + errorThrown );
 			}
 		})
+	}
+
+
+	function submitShowOrders( x)
+	{
+		$('#myinputform')[0].value = "select id, t, content->'url' as url\nfrom events\nwhere msg = 'order2'\norder by id desc limit 10";
+		submitTryit( 'dummy'  );
+	}
+
+	function submitShowErrors( x)
+	{
+		$('#myinputform')[0].value = "select id, t, left( content::varchar, 30) as error\nfrom events\nwhere msg = 'error'\norder by id desc limit 10";
+		submitTryit( 'dummy'  );
 	}
 
 

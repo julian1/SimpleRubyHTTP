@@ -278,15 +278,23 @@ class Application
 end
 
 
+http_log_file = File.new('log.txt', 'a')
+http_log_file.sync = 1
+http_log = Logger.new( http_log_file  )
+http_log.level = Logger::INFO
+
 # we can separate out http requests from everything else by
 # just creating two loggers 
 log = Logger.new(STDOUT)
-log.level = Logger::WARN
-#log.level = Logger::INFO
+#log.level = Logger::WARN
+log.level = Logger::INFO
 
-log.formatter = proc do |severity, datetime, progname, msg|
+myformatter = proc do |severity, datetime, progname, msg|
   "#{severity}: #{datetime}: #{msg}\n"
 end
+
+log.formatter = myformatter
+http_log.formatter = myformatter
 
 
 model_data = []
@@ -303,9 +311,9 @@ report_conn = PG::Connection.open(:dbname => 'prod', :user => 'meteo', :password
 
 model_reader = Model::ModelReader.new( log, model_data )
 
-application = Application.new( log, model_reader, file_content, report_conn )
+application = Application.new( http_log, model_reader, file_content, report_conn )
 
-server = Server::Processor.new(log)
+server = Server::Processor.new(http_log)
 
 
 

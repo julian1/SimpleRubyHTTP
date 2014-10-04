@@ -7,7 +7,7 @@ require 'digest/md5'
 
 # adapted from, https://practicingruby.com/articles/implementing-an-http-file-server
 
-module Static
+module Assets
 
 
   class FileContent

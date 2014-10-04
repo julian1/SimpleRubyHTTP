@@ -1,6 +1,6 @@
 
 require './server'
-require './static'
+require './assets'
 require './helper'
 require './es_model'
 require 'logger'
@@ -21,10 +21,10 @@ class Application
   # model here is the event processor.
   # this is not well named at all
 
-  def initialize( log, model, file_content, report_conn )
+  def initialize( log, model, assets_content, report_conn )
     @log = log
     @model = model
-    @file_content = file_content
+    @assets_content = assets_content
     # the report conn ought to be encapsulated and delegated to
     @report_conn = report_conn
 
@@ -63,7 +63,7 @@ class Application
     strip_http_version( x)
     rewrite_index_get( x)
     # could group all these together and delegate
-    serve_asset( x, @file_content )
+    serve_asset( x, @assets_content )
     serve_model_resource( x, @model )
     serve_report_resource( x, @report_conn )
     do_cache_control( x)
@@ -172,20 +172,20 @@ class Application
     end
   end
 
-  def serve_asset( x, file_content)
+  def serve_asset( x, assets_content)
     return if x[:response]
 
     matches = /^GET (.*\.txt|.*\.html|.*\.css|.*\.js|.*\.jpeg|.*\.png|.*\.ico)$/.match(x[:request])
     if matches && matches.captures.length == 1
 
-      digest = file_content.digest_file( x )
+      digest = assets_content.digest_file( x )
       if_none_match = x[:request_headers]['If-None-Match']
 
       if digest && if_none_match && if_none_match == digest
         x[:response] = "HTTP/1.1 304 Not Modified"
       else
         # eg. serve normal 200 OK
-        file_content.serve_file( x )
+        assets_content.serve_file( x )
         x[:response_headers]['ETag'] = digest
       end
     end
@@ -340,13 +340,13 @@ event_conn = PG::Connection.open(:dbname => 'prod', :user => 'meteo', :password 
 
 event_processor = Model::EventProcessor.new( log, event_conn, event_sink )
 
-file_content = Static::FileContent.new( log, "#{Dir.pwd}/static" )
+assets_content = Assets::FileContent.new( log, "#{Dir.pwd}/assets" )
 
 report_conn = PG::Connection.open(:dbname => 'prod', :user => 'meteo', :password => 'meteo' )
 
 model_reader = Model::ModelReader.new( log, model_data )
 
-application = Application.new( http_log, model_reader, file_content, report_conn )
+application = Application.new( http_log, model_reader, assets_content, report_conn )
 
 server = Server::Processor.new(http_log)
 

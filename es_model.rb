@@ -64,13 +64,15 @@ module Model
       id
     end
 
+    # channel to wait on
+    POSTGRES_CHANNEL = 'events_insert'
 
     # need to pass the id
     def process_current_events( id)
       @log.info( "current events - next id to process #{id}")
       while true
         begin
-          @conn.async_exec "LISTEN events_insert"
+          @conn.async_exec "LISTEN #{POSTGRES_CHANNEL}"
           @conn.wait_for_notify do |channel, pid, payload|
 
             @log.info( "Received a NOTIFY on channel #{channel} #{pid} #{payload}" )

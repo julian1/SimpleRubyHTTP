@@ -1,4 +1,3 @@
-#!/usr/bin/ruby
 
 require "socket"
 require "openssl"
@@ -56,7 +55,7 @@ module Server
       end
     end
 
-    def start_ssl(  listeningPort, &code)
+    def start_ssl( listeningPort, &code)
         @threads << Thread.new {
         begin
           server = TCPServer.new(listeningPort)
@@ -73,7 +72,7 @@ module Server
       }
     end
 
-    def start(  listeningPort, &code)
+    def start( listeningPort, &code)
       @threads << Thread.new {
         begin
           server = TCPServer.new('127.0.0.1', listeningPort)

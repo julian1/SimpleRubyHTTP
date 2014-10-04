@@ -8,6 +8,7 @@ require 'logger'
 
 # chain together transforms...
 
+# the app at top level, is a lot like processing old win32 or apple OS message pumps
 
 # Ok aparently ruby blocks can reference their enclosing scope!
 # how are we going to pass a reference into into the processing block...
@@ -52,6 +53,7 @@ class Application
       return nil
     end
 
+    redirect_to_https( x)
     handle_post_request( x)
     strip_http_version( x)
     rewrite_index_get( x)
@@ -80,13 +82,28 @@ class Application
   end
 
   def log_request( x)
+    # getpeername, and getsockname are better, but unsupported for sslsocket
+    # see -> http://stackoverflow.com/questions/19315361/obtaining-client-address-with-ruby-sslsockets
+    # port, ip = Socket.unpack_sockaddr_in(x[:socket].getpeername)
+
     ip = x[:socket].peeraddr[3] 
     @log.info( "request from #{ip} '#{ x[:request] ? x[:request].strip : "nil"  }'" )
     @log.info( "request_headers #{ x[:request_headers] }" )
     # puts "peer addr: #{ x[:socket].peeraddr } "
   end
 
+
+  def redirect_to_https( x)
+    port = x[:socket].addr[1]
+    if port == 8000
+      @log.info( "redirect to https" )
+      x[:response] = "HTTP/1.1 302 Found"
+      x[:response_headers]['Location'] = "https://localhost:1443"
+    end
+  end
+
   def handle_post_request( x)
+    return if x[:response]
     # should we inject the socket straight in here ?
     # it makes instantiating the graph harder...
     if /^POST .*$/.match(x[:request])
@@ -100,8 +117,10 @@ class Application
   end
 
   def strip_http_version( x)
-    # eases subsequent matching
-    # should do this on other types also ?
+    return if x[:response]
+    # - think we should do this before the post, and not care
+    # irrespective of the actual http verb 
+    # - eases subsequent matching
     matches = /^(GET .*)\s(HTTP.*)/.match(x[:request])
     if matches and matches.captures.length == 2
       x[:request] = matches.captures[0]
@@ -109,6 +128,7 @@ class Application
   end
 
   def rewrite_index_get( x)
+    return if x[:response]
     # rewrite top level / to index.html
     if matches = /^GET \/$/.match(x[:request])
       x[:request] = "GET /index.html"
@@ -116,6 +136,7 @@ class Application
   end
 
   def serve_asset( x, file_content)
+    return if x[:response]
 
     matches = /^GET (.*\.txt|.*\.html|.*\.css|.*\.js|.*\.jpeg|.*\.png|.*\.ico)$/.match(x[:request])
     if matches && matches.captures.length == 1
@@ -134,6 +155,7 @@ class Application
   end
 
   def serve_model_resource( x, model )
+    return if x[:response]
     # can have separate filters or handle together etc
 
     if /^GET \/get_series.json$/.match(x[:request])
@@ -149,6 +171,7 @@ class Application
   end
 
   def serve_report_resource( x, report_conn )
+    return if x[:response]
     # can have separate filters or handle together etc
     #puts "***1***************** got request #{x[:request]} "
 
@@ -255,7 +278,8 @@ class Application
 end
 
 
-
+# we can separate out http requests from everything else by
+# just creating two loggers 
 log = Logger.new(STDOUT)
 log.level = Logger::WARN
 #log.level = Logger::INFO
@@ -296,10 +320,10 @@ end
 # start processing at event tip less 2000
 id = event_conn.exec_params( "select max(id) - 2000 as max_id from events" )[0]['max_id']
 
-log.info( "starting processing events at #{id}")
+log.warn( "starting processing events at #{id}")
 id = event_processor.process_events( id )
 
-log.info( "starting processing current events #{id}")
+log.warn( "starting processing current events #{id}")
 event_processor.process_current_events( id )
 
 # block

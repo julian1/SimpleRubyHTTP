@@ -10,16 +10,15 @@ Minimal HTTP server, supporting
     - streaming io (using file/stringio - still need chunked transfer) .
     - filter chains
     - static assets from file-system
-    - redirect to https
+    - 302 redirect to https
     - mime mappping
     - simple example of event sourcing model 
 
 TODO
-    - 302
+
     - chunked transfer
     - websockets
-    - cache cotnrol example using last modified
+    - cache cotnrol example using last-modified
     - public cache example would be interesting
-
 
 

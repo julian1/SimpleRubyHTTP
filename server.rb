@@ -18,7 +18,7 @@ module Server
       loop do
         socket = server.accept
 
-        ip = socket.peeraddr[3] 
+        ip = socket.peeraddr[3]
         @log.info("new connection #{ip}")
 
         # if we don't spawn the thread then we get a broken pipe which is weird

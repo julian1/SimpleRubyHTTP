@@ -1,4 +1,10 @@
 
+redirect to https
+
+supports streaming.
+
+---
+
 Lets aggregate the model, conn into services and then pass to all 
 the message cracker stuff.
 
@@ -150,5 +156,19 @@ it's very close to being real time.
 
 ok, it would be nice to have real-time display of date 
 
+
+# require 'cgi'
+  # require 'base64'
+  # 
+  # def decode_utf8_b64(string)
+  #   URI.unescape(CGI::escape(Base64.decode64(string)))
+  # end
+  # 
+  #    query = matches.captures[0]
+  #query = URI.unescape( matches.captures[0] ) 
+  #    query = decode_utf8_b64(  matches.captures[0]  )
+  # ?field1=select+*+from+mytable+limit+1
+  # what about handling + signs
+  #query = query.gsub(/+/, ' ' ); 
 
 

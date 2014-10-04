@@ -58,11 +58,35 @@ class AuthController
       end
       serve_response( x)
     end
+  end
+end
 
 
+
+class AssetsController
+
+  def initialize(content)
+    @content = content
   end
 
+  def action( x)
+    matches = /^GET (.*\.txt|.*\.html|.*\.css|.*\.js|.*\.jpeg|.*\.png|.*\.ico)$/.match(x[:request])
+    if matches && matches.captures.length == 1
+
+      digest = @content.digest_file( x )
+      if_none_match = x[:request_headers]['If-None-Match']
+
+      if digest && if_none_match && if_none_match == digest
+        x[:response] = "HTTP/1.1 304 Not Modified"
+      else
+        # eg. serve normal 200 OK
+        @content.serve_file( x )
+        x[:response_headers]['ETag'] = digest
+      end
+    end
+  end
 end
+
 
 
 class Application
@@ -70,10 +94,10 @@ class Application
   # model here is the event processor.
   # this is not well named at all
 
-  def initialize( log, model, assets_content, report_conn, auth_controller )
+  def initialize( log, model, assets_controller, report_conn, auth_controller )
     @log = log
     @model = model
-    @assets_content = assets_content
+    @assets_controller = assets_controller
     # the report conn ought to be encapsulated and delegated to
     @report_conn = report_conn
     @auth_controller = auth_controller
@@ -113,7 +137,7 @@ class Application
     strip_http_version( x)
     rewrite_index_get( x)
     # could group all these together and delegate
-    serve_asset( x, @assets_content )
+    serve_asset( x )
     serve_model_resource( x, @model )
     serve_authentification( x)
     serve_report_resource( x, @report_conn )
@@ -223,23 +247,9 @@ class Application
     end
   end
 
-  def serve_asset( x, assets_content)
+  def serve_asset( x)
     return if x[:response]
-
-    matches = /^GET (.*\.txt|.*\.html|.*\.css|.*\.js|.*\.jpeg|.*\.png|.*\.ico)$/.match(x[:request])
-    if matches && matches.captures.length == 1
-
-      digest = assets_content.digest_file( x )
-      if_none_match = x[:request_headers]['If-None-Match']
-
-      if digest && if_none_match && if_none_match == digest
-        x[:response] = "HTTP/1.1 304 Not Modified"
-      else
-        # eg. serve normal 200 OK
-        assets_content.serve_file( x )
-        x[:response_headers]['ETag'] = digest
-      end
-    end
+    @assets_controller.action( x)
   end
 
   def serve_model_resource( x, model )
@@ -429,13 +439,15 @@ event_processor = Model::EventProcessor.new( log, event_conn, event_sink )
 
 assets_content = Assets::FileContent.new( log, "#{Dir.pwd}/assets" )
 
+assets_controller = AssetsController.new( assets_content )
+
 report_conn = PG::Connection.open(:dbname => 'prod', :user => 'meteo', :password => 'meteo' )
 
 model_reader = Model::ModelReader.new( log, model_data )
 
 auth_controller = AuthController.new()
 
-application = Application.new( http_log, model_reader, assets_content, report_conn, auth_controller )
+application = Application.new( http_log, model_reader, assets_controller, report_conn, auth_controller )
 
 server = Server::Processor.new(http_log)
 

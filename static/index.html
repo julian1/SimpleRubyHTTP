@@ -22,15 +22,15 @@
        scaled.</p>
 
 
-	<!-- ok, we want to try to load a json file --> 
+	<!-- ok, we want to try to load a json file -->
 
 <script type="text/javascript">
 $(function () {
 
-	// how do we get the json data ? - can we specify it in the head. 
-	// or does it have to be httprequest from within ? 
+	// how do we get the json data ? - can we specify it in the head.
+	// or does it have to be httprequest from within ?
 
-	// how can i get the file data ? 
+	// how can i get the file data ?
 	// --  var p = JSON.parse(contact);
 
 	//PlainObject data, String textStatus, jqXHR jqXHR
@@ -44,9 +44,9 @@ $(function () {
 	// scrolling would be nice ...
 
 	// but we really want to be able to add another access.
-	// AHHH even if we can't then we can have two charts. 
+	// AHHH even if we can't then we can have two charts.
 	// one on top of the other...
-	// Also getting the 5% bound - almost certainly wants to be put on the same graph. 
+	// Also getting the 5% bound - almost certainly wants to be put on the same graph.
 
 
 
@@ -66,11 +66,11 @@ $(function () {
 				yaxes: [
 					{
 						position: "right"
-					}, 
+					},
 					{
 						position: "left"
-					} 
-					],  
+					}
+					],
 
 				xaxis: {
 					mode: "time",
@@ -82,18 +82,18 @@ $(function () {
 					axisLabelFontFamily: 'Verdana, Arial',
 					axisLabelPadding: 10,
 
-					tickFormatter: function (val, axis) {           
+					tickFormatter: function (val, axis) {
 						//return dayOfWeek[new Date(val).getDay()];
-						//return val.toLocaleTimeString() 
-						return new Date( val).toLocaleTimeString(); 
+						//return val.toLocaleTimeString()
+						return new Date( val).toLocaleTimeString();
 					}
 
 				}
 			};
 
 		all_series = null;
-	
-		graph = null ; 
+
+		graph = null ;
 
 		last_id = -1;
 
@@ -107,11 +107,11 @@ $(function () {
 		$.ajax({
 			dataType: "json",
 			url: "get_id.json",
-			success: function ( id, textStatus, jqXHR ) { 
+			success: function ( id, textStatus, jqXHR ) {
 
-				console.log( "id is " + id + " last_id " + last_id );	
-				
-				if( id <= last_id ) { 
+				console.log( "id is " + id + " last_id " + last_id );
+
+				if( id <= last_id ) {
 
 					console.log( "nothing to update");
 				}
@@ -122,31 +122,31 @@ $(function () {
 						dataType: "json",
 						url: "get_series.json",
 						//data: "whoot",
-						success: function ( datax, textStatus, jqXHR ) { 
-							console.log( 'whoot got data' ); 
+						success: function ( datax, textStatus, jqXHR ) {
+							console.log( 'whoot got data' );
 							//data = [[0, 3], [4, 8], [8, 5], [9, 13]];
-							var all_series = [  
-								{ 
-									label: "top ask", 
-									data: datax.map( function(x) { 
-											return [ new Date( x.time), x.top_ask ] 
-										} ),  
-									yaxis: 1 
+							var all_series = [
+								{
+									label: "top ask",
+									data: datax.map( function(x) {
+											return [ new Date( x.time), x.top_ask ]
+										} ),
+									yaxis: 1
 								},
-								{ 
-									label: "top bid", 
-									data: datax.map( function(x) { 
-											return [ new Date( x.time), x.top_bid ] 
-										} ), 
-									yaxis: 1 
+								{
+									label: "top bid",
+									data: datax.map( function(x) {
+											return [ new Date( x.time), x.top_bid ]
+										} ),
+									yaxis: 1
 								},
-								{ 
-									label: "sum ratio", 
-									data: 
-										datax.map( function(x) { 
-											return [ new Date( x.time), x.sum_ratio ] 
-										} ), 
-									yaxis: 2, 
+								{
+									label: "sum ratio",
+									data:
+										datax.map( function(x) {
+											return [ new Date( x.time), x.sum_ratio ]
+										} ),
+									yaxis: 2,
 									//points: { symbol: "circle", fillColor: "#7F7F7F", show: true },
 									lines: { color: "#7F7F7F" }
 								}
@@ -164,19 +164,19 @@ $(function () {
 								graph.draw();            // Update actual plot
 							}
 
-							// now we want to do update this thing 
-							x = datax.slice(-1)[0]; 
+							// now we want to do update this thing
+							x = datax.slice(-1)[0];
 							y = new Date( x.time).toLocaleTimeString()
 							$( "#mytime" ).html( "<p>" + y + "</p>" );
 
 
-							
-							last_id = x.id;	
+
+							last_id = x.id;
 
 						} ,
-						error: function (jqXHR, textStatus, errorThrown ) { 
-							console.log(   textStatus  + errorThrown ); 
-						} 
+						error: function (jqXHR, textStatus, errorThrown ) {
+							console.log(   textStatus  + errorThrown );
+						}
 					});
 
 
@@ -207,7 +207,7 @@ $(function () {
 
     // a null signifies separate line segments
     //var d3 = [[0, 13], [7, 13], null, [7, 2.5], [14, 2.5]];
-    
+
     //$.plot($("#placeholder"), [ d1, d2, d3 ]);
     //$.plot($("#placeholder"), [ d3 ]);
 });

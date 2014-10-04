@@ -11,7 +11,7 @@ module Server
 
     def initialize()
       @threads = []
-    end 
+    end
 
     def process_accept( server, &code )
       loop do
@@ -28,7 +28,7 @@ module Server
               break if code.call( socket ).nil?
 
               # # i think we get a broken pipe if we can't read anything
-              # rescue Errno::EPIPE 
+              # rescue Errno::EPIPE
               # $stderr.puts "*** EPIPE "
               # socket.close
               # break;

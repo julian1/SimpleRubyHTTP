@@ -14,7 +14,7 @@ require './es_model'
 
 class Application
 
-  # model here is the event processor. 
+  # model here is the event processor.
   # this is not well named at all
 
   def initialize( model, file_content, report_conn )
@@ -37,13 +37,13 @@ class Application
     }
 
     # this kind of chaining could be done more
-    # dynamically, by processing an array 
+    # dynamically, by processing an array
     # and that would support insertAfterFilter() etc.
     # but this is ok,
     decode_request( x)
     log_request( x)
 
-    # if the connection was closed by remote
+    # no request, indicating connection close by remote
     if x[:request].nil?
       return nil
     end
@@ -136,8 +136,8 @@ class Application
       model.get_series( x)
     end
 
-    # this whole id thing, where client submits id to check for change, is 
-    # almost equivalent to etag approach 
+    # this whole id thing, where client submits id to check for change, is
+    # almost equivalent to etag approach
     if /^GET \/get_id.json$/.match(x[:request])
       model.get_id( x )
     end
@@ -146,21 +146,21 @@ class Application
 
   def serve_report_resource( x, report_conn )
     # can have separate filters or handle together etc
-    #puts "***1***************** got request #{x[:request]} " 
+    #puts "***1***************** got request #{x[:request]} "
 
     matches = /^GET \/report.json\?field1=(.*)$/.match( x[:request])
     if matches and matches.captures.length == 1
-      
-      # so we replace the + with space and then decode 
-      query = URI.decode( matches.captures[0].gsub(/\+/,' ') ) 
 
-      puts "********************* got report! #{query} " 
+      # so we replace the + with space and then decode
+      query = URI.decode( matches.captures[0].gsub(/\+/,' ') )
+
+      puts "********************* got report! #{query} "
 
       # how do we print up the response ...
       res = report_conn.exec_params( query )
-      w = StringIO.new() 
+      w = StringIO.new()
       res.each do |row|
-          w.puts row 
+          w.puts row
       end
   #    puts "result is #{ w.string } "
       x[:response] = "HTTP/1.1 200 OK"
@@ -202,7 +202,7 @@ class Application
   # data, if we have snapshots, running on the server. but then loose the power
   # of customizing locally which is the only reason to run locally.
 
-  # what we're doing with checking for an id update - is very similar to ES. 
+  # what we're doing with checking for an id update - is very similar to ES.
 
 
   def catch_all( x)
@@ -257,9 +257,7 @@ event_sink = Model::EventSink.new( model_data )
 
 event_conn = PG::Connection.open(:dbname => 'prod', :user => 'meteo', :password => 'meteo' )
 
-event_processor = Model::EventProcessor.new( event_conn, event_sink ) 
-
-server = Server::Processor.new()
+event_processor = Model::EventProcessor.new( event_conn, event_sink )
 
 file_content = Static::FileContent.new( "#{Dir.pwd}/static" )
 
@@ -269,33 +267,30 @@ model_reader = Model::ModelReader.new( model_data )
 
 application = Application.new( model_reader, file_content, report_conn )
 
+server = Server::Processor.new()
+
 
 server.start_ssl(1443) do |socket|
   application.process_request( socket)
 end
-
 
 server.start(8000) do |socket|
   application.process_request( socket)
 end
 
 
-id = -1
+# id = -1
 
-# start processing events at tip less 2000
+# start processing at event tip less 2000
 id = event_conn.exec_params( "select max(id) - 2000 as max_id from events" )[0]['max_id']
 
-puts "starting events at #{id}"
-
-
+puts "starting processing events at #{id}"
 id = event_processor.process_events( id )
 
-puts "finished processing historic events, id now #{id}"
-
+puts "starting processing current events #{id}"
 event_processor.process_current_events( id )
 
-
+# block
 server.run()
-
 
 

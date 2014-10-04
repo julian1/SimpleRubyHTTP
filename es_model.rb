@@ -15,7 +15,7 @@ require 'date'
 # is purely in memory
 #
 
-# change name ESModel? 
+# change name ESModel?
 module Model
 
 
@@ -30,7 +30,7 @@ module Model
       @conn = conn
       @event_sink = event_sink
     end
-  
+
 
     def process_events( id )
       # process from id, and return the next unprocessed id

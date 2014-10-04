@@ -35,13 +35,13 @@ module Helper
       end
 
 
-      if false 
+      if false
         # don't compress
         content = x[:body].read
-        headers['Content-Length'] =  "#{content.bytesize}" 
+        headers['Content-Length'] =  "#{content.bytesize}"
       end
 
-      ## We shouldnt be compressing already compressed assets like images. 
+      ## We shouldnt be compressing already compressed assets like images.
 
       # we could actually read the header field to decide whether to compress or not
       # or the request object
@@ -54,15 +54,15 @@ module Helper
 
         content = wio.string
         headers['Content-Encoding'] = "gzip"
-        headers['Content-Length'] =  "#{content.bytesize}" 
+        headers['Content-Length'] =  "#{content.bytesize}"
 
       else
 
-        headers['Content-Length'] =  "0" 
-      end 
+        headers['Content-Length'] =  "0"
+      end
 
       # Ok, we don't really have to wrap the stream to do chuncked encoding etc.
-      # instead we can localise the behavior here. 
+      # instead we can localise the behavior here.
 
       socket = x[:socket]
 
@@ -81,28 +81,28 @@ module Helper
 
       socket.print "\r\n"
 
-      if x[:body] 
+      if x[:body]
 
         # write content
-        socket.print content 
+        socket.print content
       end
 
   end
 
- 
-#     # there's all these things that interact - cookies, compression, keep alives, cache-control, ssl 
-# 
-#     # actually we could construct a pipeline that has two calls.
-#     # content and headers. 
-# 
-#     # that way we can abstract the filling in of the size. and compression. 
-#     # lower levels - handle db,file stream, set response 404, 200 etc, cache control
-#     # other levels - cookies. 
-#     # top level compression, keep-alive etc.
-#     
- 
 
-    # this is failing on, with new line behavior 
+#     # there's all these things that interact - cookies, compression, keep alives, cache-control, ssl
+#
+#     # actually we could construct a pipeline that has two calls.
+#     # content and headers.
+#
+#     # that way we can abstract the filling in of the size. and compression.
+#     # lower levels - handle db,file stream, set response 404, 200 etc, cache control
+#     # other levels - cookies.
+#     # top level compression, keep-alive etc.
+#
+
+
+    # this is failing on, with new line behavior
     #  echo -e 'GET / HTTP/1.1' | nc localhost 2345 | less
 
     #request = {}
@@ -111,40 +111,40 @@ module Helper
 
     # ok, we have to avoid calling it twice,
 
-    # I don't think we can actually call gets, if we don't 
+    # I don't think we can actually call gets, if we don't
     # know for certain ... whether more data should arrive...
 
-    # I don't see how we can know that we're finshed - if it's HTTP/1.0 
-    # and there are no headers. 
+    # I don't see how we can know that we're finshed - if it's HTTP/1.0
+    # and there are no headers.
 
-    # no it will be terminated by another \r\n 
+    # no it will be terminated by another \r\n
 
     # i think it's correct - we have to block twice to know when http finishes.
 
 #   def Helper.decode_request( x )
-# 
+#
 #     socket = x[:socket]
 #     x[:request] = socket.gets
 #     while line = socket.gets("\r\n")  # this blocks, because there's nothing more to read after the first line.
 #                                       # i think this is correct behavior
 #       break if line == "\r\n"
 #       s = line.split(':')
-#       x[:request_headers][ s[0].strip] = s[1].strip 
+#       x[:request_headers][ s[0].strip] = s[1].strip
 #     end
 #   end
 
   def Helper.ignore_exception
      begin
-     yield  
+     yield
      rescue Exception
     end
   end
 
 
-# 
+#
 #   def Helper.write_redirect_message( request, socket )
-# 
-#     response = <<-EOS  
+#
+#     response = <<-EOS
 #       <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
 #       <html><head>
 #       <title>302 Found</title>
@@ -155,19 +155,19 @@ module Helper
 #       <address>Apache Server at imos.aodn.org.au Port 80</address>
 #       </body></html>
 #     EOS
-#    
-#     socket.print "HTTP/1.1 302 Found" + 
-#       "Date: Sun, 21 Sep 2014 09:02:16 GMT\r\n" + 
+#
+#     socket.print "HTTP/1.1 302 Found" +
+#       "Date: Sun, 21 Sep 2014 09:02:16 GMT\r\n" +
 #       "Server: Apache\r\n" +
-#       "Location: https://localhost:1443\r\n" + 
-#       "Vary: Accept-Encoding\r\n" + 
+#       "Location: https://localhost:1443\r\n" +
+#       "Vary: Accept-Encoding\r\n" +
 #       "Content-Length: 282\r\n" +
 #       "Content-Type: text/html; charset=iso-8859-1\r\n" +
 #       "\r\n"
-# 
+#
 #     # Print the actual response body, which is just "Hello World!\n"
 #     socket.print response
 #   end
-# 
+#
 end
 

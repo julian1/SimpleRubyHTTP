@@ -2,7 +2,7 @@
 
 require 'digest/md5'
 
-# change module name to Asset ? 
+# change module name to Asset ?
 # or Static FileAsset
 
 # adapted from, https://practicingruby.com/articles/implementing-an-http-file-server
@@ -64,9 +64,9 @@ module Static
       CONTENT_TYPE_MAPPING.fetch(ext, DEFAULT_CONTENT_TYPE)
     end
 
- 
+
     # sending the Etag gives us
-    # we definitely need to construct a pipeline. 
+    # we definitely need to construct a pipeline.
     # if-none-match
 
     # Hmmm we can just append the file timestamp to the etag  ...
@@ -89,7 +89,7 @@ module Static
 
     def serve_file( x )
 
-      # no because we're also doing why don't we just return a valid stream descriptor here? 
+      # no because we're also doing why don't we just return a valid stream descriptor here?
 
       path = requested_file( x[:request] )
 

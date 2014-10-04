@@ -17,10 +17,10 @@ class Application
   # model here is the event processor. 
   # this is not well named at all
 
-  def initialize( model, fileContent, report_conn )
-    puts "%%%% application initialize"
+  def initialize( model, file_content, report_conn )
     @model = model
-    @fileContent = fileContent
+    @file_content = file_content
+    # the report conn ought to be encapsulated and delegated to
     @report_conn = report_conn
   end
 
@@ -50,9 +50,8 @@ class Application
 
     handle_post_request( x)
     strip_http_version( x)
-    # main stuff here
     rewrite_index_get( x)
-    serve_asset( x, @fileContent )
+    serve_asset( x, @file_content )
     serve_model_resource( x, @model )
     serve_report_resource( x, @report_conn )
     do_cookie_stuff( x)
@@ -61,8 +60,8 @@ class Application
     send_response( x )
     log_response( x)
     true
-  end
 
+  end
 
 
   def decode_request( x)
@@ -112,19 +111,19 @@ class Application
     end
   end
 
-  def serve_asset( x, fileContent)
+  def serve_asset( x, file_content)
 
     matches = /^GET (.*\.txt|.*\.html|.*\.css|.*\.js|.*\.jpeg|.*\.png|.*\.ico)$/.match(x[:request])
     if matches && matches.captures.length == 1
 
-      digest = fileContent.digest_file( x )
+      digest = file_content.digest_file( x )
       if_none_match = x[:request_headers]['If-None-Match']
 
       if digest && if_none_match && if_none_match == digest
         x[:response] = "HTTP/1.1 304 Not Modified"
       else
         # eg. serve normal 200 OK
-        fileContent.serve_file( x )
+        file_content.serve_file( x )
         x[:response_headers]['ETag'] = digest
       end
     end
@@ -262,13 +261,13 @@ event_processor = Model::EventProcessor.new( event_conn, event_sink )
 
 server = Server::Processor.new()
 
-fileContent = Static::FileContent.new( "#{Dir.pwd}/static" )
+file_content = Static::FileContent.new( "#{Dir.pwd}/static" )
 
 report_conn = PG::Connection.open(:dbname => 'prod', :user => 'meteo', :password => 'meteo' )
 
 model_reader = Model::ModelReader.new( model_data )
 
-application = Application.new( model_reader, fileContent, report_conn )
+application = Application.new( model_reader, file_content, report_conn )
 
 
 server.start_ssl(1443) do |socket|

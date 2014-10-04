@@ -4,19 +4,12 @@ require 'pg'
 require 'date'
 
 # we can actually have multiple models if we want. or multiple event processors
-
-
 # model1( processor) , model2( processor)
 # or
 # model( processor1, processor2 )
 # or
 # model1( processor1), model2( processor2)
 #
-#
-# also we can route the message cracking down into this class.
-# so
-# this is very interesting.
-
 
 # we don't need db stuff to be atomic, because the model
 # is purely in memory
@@ -33,9 +26,9 @@ module Model
 
   class EventProcessor
 
-    def initialize( conn, f)
+    def initialize( conn, event_sink)
       @conn = conn
-      @f = f
+      @event_sink = event_sink
     end
   
 
@@ -61,8 +54,7 @@ module Model
             rescue
               $stderr.puts "Error decoding json content: #{id} error: #{$!}"
             end
-            # f.call(id, msg, t, content)
-            @f.process_event(id, msg, t, content)
+            @event_sink.process_event(id, msg, t, content)
           rescue
             # for some reason we aer getting errors
             $stderr.puts "Error processing message id: #{id} error: #{$!}"
@@ -97,24 +89,12 @@ module Model
   end
 
 
-
-  # IMPORTANT we can have another class , and inject the array into an access api class
-  # and the sink
-
-	# these are named around the wrong way.
-	# they are both event processors.
-	# one knows about the db, and the function
-
   class EventSink
 
     def initialize( model)
       @model = model
     end
 
-#     def initialize()
-#   		@model = []
-#     end
-# 
     def compute_sum(data)
       bids_sum = 0
       data.each do |i|
@@ -186,15 +166,6 @@ module Model
             puts "unknown event msg #{msg}"
         end
     end
-
-    # access the current model state
-    # this can be performed at any time ...
-    # or pushed into the db, etc.
-
-
-    # so i think rather than do the formatting, it would be better to just send
-    # the series data, and handle presentation in javascript.
-
   end
 
 
@@ -207,33 +178,27 @@ module Model
     end
 
     def get_series( x)
-      # to be fast, we should really use a stream
-      # should be a join,
-
+      # should be a stream not stringstream
       puts "$$ model length #{@model.length}"
 
-
-      # take up to 500 elts
+      # take up to 500 elts, with logic to handle fewer
       take = 500
       n = @model.length
       m = @model[ (n - take > 0 ? n - take : 0) .. n - 1]
 
       top_ask = m.map do |row| <<-EOF
-          {
-            "id": "#{row[:id]}",
-            "time": "#{row[:time]}",
-            "top_ask": #{row[:top_ask]},
-            "top_bid": #{row[:top_bid]},
-            "sum_ratio": #{row[:sum_ratio]}
-
-          }
+        {
+          "id": "#{row[:id]}",
+          "time": "#{row[:time]}",
+          "top_ask": #{row[:top_ask]},
+          "top_bid": #{row[:top_bid]},
+          "sum_ratio": #{row[:sum_ratio]}
+        }
         EOF
       end
 
       ret = <<-EOF
-
         [ #{top_ask.join(", ")} ]
-
       EOF
 
       x[:response] = "HTTP/1.1 200 OK"
@@ -241,21 +206,17 @@ module Model
       x[:body] = StringIO.new( ret, "r")
     end
 
-
-#     def get_time()
-#       "\"#{@model.last[:time]}\""
-#     end
-
-
     def get_id( x )
       x[:response] = "HTTP/1.1 200 OK"
       x[:response_headers]['Content-Type'] = "application/json"
       x[:body] = StringIO.new( "\"#{@model.last[:id]}\"" )
     end
 
+#     def get_time()
+#       "\"#{@model.last[:time]}\""
+#     end
 
   end
-
 
 end
 

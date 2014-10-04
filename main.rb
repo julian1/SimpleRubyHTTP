@@ -89,6 +89,7 @@ end
 
 
 class ModelController
+  # I think that the model reader can actually be turned into this.
 
   def initialize(model)
     @model = model
@@ -108,18 +109,60 @@ class ModelController
 end
 
 
+class ReportController
+
+  # this is not thread safe on the conn!!!
+  # should be using a conn pool ? 
+  def initialize(log, conn)
+    @log = log
+    @conn = conn
+  end
+
+  def action( x) 
+
+    puts "*** WHOOT report controller action " 
+
+    matches = /^GET \/report.json\?field1=(.*)$/.match( x[:request])
+    if matches and matches.captures.length == 1
+
+      if x[:session][:authenticated] \
+        && x[:session][:authenticated] == true
+
+        # so we replace the + with space and then decode
+        query = URI.decode( matches.captures[0].gsub(/\+/,' ') )
+
+        @log.info( "got report query '#{query}'")
+
+        # we should return json, or decode the json
+        res = @conn .exec_params( query )
+        w = StringIO.new()
+        res.each do |row|
+            w.puts row
+        end
+        #   @log.info( "result is #{ w.string } ")
+        x[:response] = "HTTP/1.1 200 OK"
+        x[:response_headers]['Content-Type'] = "text/plain"
+        x[:body] = StringIO.new( w.string )  # we shouldn't need this double handling
+      else
+        x[:response] = "HTTP/1.1 200 OK"
+        x[:response_headers]['Content-Type'] = "text/plain"
+        x[:body] = StringIO.new( "Please login first!!" )
+      end
+    end
+  end
+end
+
 
 class Application
 
   # model here is the event processor.
   # this is not well named at all
 
-  def initialize( log, model_controller, assets_controller, report_conn, auth_controller )
+  def initialize( log, model_controller, assets_controller, report_controller, auth_controller )
     @log = log
     @model_controller = model_controller
     @assets_controller = assets_controller
-    # the report conn ought to be encapsulated and delegated to
-    @report_conn = report_conn
+    @report_controller = report_controller
     @auth_controller = auth_controller
 
     @sessions = { }
@@ -160,7 +203,7 @@ class Application
     serve_asset( x )
     serve_model_resource( x)
     serve_authentification( x)
-    serve_report_resource( x, @report_conn )
+    serve_report_resource( x )
     do_cache_control( x)
     catch_all( x)
     send_response( x )
@@ -274,53 +317,17 @@ class Application
 
   def serve_model_resource( x )
     return if x[:response]
-    # can have separate filters or handle together etc
-
 	  @model_controller.action( x)
-
   end
-
 
   def serve_authentification( x) 
     return if x[:response] # eg. if not ssl 
-
     @auth_controller.action( x) 
-
   end
 
-
-  def serve_report_resource( x, report_conn )
+  def serve_report_resource( x)
     return if x[:response]
-    # can have separate filters or handle together etc
-
-
-    matches = /^GET \/report.json\?field1=(.*)$/.match( x[:request])
-    if matches and matches.captures.length == 1
-
-      if x[:session][:authenticated] \
-        && x[:session][:authenticated] == true
-
-        # so we replace the + with space and then decode
-        query = URI.decode( matches.captures[0].gsub(/\+/,' ') )
-
-        @log.info( "got report query '#{query}'")
-
-        # we should return json, or decode the json
-        res = report_conn.exec_params( query )
-        w = StringIO.new()
-        res.each do |row|
-            w.puts row
-        end
-        #   @log.info( "result is #{ w.string } ")
-        x[:response] = "HTTP/1.1 200 OK"
-        x[:response_headers]['Content-Type'] = "text/plain"
-        x[:body] = StringIO.new( w.string )  # we shouldn't need this double handling
-      else
-        x[:response] = "HTTP/1.1 200 OK"
-        x[:response_headers]['Content-Type'] = "text/plain"
-        x[:body] = StringIO.new( "Please login first!!" )
-      end
-    end
+    @report_controller.action( x)
   end
 
   # We have a problem that something's eating exceptions
@@ -459,10 +466,11 @@ model_reader = Model::ModelReader.new( log, model_data )
 
 model_controller = ModelController.new( model_reader)
 
-
 auth_controller = AuthController.new()
 
-application = Application.new( http_log, model_controller, assets_controller, report_conn, auth_controller )
+report_controller = ReportController.new( log, report_conn )
+
+application = Application.new( http_log, model_controller, assets_controller, report_controller, auth_controller )
 
 server = Server::Processor.new(http_log)
 

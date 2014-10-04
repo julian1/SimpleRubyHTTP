@@ -36,10 +36,10 @@ class Application
       :body => nil
     }
 
-    # this kind of chaining could be done more
-    # dynamically, by processing an array
-    # and that would support insertAfterFilter() etc.
+    # this kind of chaining could be done more dynamically, 
+    # using classes and exposing the request match predicates as methods etc.
     # but this is ok,
+    # also can delegate, from general controllers, to session controllers etc. 
     decode_request( x)
     log_request( x)
 
@@ -51,6 +51,7 @@ class Application
     handle_post_request( x)
     strip_http_version( x)
     rewrite_index_get( x)
+    # could group all these together and delegate
     serve_asset( x, @file_content )
     serve_model_resource( x, @model )
     serve_report_resource( x, @report_conn )

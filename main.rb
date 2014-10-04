@@ -284,6 +284,9 @@ log = Logger.new(STDOUT)
 log.level = Logger::WARN
 #log.level = Logger::INFO
 
+log.formatter = proc do |severity, datetime, progname, msg|
+  "#{severity}: #{datetime}: #{msg}\n"
+end
 
 
 model_data = []
@@ -320,10 +323,10 @@ end
 # start processing at event tip less 2000
 id = event_conn.exec_params( "select max(id) - 2000 as max_id from events" )[0]['max_id']
 
-log.warn( "starting processing events at #{id}")
+log.warn( "processing historic events from #{id}")
 id = event_processor.process_events( id )
 
-log.warn( "starting processing current events #{id}")
+log.warn( "waiting for current events at #{id}")
 event_processor.process_current_events( id )
 
 # block

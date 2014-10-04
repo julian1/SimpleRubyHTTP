@@ -76,10 +76,13 @@ class Application
   end
 
   def log_request( x)
+    ip = x[:socket].peeraddr[3] 
 
     puts "---------------"
-    puts "request '#{ x[:request] ? x[:request].strip : "nil"  }'"
+    puts "request from #{ip} '#{ x[:request] ? x[:request].strip : "nil"  }'"
     puts "request_headers #{ x[:request_headers] }"
+
+    # puts "peer addr: #{ x[:socket].peeraddr } "
   end
 
   def handle_post_request( x)

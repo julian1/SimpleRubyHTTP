@@ -39,8 +39,6 @@ class AuthController
 
   def action( x)
 
-    puts "WHOOT here"
-
     # two methods test whether authenticated and login
     # these things are controllers - they ought to be classes
 

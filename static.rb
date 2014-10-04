@@ -12,7 +12,8 @@ module Static
 
   class FileContent
 
-    def initialize( dir)
+    def initialize( log, dir)
+      @log = log
       @dir = dir
     end
 

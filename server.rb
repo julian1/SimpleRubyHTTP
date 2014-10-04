@@ -3,13 +3,15 @@
 require "socket"
 require "openssl"
 require "thread"
+require 'logger'
 
 
 module Server
 
   class Processor
 
-    def initialize()
+    def initialize( log)
+      @log = log
       @threads = []
     end
 
@@ -17,7 +19,8 @@ module Server
       loop do
         socket = server.accept
 
-        $stderr.puts "** new connection"
+        ip = socket.peeraddr[3] 
+        @log.info("new connection #{ip}")
 
         # if we don't spawn the thread then we get a broken pipe which is weird
         Thread.new {
@@ -39,15 +42,15 @@ module Server
               #   break
 
             rescue => e
-              $stderr.puts "Error during processing: #{$!}"
-              $stderr.puts "Backtrace:\n\t#{e.backtrace.join("\n\t")}"
-              $stderr.puts "Unknown Exception #{$!}"
+              @log.warn( "Error during processing: #{$!}" )
+              @log.warn( "Backtrace:\n\t#{e.backtrace.join("\n\t")}" )
+              @log.warn( "Unknown Exception #{$!}" )
               break
             end
           end
 
           # the close should only be in one place
-          $stderr.puts "** close connection"
+          @log.info( "close connection")
           socket.close
         }
       end
@@ -62,10 +65,10 @@ module Server
           sslContext.key = OpenSSL::PKey::RSA.new(File.open("certs/server.key"))
           sslServer = OpenSSL::SSL::SSLServer.new(server, sslContext)
 
-          $stderr.puts "https listening on port #{listeningPort}"
+          @log.info( "https listening on port #{listeningPort}")
           process_accept( sslServer, &code)
         rescue
-          $stderr.puts "ssl socket exception #{$!}"
+          @log.error( "ssl socket exception #{$!}")
         end
       }
     end
@@ -73,13 +76,11 @@ module Server
     def start(  listeningPort, &code)
       @threads << Thread.new {
         begin
-          #server = TCPServer.new('localhost', listeningPort)
           server = TCPServer.new('127.0.0.1', listeningPort)
-
-          $stderr.puts "http listening on port #{listeningPort}"
-          process_accept( server,  &code)
+          @log.info( "https listening on port #{listeningPort}")
+          process_accept( server, &code)
         rescue
-          $stderr.puts "socket exception #{$!}"
+          @log.error( "ssl socket exception #{$!}")
         end
       }
     end

@@ -2,6 +2,7 @@
 require 'json'
 require 'pg'
 require 'date'
+require 'logger'
 
 # we can actually have multiple models if we want. or multiple event processors
 # model1( processor) , model2( processor)
@@ -19,14 +20,10 @@ require 'date'
 module Model
 
 
-  # i think we should use >= as it's more logical
-  # basically process from
-
-  # One is the event processor the other is the event sink
-
   class EventProcessor
 
-    def initialize( conn, event_sink)
+    def initialize( log, conn, event_sink)
+      @log = log
       @conn = conn
       @event_sink = event_sink
     end
@@ -52,12 +49,12 @@ module Model
             begin
               content = JSON.parse( row['content'] )
             rescue
-              $stderr.puts "Error decoding json content: #{id} error: #{$!}"
+              @log.warn( "Error decoding json content: #{id} error: #{$!}" )
             end
             @event_sink.process_event(id, msg, t, content)
           rescue
             # for some reason we aer getting errors
-            $stderr.puts "Error processing message id: #{id} error: #{$!}"
+            @log.warn( "Error processing message id: #{id} error: #{$!}" )
           end
         end
         # puts "count is #{count}"
@@ -67,19 +64,18 @@ module Model
       id
     end
 
-    # ok, we got a problem that we are increasing the id,
 
     # need to pass the id
     def process_current_events( id)
-      puts "current events - next id to process #{id}"
+      @log.info( "current events - next id to process #{id}")
       while true
         begin
           @conn.async_exec "LISTEN events_insert"
           @conn.wait_for_notify do |channel, pid, payload|
-          puts "Received a NOTIFY on channel #{channel} #{pid} #{payload}"
-          # puts "here0 current id #{id}"
-          id = process_events( id )
-        end
+
+            @log.info( "Received a NOTIFY on channel #{channel} #{pid} #{payload}" )
+            id = process_events( id )
+          end
         ensure
           @conn.async_exec "UNLISTEN *"
         end
@@ -91,7 +87,8 @@ module Model
 
   class EventSink
 
-    def initialize( model)
+    def initialize( log, model)
+      @log = log
       @model = model
     end
 
@@ -131,7 +128,7 @@ module Model
           :sum_ratio => sum_ratio
         }
       rescue
-          $stderr.puts "Failed to decode bitstamp orderbook orderbook error: #{$!}"
+          @log.info( "Failed to decode bitstamp orderbook orderbook error: #{$!}" )
       end
     end
 
@@ -141,7 +138,8 @@ module Model
     def process_event( id, msg, t, content)
       case msg
         when "error"
-            puts "got event error type"
+          # an error here, is treated as operational
+          @log.info( "got event error type")
 
         when 'order2'
           # new style order event
@@ -153,7 +151,7 @@ module Model
             when 'https://api.btcmarkets.net/market/BTC/AUD/orderbook'
             when 'https://api.btcmarkets.net/market/BTC/AUD/trades'
             else
-              puts "unknown url #{content['url']}"
+              @log.warn( "got something unknown")
             end
 
         when 'order'
@@ -163,7 +161,8 @@ module Model
         when 'ticker'
           # old style bitstamp ticker
         else
-            puts "unknown event msg #{msg}"
+
+            @log.warn( puts "unknown event msg #{msg}" )
         end
     end
   end
@@ -173,13 +172,13 @@ module Model
   # cqrs, this is like a view - read only
   class ModelReader
 
-    def initialize( model)
+    def initialize( log, model)
+      @log = log
       @model = model
     end
 
     def get_series( x)
       # should be a stream not stringstream
-      puts "$$ model length #{@model.length}"
 
       # take up to 500 elts, with logic to handle fewer
       take = 500

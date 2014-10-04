@@ -3,6 +3,7 @@ require './server'
 require './static'
 require './helper'
 require './es_model'
+require 'logger'
 
 
 # chain together transforms...
@@ -17,11 +18,14 @@ class Application
   # model here is the event processor.
   # this is not well named at all
 
-  def initialize( model, file_content, report_conn )
+  def initialize( log, model, file_content, report_conn )
+    @log = log
     @model = model
     @file_content = file_content
     # the report conn ought to be encapsulated and delegated to
     @report_conn = report_conn
+
+    @log.warn("Application started")
   end
 
   def process_request( socket)
@@ -77,11 +81,8 @@ class Application
 
   def log_request( x)
     ip = x[:socket].peeraddr[3] 
-
-    puts "---------------"
-    puts "request from #{ip} '#{ x[:request] ? x[:request].strip : "nil"  }'"
-    puts "request_headers #{ x[:request_headers] }"
-
+    @log.info( "request from #{ip} '#{ x[:request] ? x[:request].strip : "nil"  }'" )
+    @log.info( "request_headers #{ x[:request_headers] }" )
     # puts "peer addr: #{ x[:socket].peeraddr } "
   end
 
@@ -89,9 +90,8 @@ class Application
     # should we inject the socket straight in here ?
     # it makes instantiating the graph harder...
     if /^POST .*$/.match(x[:request])
-      puts "************ got post !!! ***********"
-      puts m
 
+      @log.warn("Got post ")
       # we must read content , otherwise it gets muddled up
       # it gets read at the next http x[:request], when connection
       # is keep alive.
@@ -158,7 +158,7 @@ class Application
       # so we replace the + with space and then decode
       query = URI.decode( matches.captures[0].gsub(/\+/,' ') )
 
-      puts "********************* got report! #{query} "
+      @log.info( "got report query '#{query}'")
 
       # how do we print up the response ...
       res = report_conn.exec_params( query )
@@ -166,7 +166,7 @@ class Application
       res.each do |row|
           w.puts row
       end
-  #    puts "result is #{ w.string } "
+      #   @log.info( "result is #{ w.string } ")
       x[:response] = "HTTP/1.1 200 OK"
       x[:response_headers]['Content-Type'] = "text/plain"
       x[:body] = StringIO.new( w.string )  # we shouldn't need this double handling
@@ -248,30 +248,38 @@ class Application
   end
 
   def log_response( x)
-    puts "response '#{ x[:response].strip }'"
-    puts "response_headers #{ x[:response_headers] }"
+    @log.info("response '#{ x[:response].strip }'")
+    @log.info("response_headers #{ x[:response_headers] }")
   end
 
 end
 
 
+
+log = Logger.new(STDOUT)
+log.level = Logger::WARN
+#log.level = Logger::INFO
+
+
+
 model_data = []
 
-event_sink = Model::EventSink.new( model_data )
+event_sink = Model::EventSink.new( log, model_data )
 
 event_conn = PG::Connection.open(:dbname => 'prod', :user => 'meteo', :password => 'meteo' )
 
-event_processor = Model::EventProcessor.new( event_conn, event_sink )
+event_processor = Model::EventProcessor.new( log, event_conn, event_sink )
 
-file_content = Static::FileContent.new( "#{Dir.pwd}/static" )
+file_content = Static::FileContent.new( log, "#{Dir.pwd}/static" )
 
 report_conn = PG::Connection.open(:dbname => 'prod', :user => 'meteo', :password => 'meteo' )
 
-model_reader = Model::ModelReader.new( model_data )
+model_reader = Model::ModelReader.new( log, model_data )
 
-application = Application.new( model_reader, file_content, report_conn )
+application = Application.new( log, model_reader, file_content, report_conn )
 
-server = Server::Processor.new()
+server = Server::Processor.new(log)
+
 
 
 server.start_ssl(1443) do |socket|
@@ -288,10 +296,10 @@ end
 # start processing at event tip less 2000
 id = event_conn.exec_params( "select max(id) - 2000 as max_id from events" )[0]['max_id']
 
-puts "starting processing events at #{id}"
+log.info( "starting processing events at #{id}")
 id = event_processor.process_events( id )
 
-puts "starting processing current events #{id}"
+log.info( "starting processing current events #{id}")
 event_processor.process_current_events( id )
 
 # block

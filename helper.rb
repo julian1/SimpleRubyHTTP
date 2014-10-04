@@ -1,9 +1,9 @@
 
 require "uri"
-
 require 'zlib'
 require 'stringio'
 require 'json'
+require 'logger'
 
 
 module Helper

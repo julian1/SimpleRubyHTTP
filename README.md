@@ -15,8 +15,7 @@ Minimal HTTP server, supporting
     - simple example of event sourcing model 
 
 TODO
-
-    - improve logging, especially ip
+    - 302
     - chunked transfer
     - websockets
     - cache cotnrol example using last modified

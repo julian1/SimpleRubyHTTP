@@ -14,7 +14,8 @@ Minimal HTTP server, supporting
     - mime mappping
     - simple example of event sourcing model 
 
-TODO,
+TODO
+
     - improve logging, especially ip
     - chunked transfer
     - websockets

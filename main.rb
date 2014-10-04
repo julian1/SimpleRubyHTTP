@@ -5,6 +5,7 @@ require './helper'
 require './es_model'
 require 'logger'
 
+require 'securerandom'
 
 # chain together transforms...
 
@@ -13,6 +14,7 @@ require 'logger'
 # Ok aparently ruby blocks can reference their enclosing scope!
 # how are we going to pass a reference into into the processing block...
 
+# we can forget if user is logged in
 
 class Application
 
@@ -25,6 +27,8 @@ class Application
     @file_content = file_content
     # the report conn ought to be encapsulated and delegated to
     @report_conn = report_conn
+
+    @sessions = { } 
 
     @log.warn("Application started")
   end
@@ -54,6 +58,7 @@ class Application
     end
 
     redirect_to_https( x)
+    do_cookie_stuff( x)
     handle_post_request( x)
     strip_http_version( x)
     rewrite_index_get( x)
@@ -61,7 +66,6 @@ class Application
     serve_asset( x, @file_content )
     serve_model_resource( x, @model )
     serve_report_resource( x, @report_conn )
-    do_cookie_stuff( x)
     do_cache_control( x)
     catch_all( x)
     send_response( x )
@@ -101,6 +105,41 @@ class Application
       x[:response_headers]['Location'] = "https://localhost:1443"
     end
   end
+
+
+  def do_cookie_stuff( x)
+
+    sent_cookie = x[:request_headers]['Cookie']
+    puts "=----="
+    puts "cookie that was sent '#{sent_cookie}'" 
+    session_id = -1
+    begin
+      id, session_id = sent_cookie.split('=') 
+      puts "id #{id}, session_id #{session_id}"
+    rescue 
+      puts "failed to extract id, session_id" 
+      session_id = SecureRandom.uuid
+      new_cookie = "id=#{ SecureRandom.uuid }; path=/"
+      puts "new encoded cookie is '#{new_cookie}'"
+      x[:response_headers]['Set-Cookie'] = new_cookie
+    end
+
+    puts "session_id is #{session_id}"
+    
+    # will this work ... to index properly?  
+    # might need to update, 
+
+    @sessions[session_id] = {} if @sessions[session_id].nil?
+
+    # alias
+    x[:session] = @sessions[session_id]
+
+    puts "now #{ Time.now}, session data is #{x[:session] }"
+
+
+  end
+
+
 
   def handle_post_request( x)
     return if x[:response]
@@ -196,17 +235,8 @@ class Application
     end
   end
 
+  # We have a problem that something's eating exceptions
 
-  def do_cookie_stuff( x)
-    # change name - session management
-    begin
-      cookie = x[:request_headers]['Cookie'].to_i + 1
-    rescue
-      cookie = 0
-    end
-
-    x[:response_headers]['Set-Cookie'] = "#{cookie}"
-  end
 
   def do_cache_control( x)
     # this may need to be combined with other resource handling, and egg stuff.
@@ -268,6 +298,8 @@ class Application
     # either separate methods, or something else ...
 
     Helper.write_response( x )
+
+    x[:session][:last_access] = Time.now 
   end
 
   def log_response( x)
@@ -281,6 +313,10 @@ end
 http_log_file = File.new('log.txt', 'a')
 http_log_file.sync = 1
 http_log = Logger.new( http_log_file  )
+http_log.level = Logger::INFO
+
+
+http_log_file = Logger.new(STDOUT)
 http_log.level = Logger::INFO
 
 # we can separate out http requests from everything else by

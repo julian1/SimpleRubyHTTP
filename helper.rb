@@ -8,6 +8,40 @@ require 'logger'
 
 module Helper
 
+  def Helper.encode_cookie( fields, attributes )
+    fields = fields.keys.map do |key|
+      "#{key}=#{fields[key]}" 
+    end
+    s = fields.join(":")
+    s += "; "
+    attributes = attributes.keys.map do |key|
+      "#{key}=#{attributes[key]}" 
+    end
+    s += attributes.join("; ")
+    s
+  end
+
+  def Helper.decode_cookie(raw_cookie)
+    fields = {}
+    attributes = {}
+    raw_cookie.split(/[;]\s?/).each_with_index do |pairs, index|
+      if index == 0
+        fields = {} 
+        pairs.split(/\:/).each do |pairs|
+          key, val = pairs.split('=') 
+          fields[key] = val
+        end
+      else
+        key, val = pairs.split('=') 
+        attributes[key] = val
+      end
+    end
+    return fields,attributes
+  end
+
+
+
+
 
   def Helper.gzip(string)
     wio = StringIO.new("w")
@@ -141,33 +175,7 @@ module Helper
   end
 
 
-#
-#   def Helper.write_redirect_message( request, socket )
-#
-#     response = <<-EOS
-#       <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
-#       <html><head>
-#       <title>302 Found</title>
-#       </head><body>redirect
-#       <h1>Found</h1>
-#       <p>The document has moved</a>.</p>
-#       <hr>
-#       <address>Apache Server at imos.aodn.org.au Port 80</address>
-#       </body></html>
-#     EOS
-#
-#     socket.print "HTTP/1.1 302 Found" +
-#       "Date: Sun, 21 Sep 2014 09:02:16 GMT\r\n" +
-#       "Server: Apache\r\n" +
-#       "Location: https://localhost:1443\r\n" +
-#       "Vary: Accept-Encoding\r\n" +
-#       "Content-Length: 282\r\n" +
-#       "Content-Type: text/html; charset=iso-8859-1\r\n" +
-#       "\r\n"
-#
-#     # Print the actual response body, which is just "Hello World!\n"
-#     socket.print response
-#   end
-#
+
+
 end
 

@@ -28,7 +28,7 @@ class Application
     # the report conn ought to be encapsulated and delegated to
     @report_conn = report_conn
 
-    @sessions = { } 
+    @sessions = { }
 
     @log.warn("Application started")
   end
@@ -45,10 +45,10 @@ class Application
       :body => nil
     }
 
-    # this kind of chaining could be done more dynamically, 
+    # this kind of chaining could be done more dynamically,
     # using classes and exposing the request match predicates as methods etc.
     # but this is ok,
-    # also can delegate, from general controllers, to session controllers etc. 
+    # also can delegate, from general controllers, to session controllers etc.
     decode_request( x)
     log_request( x)
 
@@ -58,8 +58,8 @@ class Application
     end
 
     redirect_to_https( x)
-    do_cookie_stuff( x)
-    handle_post_request( x)
+    establish_session( x)
+    #handle_post_request( x)
     strip_http_version( x)
     rewrite_index_get( x)
     # could group all these together and delegate
@@ -90,7 +90,7 @@ class Application
     # see -> http://stackoverflow.com/questions/19315361/obtaining-client-address-with-ruby-sslsockets
     # port, ip = Socket.unpack_sockaddr_in(x[:socket].getpeername)
 
-    ip = x[:socket].peeraddr[3] 
+    ip = x[:socket].peeraddr[3]
     @log.info( "request from #{ip} '#{ x[:request] ? x[:request].strip : "nil"  }'" )
     @log.info( "request_headers #{ x[:request_headers] }" )
     # puts "peer addr: #{ x[:socket].peeraddr } "
@@ -98,6 +98,10 @@ class Application
 
 
   def redirect_to_https( x)
+
+    # We should read the host from the Host flag - no that would
+    # be insecure
+
     port = x[:socket].addr[1]
     if port == 8000
       @log.info( "redirect to https" )
@@ -107,59 +111,53 @@ class Application
   end
 
 
-  def do_cookie_stuff( x)
+  def establish_session( x)
+    # there's a bit of a bug, in which if we change the attributes,
+    # and get multiple sessions, the cookie header gets overwritten
+    # by the multiple returned cookies.
+
+    # IMPORTANT - We need, to change this to use Secure flag, then only send it
+    # when the connection is https
 
     sent_cookie = x[:request_headers]['Cookie']
-    puts "=----="
-    puts "cookie that was sent '#{sent_cookie}'" 
     session_id = -1
     begin
-      id, session_id = sent_cookie.split('=') 
-      puts "id #{id}, session_id #{session_id}"
-    rescue 
-      puts "failed to extract id, session_id" 
+      id, session_id = sent_cookie.split('=')
+    rescue
       session_id = SecureRandom.uuid
-      new_cookie = "id=#{ SecureRandom.uuid }; path=/"
-      puts "new encoded cookie is '#{new_cookie}'"
+      new_cookie = "id=#{ session_id }; path=/"
       x[:response_headers]['Set-Cookie'] = new_cookie
     end
 
     puts "session_id is #{session_id}"
-    
-    # will this work ... to index properly?  
-    # might need to update, 
 
+    # create new session
     @sessions[session_id] = {} if @sessions[session_id].nil?
-
-    # alias
     x[:session] = @sessions[session_id]
 
-    puts "now #{ Time.now}, session data is #{x[:session] }"
-
-
+    puts "session data is #{x[:session] }"
   end
 
-
-
-  def handle_post_request( x)
-    return if x[:response]
-    # should we inject the socket straight in here ?
-    # it makes instantiating the graph harder...
-    if /^POST .*$/.match(x[:request])
-
-      @log.warn("Got post ")
-      # we must read content , otherwise it gets muddled up
-      # it gets read at the next http x[:request], when connection
-      # is keep alive.
-      # abort()
-    end
-  end
-
+#
+#   def handle_post_request( x)
+#     return if x[:response]
+#     # should we inject the socket straight in here ?
+#     # it makes instantiating the graph harder...
+#     if /^POST .*$/.match(x[:request])
+#
+#       @log.warn("Got post ")
+#       # we must read content , otherwise it gets muddled up
+#       # it gets read at the next http x[:request], when connection
+#       # is keep alive.
+#       # abort()
+#     end
+#   end
+#
   def strip_http_version( x)
     return if x[:response]
+    # eases subsequent matching
     # - think we should do this before the post, and not care
-    # irrespective of the actual http verb 
-    # - eases subsequent matching
+    # irrespective of the actual http verb
     matches = /^(GET .*)\s(HTTP.*)/.match(x[:request])
     if matches and matches.captures.length == 2
       x[:request] = matches.captures[0]
@@ -288,18 +286,19 @@ class Application
   end
 
   def send_response( x)
-    # note that we could pass in the socket here,
-    # rather than pass it about everywhere....
-    # issue is that if it's a post, then we want to read ...
-    # send response expects this ...
-
-    # we can have a few options about how we send the response.
-    # send chunked, etc.
-    # either separate methods, or something else ...
+    # note that we could pass in the socket here from application,
+    # rather than keeping it around in x.
 
     Helper.write_response( x )
 
-    x[:session][:last_access] = Time.now 
+    x[:session][:last_access] = Time.now
+
+    begin
+      x[:session][:page_count] += 1
+    rescue
+      x[:session][:page_count] = 0
+    end
+
   end
 
   def log_response( x)
@@ -320,7 +319,7 @@ http_log_file = Logger.new(STDOUT)
 http_log.level = Logger::INFO
 
 # we can separate out http requests from everything else by
-# just creating two loggers 
+# just creating two loggers
 log = Logger.new(STDOUT)
 #log.level = Logger::WARN
 log.level = Logger::INFO

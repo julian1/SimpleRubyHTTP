@@ -1,4 +1,8 @@
 
+
+# be careful here. because this is a general controller 
+# any response before here, will mean this doesn't run 
+
 class SessionController
 
 	# Note this writes the x[:session] which is not available

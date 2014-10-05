@@ -188,6 +188,10 @@ end
 ## we want to separate out the rule rewriters into a class too .
 ## would be nice if we could pass procs where we don't need state too
 
+
+## or we can organize into groups, and pass the groups in
+## eg. logger, rewriters, controllers 
+
 class Application
 
   # model here is the event processor.

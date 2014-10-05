@@ -3,6 +3,15 @@ require './server'
 require './assets'
 require './helper'
 require './es_model'
+
+
+# need to separate out custom from builtin
+require './controllers/auth'
+require './controllers/assets'
+require './controllers/time_series'
+require './controllers/report'
+require './controllers/url_rewrite'
+
 require 'logger'
 
 require 'securerandom'
@@ -16,140 +25,6 @@ require 'securerandom'
 
 # we can forget if user is logged in
 
-class AuthController
-
-  def initialize()
-    @secret = 'pineapple123'
-  end
-
-  def serve_response( x)
-    x[:body] = StringIO.new( <<-EOF
-        { "authenticated": #{ 
-          x[:session][:authenticated] \
-          && x[:session][:authenticated] == true \
-          ? "true" : "false" 
-        } }
-      EOF
-      )
-      x[:response] = "HTTP/1.1 200 OK"
-      #x[:response_headers]['Content-Type'] = "text/plain"
-      x[:response_headers]['Content-Type'] = "application/json" 
-  end
-
-  def action( x)
-
-    # two methods test whether authenticated and login
-    # these things are controllers - they ought to be classes
-
-    # should explicitly test for port 1443 again
-
-    matches = /^GET \/authenticated.json$/.match( x[:request])
-    if matches
-      serve_response( x)
-    end
-
-    matches = /^GET \/login.json\?field1=(.*)$/.match( x[:request])
-    if matches and matches.captures.length == 1
-
-      query = URI.decode( matches.captures[0].gsub(/\+/,' ') )
-      if( query == @secret)
-        x[:session][:authenticated] = true
-      end
-      serve_response( x)
-    end
-  end
-end
-
-
-
-class AssetsController
-
-  def initialize(content)
-    @content = content
-  end
-
-  def action( x)
-    matches = /^GET (.*\.txt|.*\.html|.*\.css|.*\.js|.*\.jpeg|.*\.png|.*\.ico)$/.match(x[:request])
-    if matches && matches.captures.length == 1
-
-      digest = @content.digest_file( x )
-      if_none_match = x[:request_headers]['If-None-Match']
-
-      if digest && if_none_match && if_none_match == digest
-        x[:response] = "HTTP/1.1 304 Not Modified"
-      else
-        # eg. serve normal 200 OK
-        @content.serve_file( x )
-        x[:response_headers]['ETag'] = digest
-      end
-    end
-  end
-end
-
-
-class TimeSeriesController
-  # I think that the model reader can actually be turned into this.
-
-  def initialize(model)
-    @model = model
-  end
-
-  def action(x )
-    if /^GET \/get_series.json$/.match(x[:request])
-      @model.get_series( x)
-    end
-
-    # this whole id thing, where client submits id to check for state change, is
-    # almost equivalent to etag approach
-    if /^GET \/get_id.json$/.match(x[:request])
-      @model.get_id( x )
-    end
-  end
-end
-
-
-class ReportController
-
-  # this is not thread safe on the conn!!!
-  # should be using a conn pool ? 
-  def initialize(log, conn)
-    @log = log
-    @conn = conn
-  end
-
-  def action( x) 
-
-    puts "*** WHOOT report controller action " 
-
-    matches = /^GET \/report.json\?field1=(.*)$/.match( x[:request])
-    if matches and matches.captures.length == 1
-
-      if x[:session][:authenticated] \
-        && x[:session][:authenticated] == true
-
-        # so we replace the + with space and then decode
-        query = URI.decode( matches.captures[0].gsub(/\+/,' ') )
-
-        @log.info( "got report query '#{query}'")
-
-        # we should return json, or decode the json
-        res = @conn .exec_params( query )
-        w = StringIO.new()
-        res.each do |row|
-            w.puts row
-        end
-        #   @log.info( "result is #{ w.string } ")
-        x[:response] = "HTTP/1.1 200 OK"
-        x[:response_headers]['Content-Type'] = "text/plain"
-        x[:body] = StringIO.new( w.string )  # we shouldn't need this double handling
-      else
-        x[:response] = "HTTP/1.1 200 OK"
-        x[:response_headers]['Content-Type'] = "text/plain"
-        x[:body] = StringIO.new( "Please login first!!" )
-      end
-    end
-  end
-end
 
 
 class HTTPLoggingController
@@ -210,6 +85,8 @@ end
 ## or we can organize into groups, and pass the groups in
 ## eg. logger, rewriters, controllers 
 
+## change name GeneralControllers to preemptiveControllers ? 
+
 class GeneralControllers
 
   def initialize( controllers ) 
@@ -217,12 +94,8 @@ class GeneralControllers
   end
 
   def action(x)
-
-
-      puts "general controller action "
-
     @controllers.each do |controller|
-      puts "doing controller #{controller}"
+      # avoid if there's already a response
       # could actually be return 
       next if x[:response]
       controller.action(x)
@@ -282,19 +155,16 @@ class Application
     redirect_to_https( x)
     establish_session( x)
     #handle_post_request( x)
-    strip_http_version( x)
-    rewrite_index_get( x)
+
+    # these are the url rewriters 
+    # combine ?
+    #strip_http_version( x)
+    #rewrite_index_get( x)
 
     # could group all these together and delegate
-
-    puts "before doing general controllers"
     @general_controllers.action( x)
-# 
-#     do_assets_controller( x )
-#     do_time_series_controller( x)
-#     do_auth_controller( x)
-#     do_report_controller( x )
-# 
+
+
     do_cache_control( x)
     catch_all( x)
     send_response( x )
@@ -379,50 +249,6 @@ class Application
 #     end
 #   end
 #
-  def strip_http_version( x)
-    return if x[:response]
-    # eases subsequent matching
-    # - think we should do this before the post, and not care
-    # irrespective of the actual http verb
-    matches = /^(GET .*)\s(HTTP.*)/.match(x[:request])
-    if matches and matches.captures.length == 2
-      x[:request] = matches.captures[0]
-    end
-  end
-
-  def rewrite_index_get( x)
-    return if x[:response]
-    # rewrite top level / to index.html
-    if matches = /^GET \/$/.match(x[:request])
-      x[:request] = "GET /index.html"
-    end
-  end
-
-  # should we change the name of action to process_message
-  # to keep consistent? 
-
-  def do_assets_controller( x)
-    return if x[:response]
-    @assets_controller.action( x)
-  end
-
-  def do_time_series_controller( x )
-    return if x[:response]
-	  @time_series_controller.action( x)
-  end
-
-  def do_auth_controller( x) 
-    return if x[:response] # eg. if not ssl 
-    @auth_controller.action( x) 
-  end
-
-  def do_report_controller( x)
-    return if x[:response]
-    @report_controller.action( x)
-  end
-
-  # We have a problem that something's eating exceptions
-
 
   def do_cache_control( x)
     # this may need to be combined with other resource handling, and egg stuff.
@@ -562,7 +388,9 @@ report_controller = ReportController.new( log, report_conn )
 http_logging_controller = HTTPLoggingController.new( http_log)
 
 
-general_controllers = GeneralControllers.new( [ assets_controller, time_series_controller, auth_controller, report_controller ] ) 
+url_rewrite_controller = URLRewriteController.new()
+
+general_controllers = GeneralControllers.new( [ url_rewrite_controller, assets_controller, time_series_controller, auth_controller, report_controller ] ) 
 
 
 application = Application.new( log, general_controllers, http_logging_controller )

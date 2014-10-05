@@ -30,6 +30,8 @@ class TimeSeriesController
     matches = /^GET \/get_series.json\??(.*)$/.match(x[:request])
     if matches && matches.captures.length == 1
 
+      puts "raw query string #{ matches.captures[0] }"
+
       fields = decode_url_args( matches.captures[0])
  
       puts "fields #{fields}"

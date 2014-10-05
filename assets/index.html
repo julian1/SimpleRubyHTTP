@@ -20,9 +20,12 @@
 
 	<span><input class="submit" type="button" value="Submit" onclick="update_chart()"></span>
 
-    <div id="mytime" style="width:100px;height:30px;"></div>
+	<span> 
+		<div id="mytime" style="width:100px;height:30px;"></div>
+		<div id="starttime" ></div>
+	</span> 
 
-    <div id="placeholder" style="width:800px;height:400px;"></div>
+		<div id="placeholder" style="width:800px;height:400px;"></div>
 
     <p>Simple example. </p>
 
@@ -177,10 +180,16 @@ $(function () {
 
 				// now we want to do update this thing
 				x = datax.slice(-1)[0];
-				y = new Date( x.time).toLocaleTimeString()
+				y = new Date( x.time).toLocaleTimeString();
 				$( "#mytime" ).html( "<p>" + y + "</p>" );
 
+				x = datax.slice(0)[0];
+				y = new Date( x.time).toLocaleString();
+				$( "#starttime" ).html( "<p>" + y + "</p>" );
 
+
+
+					
 
 				last_id = x.id;
 

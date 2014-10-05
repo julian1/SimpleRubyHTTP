@@ -367,10 +367,13 @@ server.start(8000) do |socket|
 end
 
 
+# MEMOIZATION ought to be a lot simpler, if put them in the same event stream.
+# eg. can compute at certain time, or id interval etc.
+
 # id = -1
 
 # start processing at event tip less 2000
-id = event_conn.exec_params( "select max(id) - 2000 as max_id from events" )[0]['max_id']
+id = event_conn.exec_params( "select max(id) - 10000 as max_id from events" )[0]['max_id']
 
 log.warn( "processing historic events from #{id}")
 id = event_processor.process_events( id )

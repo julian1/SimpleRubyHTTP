@@ -38,6 +38,7 @@ class TimeSeriesController
 
       # defaults 
       ticks = fields['ticks'] ? fields['ticks'].to_i : 100
+      interval = fields['interval'] ? fields['interval'].to_i : 1
 
       puts "model length #{@model.length }"
 

@@ -12,6 +12,7 @@ require './controllers/time_series'
 require './controllers/report'
 require './controllers/url_rewrite'
 require './controllers/session'
+require './controllers/redirect'
 
 require 'logger'
 
@@ -154,7 +155,7 @@ class Application
       return nil
     end
 
-    redirect_to_https( x)
+#    redirect_to_https( x)
 #    establish_session( x)
     #handle_post_request( x)
 
@@ -366,7 +367,9 @@ url_rewrite_controller = URLRewriteController.new()
 
 session_controller = SessionController.new()
 
-general_controllers = GeneralControllers.new( [ session_controller, url_rewrite_controller, assets_controller, time_series_controller, auth_controller, report_controller ] ) 
+redirect_controller = RedirectController.new( log)
+
+general_controllers = GeneralControllers.new( [ redirect_controller, session_controller, url_rewrite_controller, assets_controller, time_series_controller, auth_controller, report_controller ] ) 
 
 
 application = Application.new( log, general_controllers, http_logging_controller )

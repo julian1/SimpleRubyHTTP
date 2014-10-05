@@ -153,6 +153,9 @@ end
 
 
 class HTTPLoggingController
+  # split this into HTTPRequestLogger and HTTPResponseLogger, to unify
+  # the interface
+
   # just gives us a log more control over log redirection, consolidation 
   # we shouldn't be passing in two loggers to the Applicationm class
 
@@ -188,23 +191,63 @@ end
 ## we want to separate out the rule rewriters into a class too .
 ## would be nice if we could pass procs where we don't need state too
 
+## IMPRTANT - we don't need an array, we can aggregate, and then set the sequence
+## by hand.
+## and combine however we want 
+
+## if the controllers were all dumped in a controllers directory that 
+## that would clean up the code a lot.
+## SessionManager, RuleRewriter ... etc. 
+
+## for example we have a new general controller we'd just add it to the generalcontroller action
+## I think we need separate classes for log_response and log_request
+## and that will keep the interface consistent
+
+## we can pass general controllers - as an array. it doesn't matter
+## and we can do this as first step, before doing everything.
+
 
 ## or we can organize into groups, and pass the groups in
 ## eg. logger, rewriters, controllers 
+
+class GeneralControllers
+
+  def initialize( controllers ) 
+    @controllers = controllers
+  end
+
+  def action(x)
+
+
+      puts "general controller action "
+
+    @controllers.each do |controller|
+      puts "doing controller #{controller}"
+      # could actually be return 
+      next if x[:response]
+      controller.action(x)
+    end
+  end
+end
+
 
 class Application
 
   # model here is the event processor.
   # this is not well named at all
 
-  def initialize( log, time_series_controller, assets_controller, report_controller, auth_controller, http_logging_controller )
+  #def initialize( log, time_series_controller, assets_controller, report_controller, auth_controller, http_logging_controller )
+  def initialize( log, general_controllers, http_logging_controller )
     @log = log
 
-    # could we pass all these in as a map ? 
-    @time_series_controller = time_series_controller
-    @assets_controller = assets_controller
-    @report_controller = report_controller
-    @auth_controller = auth_controller
+#     # could we pass all these in as a map ? 
+#     @time_series_controller = time_series_controller
+#     @assets_controller = assets_controller
+#     @report_controller = report_controller
+#     @auth_controller = auth_controller
+# 
+    @general_controllers = general_controllers
+
     @http_logging_controller = http_logging_controller
 
     @sessions = { }
@@ -241,12 +284,17 @@ class Application
     #handle_post_request( x)
     strip_http_version( x)
     rewrite_index_get( x)
-    # could group all these together and delegate
-    do_assets_controller( x )
-    do_time_series_controller( x)
-    do_auth_controller( x)
-    do_report_controller( x )
 
+    # could group all these together and delegate
+
+    puts "before doing general controllers"
+    @general_controllers.action( x)
+# 
+#     do_assets_controller( x )
+#     do_time_series_controller( x)
+#     do_auth_controller( x)
+#     do_report_controller( x )
+# 
     do_cache_control( x)
     catch_all( x)
     send_response( x )
@@ -513,7 +561,11 @@ report_controller = ReportController.new( log, report_conn )
 
 http_logging_controller = HTTPLoggingController.new( http_log)
 
-application = Application.new( log, time_series_controller, assets_controller, report_controller, auth_controller, http_logging_controller )
+
+general_controllers = GeneralControllers.new( [ assets_controller, time_series_controller, auth_controller, report_controller ] ) 
+
+
+application = Application.new( log, general_controllers, http_logging_controller )
 
 server = Server::Processor.new(http_log)
 

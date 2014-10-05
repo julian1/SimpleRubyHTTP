@@ -22,7 +22,6 @@ class AuthController
     @secret = 'pineapple123'
   end
 
-
   def serve_response( x)
     x[:body] = StringIO.new( <<-EOF
         { "authenticated": #{ 
@@ -153,17 +152,47 @@ class ReportController
 end
 
 
+class HTTPLoggingController
+  # just gives us a log more control over log redirection, consolidation 
+  # we shouldn't be passing in two loggers to the Applicationm class
+
+  def initialize(log)
+    @log = log
+  end
+
+  def log_request( x)
+    # getpeername, and getsockname are better, but unsupported for sslsocket
+    # see -> http://stackoverflow.com/questions/19315361/obtaining-client-address-with-ruby-sslsockets
+    # port, ip = Socket.unpack_sockaddr_in(x[:socket].getpeername)
+
+    ip = x[:socket].peeraddr[3]
+    @log.info( "request from #{ip} '#{ x[:request] ? x[:request].strip : "nil"  }'" )
+    #@log.info( "request_headers #{ x[:request_headers] }" )
+    # @log.info( "peer addr: #{ x[:socket].peeraddr } ) "
+  end
+
+  def log_response( x)
+    #@log.info("response '#{ x[:response].strip }'")
+    #@log.info("response_headers #{ x[:response_headers] }")
+  end  
+end
+
+
+
 class Application
 
   # model here is the event processor.
   # this is not well named at all
 
-  def initialize( log, time_series_controller, assets_controller, report_controller, auth_controller )
+  def initialize( log, time_series_controller, assets_controller, report_controller, auth_controller, http_logging_controller )
     @log = log
+
+    # could we pass all these in as a map ? 
     @time_series_controller = time_series_controller
     @assets_controller = assets_controller
     @report_controller = report_controller
     @auth_controller = auth_controller
+    @http_logging_controller = http_logging_controller
 
     @sessions = { }
 
@@ -229,14 +258,7 @@ class Application
   ## have two methods...
 
   def log_request( x)
-    # getpeername, and getsockname are better, but unsupported for sslsocket
-    # see -> http://stackoverflow.com/questions/19315361/obtaining-client-address-with-ruby-sslsockets
-    # port, ip = Socket.unpack_sockaddr_in(x[:socket].getpeername)
-
-    ip = x[:socket].peeraddr[3]
-    @log.info( "request from #{ip} '#{ x[:request] ? x[:request].strip : "nil"  }'" )
-    @log.info( "request_headers #{ x[:request_headers] }" )
-    # puts "peer addr: #{ x[:socket].peeraddr } "
+    @http_logging_controller.log_request( x)
   end
 
 
@@ -407,21 +429,19 @@ class Application
   end
 
   def log_response( x)
-    @log.info("response '#{ x[:response].strip }'")
-    @log.info("response_headers #{ x[:response_headers] }")
+
+    @http_logging_controller.log_response( x)
   end
 
 end
 
 
-http_log_file = File.new('log.txt', 'a')
+http_log_file = File.new('log.txt', 'w')
 http_log_file.sync = 1
 http_log = Logger.new( http_log_file  )
 http_log.level = Logger::INFO
-
-
-http_log_file = Logger.new(STDOUT)
-http_log.level = Logger::INFO
+#http_log_file = Logger.new(STDOUT)
+#http_log.level = Logger::INFO
 
 # we can separate out http requests from everything else by
 # just creating two loggers
@@ -478,7 +498,9 @@ auth_controller = AuthController.new()
 
 report_controller = ReportController.new( log, report_conn )
 
-application = Application.new( http_log, time_series_controller, assets_controller, report_controller, auth_controller )
+http_logging_controller = HTTPLoggingController.new( http_log)
+
+application = Application.new( log, time_series_controller, assets_controller, report_controller, auth_controller, http_logging_controller )
 
 server = Server::Processor.new(http_log)
 

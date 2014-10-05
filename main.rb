@@ -11,6 +11,7 @@ require './controllers/assets'
 require './controllers/time_series'
 require './controllers/report'
 require './controllers/url_rewrite'
+require './controllers/session'
 
 require 'logger'
 
@@ -123,7 +124,7 @@ class Application
 
     @http_logging_controller = http_logging_controller
 
-    @sessions = { }
+#    @sessions = { }
 
     @log.warn("Application started")
   end
@@ -148,12 +149,13 @@ class Application
     log_request( x)
 
     # no request, indicating connection close by remote
+    # we don't actually need to log this
     if x[:request].nil?
       return nil
     end
 
     redirect_to_https( x)
-    establish_session( x)
+#    establish_session( x)
     #handle_post_request( x)
 
     # these are the url rewriters 
@@ -204,34 +206,6 @@ class Application
       x[:response] = "HTTP/1.1 302 Found"
       x[:response_headers]['Location'] = "https://localhost:1443"
     end
-  end
-
-
-  def establish_session( x)
-    # there's a bit of a bug, in which if we change the attributes,
-    # and get multiple sessions, the cookie header gets overwritten
-    # by the multiple returned cookies.
-
-    # IMPORTANT - We need, to change this to use Secure flag, then only send it
-    # when the connection is https
-
-    sent_cookie = x[:request_headers]['Cookie']
-    session_id = -1
-    begin
-      id, session_id = sent_cookie.split('=')
-    rescue
-      session_id = SecureRandom.uuid
-      new_cookie = "id=#{ session_id }; path=/"
-      x[:response_headers]['Set-Cookie'] = new_cookie
-    end
-
-    puts "session_id is #{session_id}"
-
-    # create new session
-    @sessions[session_id] = {} if @sessions[session_id].nil?
-    x[:session] = @sessions[session_id]
-
-    puts "session data is #{x[:session] }"
   end
 
 #
@@ -390,7 +364,9 @@ http_logging_controller = HTTPLoggingController.new( http_log)
 
 url_rewrite_controller = URLRewriteController.new()
 
-general_controllers = GeneralControllers.new( [ url_rewrite_controller, assets_controller, time_series_controller, auth_controller, report_controller ] ) 
+session_controller = SessionController.new()
+
+general_controllers = GeneralControllers.new( [ session_controller, url_rewrite_controller, assets_controller, time_series_controller, auth_controller, report_controller ] ) 
 
 
 application = Application.new( log, general_controllers, http_logging_controller )

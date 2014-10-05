@@ -111,21 +111,12 @@ class Application
   # model here is the event processor.
   # this is not well named at all
 
-  #def initialize( log, time_series_controller, assets_controller, report_controller, auth_controller, http_logging_controller )
   def initialize( log, general_controllers, http_logging_controller )
     @log = log
 
-#     # could we pass all these in as a map ? 
-#     @time_series_controller = time_series_controller
-#     @assets_controller = assets_controller
-#     @report_controller = report_controller
-#     @auth_controller = auth_controller
-# 
     @general_controllers = general_controllers
 
     @http_logging_controller = http_logging_controller
-
-#    @sessions = { }
 
     @log.warn("Application started")
   end
@@ -155,16 +146,6 @@ class Application
       return nil
     end
 
-#    redirect_to_https( x)
-#    establish_session( x)
-    #handle_post_request( x)
-
-    # these are the url rewriters 
-    # combine ?
-    #strip_http_version( x)
-    #rewrite_index_get( x)
-
-    # could group all these together and delegate
     @general_controllers.action( x)
 
 
@@ -194,21 +175,7 @@ class Application
   def log_request( x)
     @http_logging_controller.log_request( x)
   end
-
-
-  def redirect_to_https( x)
-
-    # We should read the host from the Host flag - no that would
-    # be insecure
-
-    port = x[:socket].addr[1]
-    if port == 8000
-      @log.info( "redirect to https" )
-      x[:response] = "HTTP/1.1 302 Found"
-      x[:response_headers]['Location'] = "https://localhost:1443"
-    end
-  end
-
+  
 #
 #   def handle_post_request( x)
 #     return if x[:response]
@@ -223,7 +190,6 @@ class Application
 #       # abort()
 #     end
 #   end
-#
 
   def do_cache_control( x)
     # this may need to be combined with other resource handling, and egg stuff.
@@ -248,6 +214,8 @@ class Application
 
   # what we're doing with checking for an id update - is very similar to ES.
 
+
+  # change name MissingResource or similar ? 
 
   def catch_all( x)
 
@@ -369,7 +337,15 @@ session_controller = SessionController.new()
 
 redirect_controller = RedirectController.new( log)
 
-general_controllers = GeneralControllers.new( [ redirect_controller, session_controller, url_rewrite_controller, assets_controller, time_series_controller, auth_controller, report_controller ] ) 
+general_controllers = GeneralControllers.new( [ 
+  redirect_controller, 
+  session_controller, 
+  url_rewrite_controller, 
+  assets_controller, 
+  time_series_controller, 
+  auth_controller, 
+  report_controller 
+] ) 
 
 
 application = Application.new( log, general_controllers, http_logging_controller )

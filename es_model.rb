@@ -4,6 +4,13 @@ require 'pg'
 require 'date'
 require 'logger'
 
+# THE SERIES WE PRODUCE IS A PROJECTION - A LEFT-FOLD. 
+# IDEALLY WE'D LIKE TO BE ABLE TO CREATE MULTIPLE PROJECTIONS
+# AND USE THEM INDEPENDENTLY.
+
+# Eg. EACH SERIES - like top_bid IS AN INDEPENDENT FUNCTION not calculated with everything else
+
+
 # we can actually have multiple models if we want. or multiple event processors
 # model1( processor) , model2( processor)
 # or
@@ -75,7 +82,7 @@ module Model
           @conn.async_exec "LISTEN #{POSTGRES_CHANNEL}"
           @conn.wait_for_notify do |channel, pid, payload|
 
-            @log.info( "Received a NOTIFY on channel #{channel} #{pid} #{payload}" )
+            #@log.debug( "Received a NOTIFY on channel #{channel} #{pid} #{payload}" )
             id = process_events( id )
           end
         ensure

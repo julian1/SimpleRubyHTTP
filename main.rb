@@ -57,6 +57,10 @@ class HTTPLoggingController
   end  
 end
 
+### i think it might be easier if we just returned if we add the message return 
+### code. Then we don't have to distingusish policy controllers from other controllers
+
+
 ######
 ## IMPORTANT
 ## OK, important. 

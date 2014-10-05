@@ -7,6 +7,8 @@ require 'logger'
 
 module Server
 
+  # should be called TcpServer
+  # or ConnectionProcessor, ConnectionServer, ConnectionManager
   class Processor
 
     def initialize( log)
@@ -31,13 +33,11 @@ module Server
 
               # # i think we get a broken pipe if we can't read anything
               # rescue Errno::EPIPE
-              # $stderr.puts "*** EPIPE "
-              # socket.close
-              # break;
+              #   $stderr.puts "*** EPIPE "
+              #   break;
               #
               # rescue IOError => e
               #   $stderr.puts "*** IOError #{e.message} "
-              #   socket.close
               #   break
 
             rescue => e

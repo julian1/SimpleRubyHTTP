@@ -177,7 +177,16 @@ class HTTPLoggingController
   end  
 end
 
+######
+## IMPORTANT
+## OK, important. 
+## I think now wer're passing controllers around, it might be a lot easier to structure
+## this a bit more dynamically.
+## all the actions have the same action interface, so we can just pass them as an ordered list
+## of actions to take... 
 
+## we want to separate out the rule rewriters into a class too .
+## would be nice if we could pass procs where we don't need state too
 
 class Application
 

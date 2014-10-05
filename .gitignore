@@ -7,3 +7,5 @@
 safe/*.txt
 server.???
 log.txt
+old
+*.swn

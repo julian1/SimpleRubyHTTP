@@ -215,7 +215,7 @@ class Application
   # what we're doing with checking for an id update - is very similar to ES.
 
 
-  # change name MissingResource or similar ? 
+  # change name ResourceNotFoundPolicy or similar ? 
 
   def catch_all( x)
 

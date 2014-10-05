@@ -324,9 +324,9 @@ assets_controller = AssetsController.new( assets_content )
 
 report_conn = PG::Connection.open(:dbname => 'prod', :user => 'meteo', :password => 'meteo' )
 
-model_reader = Model::ModelReader.new( log, model_data )
+#model_reader = Model::ModelReader.new( log, model_data )
 
-time_series_controller = TimeSeriesController.new( model_reader)
+time_series_controller = TimeSeriesController.new( model_data )
 
 auth_controller = AuthController.new()
 

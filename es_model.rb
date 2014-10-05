@@ -178,55 +178,62 @@ module Model
 
 
 
-  # cqrs, this is like a view - read only
-  # a model presentation class
-  # or a View Model.
-  class ModelReader
-
-    def initialize( log, model)
-      @log = log
-      @model = model
-    end
-
-    def get_series( x)
-      # should be a stream not stringstream
-
-      # take up to 500 elts, with logic to handle fewer
-      take = 500
-      n = @model.length
-      m = @model[ (n - take > 0 ? n - take : 0) .. n - 1]
-
-      top_ask = m.map do |row| <<-EOF
-        {
-          "id": "#{row[:id]}",
-          "time": "#{row[:time]}",
-          "top_ask": #{row[:top_ask]},
-          "top_bid": #{row[:top_bid]},
-          "sum_ratio": #{row[:sum_ratio]}
-        }
-        EOF
-      end
-
-      ret = <<-EOF
-        [ #{top_ask.join(", ")} ]
-      EOF
-
-      x[:response] = "HTTP/1.1 200 OK"
-      x[:response_headers]['Content-Type'] = "application/json"
-      x[:body] = StringIO.new( ret, "r")
-    end
-
-    def get_id( x )
-      x[:response] = "HTTP/1.1 200 OK"
-      x[:response_headers]['Content-Type'] = "application/json"
-      x[:body] = StringIO.new( "\"#{@model.last[:id]}\"" )
-    end
-
-#     def get_time()
-#       "\"#{@model.last[:time]}\""
+#   # cqrs, this is like a view - read only
+#   # a model presentation class
+#   # or a View Model.
+#   class ModelReader
+# 
+#     # the json and http bits here should be moved
+#     # into the time series controller.
+# 
+#     def initialize( log, model)
+#       @log = log
+#       @model = model
 #     end
-
-  end
-
+# 
+#     def get_series( x, ticks)
+#       # should be a stream not stringstream
+# 
+#       # take up to 500 elts, with logic to handle fewer
+#       take = ticks #500
+#       n = @model.length
+#       m = @model[ (n - take > 0 ? n - take : 0) .. n - 1]
+# 
+#       top_ask = m.map do |row| <<-EOF
+#         {
+#           "id": "#{row[:id]}",
+#           "time": "#{row[:time]}",
+#           "top_ask": #{row[:top_ask]},
+#           "top_bid": #{row[:top_bid]},
+#           "sum_ratio": #{row[:sum_ratio]}
+#         }
+#         EOF
+#       end
+# 
+#       ret = <<-EOF
+#         [ #{top_ask.join(", ")} ]
+#       EOF
+# 
+#       x[:response] = "HTTP/1.1 200 OK"
+#       x[:response_headers]['Content-Type'] = "application/json"
+#       x[:body] = StringIO.new( ret, "r")
+#     end
+# 
+# 
+# 
+# 
+# 
+#     def get_id( x )
+#       x[:response] = "HTTP/1.1 200 OK"
+#       x[:response_headers]['Content-Type'] = "application/json"
+#       x[:body] = StringIO.new( "\"#{@model.last[:id]}\"" )
+#     end
+# 
+# #     def get_time()
+# #       "\"#{@model.last[:time]}\""
+# #     end
+# 
+#   end
+# 
 end
 

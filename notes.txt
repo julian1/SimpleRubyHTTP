@@ -1,11 +1,24 @@
 
-redirect to https
+Ok, we want to be able to change the number of ticks. 
 
-supports streaming.
+Our new state (stream)  - considered as a left fold.
+
+
+-----
+
+We want. total value of orders, and for ask and spread. 
+	and to chart this.
+
+
+----
+
+done redirect to https
+
+done supports streaming.
 
 ---
 
-Lets aggregate the model, conn into services and then pass to all 
+done Lets aggregate the model, conn into services and then pass to all 
 the message cracker stuff.
 
 also get remote end - ip address for logging.  and port to determine if ssl
@@ -15,28 +28,27 @@ and try to do some session management.
 and if not ssl - do a 302 right at the start of the chain.
 
 
-rather than use functions for the filter chain. make these methods of application class
+done rather than use functions for the filter chain. make these methods of application class
 and have the server delegate.
 
-then inject conn and model into the application class.
+done then inject conn and model into the application class.
  
 
-and compute real bollinger bands.
+done and compute real bollinger bands.
 
-
-Be nice to get a view of events, errors etc - . 
+done Be nice to get a view of ES events, errors etc - . 
 
 ---
 
-we don't need db stuff to be atomic, because the model
+done we don't need db stuff to be atomic, because the model
 is purely in memory
 
-but if we want to do some queries against the db. eg. 
-for reporting? 
+	- but if we want to do some queries against the db. eg. 
+	for reporting? 
 
 ----
 
-we need matcher, and post filter operations. 
+done we need matcher, and post filter operations. 
 
 	request
 	req_headers	

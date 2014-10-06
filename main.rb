@@ -310,11 +310,20 @@ http_log.formatter = myformatter
 # we need to change the db, so the model presenter reader only connects on
 # a read only connection.
 
+
+db_params = { 
+    :host => '127.0.0.1', 
+    :dbname => 'prod', 
+    :port => 5432, 
+    :user => 'events_ro', 
+    :password => 'events_ro' 
+}
+
 model_data = []
 
 event_sink = Model::EventSink.new( log, model_data )
 
-event_conn = PG::Connection.open(:dbname => 'prod', :user => 'meteo', :password => 'meteo' )
+event_conn = PG::Connection.open( db_params ) 
 
 event_processor = Model::EventProcessor.new( log, event_conn, event_sink )
 
@@ -322,7 +331,7 @@ assets_content = Assets::FileContent.new( log, "#{Dir.pwd}/assets" )
 
 assets_controller = AssetsController.new( assets_content )
 
-report_conn = PG::Connection.open(:dbname => 'prod', :user => 'meteo', :password => 'meteo' )
+report_conn = PG::Connection.open( db_params ) 
 
 #model_reader = Model::ModelReader.new( log, model_data )
 

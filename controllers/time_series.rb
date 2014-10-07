@@ -25,6 +25,8 @@ class TimeSeriesController
   end
 
   def action(x)
+	return if x[:response]
+
     # the ? isn't quite right here, it shouldn't be optional
     # if there's a param set. 
     matches = /^GET \/get_series.json\??(.*)$/.match(x[:request])

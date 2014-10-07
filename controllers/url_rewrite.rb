@@ -2,7 +2,7 @@
 class URLRewriteController
 
   def action( x)
-    #return if x[:response]
+    return if x[:response]
 
 
     # eases subsequent matching

@@ -11,6 +11,7 @@ class ReportController
   end
 
   def action( x) 
+	return if x[:response]
 
     puts "*** WHOOT report controller action " 
 

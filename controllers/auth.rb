@@ -22,7 +22,7 @@ class AuthController
   end
 
   def action( x)
-
+	return if x[:response]
     # two methods test whether authenticated and login
     # these things are controllers - they ought to be classes
 

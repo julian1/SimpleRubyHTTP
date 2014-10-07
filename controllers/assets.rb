@@ -7,6 +7,8 @@ class AssetsController
   end
 
   def action( x)
+	return if x[:response]
+
     matches = /^GET (.*\.txt|.*\.html|.*\.css|.*\.js|.*\.jpeg|.*\.png|.*\.ico)$/.match(x[:request])
     if matches && matches.captures.length == 1
 

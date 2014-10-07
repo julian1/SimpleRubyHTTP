@@ -103,7 +103,7 @@ class GeneralControllers
     @controllers.each do |controller|
       # avoid if there's already a response
       # could actually be return 
-      next if x[:response]
+  #    next if x[:response]
       controller.action(x)
     end
   end

@@ -1,8 +1,8 @@
 
-require './server'
-require './assets'
-#require './helper'
-require './es_model'
+require './support/server'
+require './support/assets'
+
+require './domain/es_model'
 
 
 # needs to be more organised

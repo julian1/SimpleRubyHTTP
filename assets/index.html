@@ -82,7 +82,9 @@
 
 
     get_series('bitstamp.topask'); 
+    get_series('bitstamp.topbid'); 
 
+    continuous_update();
   });
 
   // we could actually keep this entire model on the server side if we wanted. 
@@ -144,9 +146,12 @@
         ticks: $( "#myticks" )[0].value, 
         name: series_name_
       },
+
+        // change series_name to just name
       success: function ( datax, textStatus, jqXHR ) {
         // ok, 
         console.log( 'whoot got series!!! ' + series_name_ );
+
         new_series = {
             series_name: series_name_, 
             color: "red", 
@@ -245,10 +250,19 @@
         }
         else {
           console.log( "require update");
-          update_chart();
+          // we have to go through each 
+          $.each( all_series, function( i, series) {
+            console.log( 'MUST UPDATE ' + series.series_name );
+            get_series( series.series_name ); 
+          });
         }
+      
+        last_id = id;
       }
     });
+    // IMPORTANT - we don't want to do this 
+    // until everything has updated. like a 
+    // thread join
     setTimeout(continuous_update, 10 * 1000 );
   }
 

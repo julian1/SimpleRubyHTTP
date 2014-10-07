@@ -1,7 +1,7 @@
 
 require './server'
 require './assets'
-require './helper'
+#require './helper'
 require './es_model'
 
 

@@ -15,12 +15,17 @@ class SessionController
   end
 
   def action( x)
-    # IMPORTANT there's a bit of a bug, in which if we change the attributes,
-    # and get multiple sessions, the cookie header gets overwritten
+    # IMPORTANT there's a potential bug, whereby if we change the attribute set,
+    #  the cookie header will gets overwritten
     # by the multiple returned cookies.
+	# actually shouldn't the browser only send one? although server can send multiple? 
+	# we need to store them in an an array at decode..
 
     # IMPORTANT - We need, to change this to use Secure flag, then only send it
     # and only send on secure https connections 
+
+	# IMPORTANT - we need to not send the session cookie, unless
+	# we're https, and send with attribute Secure
 
     sent_cookie = x[:request_headers]['Cookie']
     session_id = -1

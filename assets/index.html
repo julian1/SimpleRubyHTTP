@@ -130,20 +130,9 @@
             }),
             yaxis: 1
           }
-      
-        // ok, it's getting added maybe? but only the title is getting drawn, which is confusing. 
- 
-        console.log( 'data length size ' + new_series.data.length  )
-        console.log( JSON.stringify( new_series.data ) )
-
-        console.log( 'all_series.length ' + all_series.length );
         all_series.push( new_series );
-        console.log( 'all_series.length ' + all_series.length );
-
         refresh_chart_data();
 
-        console.log( new_series );
-  
         // now we should find and replace the series with a new one
         // and then call chart update 
       },

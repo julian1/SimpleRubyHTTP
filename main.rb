@@ -16,6 +16,7 @@ require './controllers/redirect'
 require './controllers/cache_policy'
 require './controllers/not_found'
 require './controllers/send_response'
+require './controllers/log_response'
 
 require 'logger'
 
@@ -54,47 +55,17 @@ class HTTPLoggingController
     # @log.info( "peer addr: #{ x[:socket].peeraddr } ) "
   end
 
-  def log_response( x)
-    #@log.info("response '#{ x[:response].strip }'")
-    #@log.info("response_headers #{ x[:response_headers] }")
-  end  
 end
 
-### i think it might be easier if we just returned if we add the message return 
-### code. Then we don't have to distingusish policy controllers from other controllers
+
+  # CEP, and ES Event Sourcing model running in javascript. It's actually not too much
+  # data, if we have snapshots, running on the server. but then loose the power
+  # of customizing locally which is the only reason to run locally.
+
+  # what we're doing with checking for an id update - is very similar to ES.
 
 
-######
-## IMPORTANT
-## OK, important. 
-## I think now wer're passing controllers around, it might be a lot easier to structure
-## this a bit more dynamically.
-## all the actions have the same action interface, so we can just pass them as an ordered list
-## of actions to take... 
 
-## we want to separate out the rule rewriters into a class too .
-## would be nice if we could pass procs where we don't need state too
-
-## IMPRTANT - we don't need an array, we can aggregate, and then set the sequence
-## by hand.
-## and combine however we want 
-
-## if the controllers were all dumped in a controllers directory that 
-## that would clean up the code a lot.
-## SessionManager, RuleRewriter ... etc. 
-
-## for example we have a new general controller we'd just add it to the generalcontroller action
-## I think we need separate classes for log_response and log_request
-## and that will keep the interface consistent
-
-## we can pass general controllers - as an array. it doesn't matter
-## and we can do this as first step, before doing everything.
-
-
-## or we can organize into groups, and pass the groups in
-## eg. logger, rewriters, controllers 
-
-## change name GeneralControllers to preemptiveControllers ? 
 
 class GeneralControllers
 
@@ -104,9 +75,6 @@ class GeneralControllers
 
   def action(x)
     @controllers.each do |controller|
-      # avoid if there's already a response
-      # could actually be return 
-  #    next if x[:response]
       controller.action(x)
     end
   end
@@ -120,17 +88,14 @@ class Application
 
   def initialize( log, general_controllers, http_logging_controller )
     @log = log
-
     @general_controllers = general_controllers
-
     @http_logging_controller = http_logging_controller
-
     @log.warn("Application started")
   end
 
   def process_request( socket)
 
-    # we can still use functions t
+    # init message structure
     x = {
       :request => nil,
       :request_headers => {},
@@ -140,11 +105,8 @@ class Application
       :body => nil
     }
 
-    # this kind of chaining could be done more dynamically,
-    # using classes and exposing the request match predicates as methods etc.
-    # but this is ok,
-    # also can delegate, from general controllers, to session controllers etc.
     decode_request( x)
+  
     log_request( x)
 
     # no request, indicating connection close by remote
@@ -154,14 +116,7 @@ class Application
     end
 
     @general_controllers.action( x)
-
-
-    # do_cache_control( x)
-    #catch_all( x)
-    #send_response( x )
-    log_response( x)
     true
-
   end
 
 
@@ -200,39 +155,6 @@ class Application
 
 
 
-  # CEP, and ES Event Sourcing model running in javascript. It's actually not too much
-  # data, if we have snapshots, running on the server. but then loose the power
-  # of customizing locally which is the only reason to run locally.
-
-  # what we're doing with checking for an id update - is very similar to ES.
-
-
-  # change name ResourceNotFoundPolicy or similar ? 
-
-#   def catch_all( x)
-# 
-#   end
-# 
-#   def send_response( x)
-#     # note that we could pass in the socket here from application,
-#     # rather than keeping it around in x.
-# 
-#     Helper.write_response( x )
-# 
-#     x[:session][:last_access] = Time.now
-# 
-#     begin
-#       x[:session][:page_count] += 1
-#     rescue
-#       x[:session][:page_count] = 0
-#     end
-# 
-#   end
-# 
-  def log_response( x)
-
-    @http_logging_controller.log_response( x)
-  end
 
 end
 
@@ -257,26 +179,6 @@ end
 log.formatter = myformatter
 http_log.formatter = myformatter
 
-# Ok, we want to show the total amount on the buy and sell side,
-# because it's so important. and to compare to other exchanges.
-
-# remember could be fictitious. but should be representative.
-# we can see how it changes over time (bollinger), to guague
-# if it's following the price, or supportive/resistive.
-
-# we could also do analysis - for example how long the order
-# has existed, indicating permanence,
-
-# it's interesting, to know why it's moving up (winklevoss)
-# or down (miners requiring settlement), we would have to find
-# out the reason of every gid in the list.
-
-# we really need, a non-increasing graph as well. of the orderbook
-# as well
-
-# we need to change the db, so the model presenter reader only connects on
-# a read only connection.
-
 
 db_params = { 
     :host => '127.0.0.1', 
@@ -300,15 +202,11 @@ assets_controller = AssetsController.new( assets_content )
 
 report_conn = PG::Connection.open( db_params ) 
 
-#model_reader = Model::ModelReader.new( log, model_data )
-
 time_series_controller = TimeSeriesController.new( model_data )
-
 
 report_controller = ReportController.new( log, report_conn )
 
 http_logging_controller = HTTPLoggingController.new( http_log)
-
 
 redirect_controller = RedirectController.new( log)
 
@@ -323,7 +221,8 @@ general_controllers = GeneralControllers.new( [
   report_controller ,
   CachePolicyController.new(),
   NotFoundController.new(),
-  SendResponseController.new()
+  SendResponseController.new(),
+  LogResponseController.new( http_log)
 ] ) 
 
 

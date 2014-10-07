@@ -1,4 +1,53 @@
 
+- Use the listen interface to get time-synchronous stream. and replicate locally
+	from aws instance. 
+	- Might be possible to do it entirely in sql. if we can connect to two dbs 
+
+	- we need event_ro  event_wr  db roles
+
+- should change the name model to stream. or eventstream_ model etc.
+
+- we can replication of the db data extremely easily. just by copying the 
+event stream.
+
+rather than set interval - we can compute it automatically. 
+
+we need control over the series. just have to declare unit. then we can show axis. 
+
+$200 means miners receive $263million per year. Um where exactly is that suppose to come from?
+
+The 3600 btc a day is a cost as well that you pay when the price drops.
+
+https://bitcoinwisdom.com/markets/bitfinex/btcusd
+
+--- 
+
+bter has api
+
+https://bter.com/api
+
+http://data.bter.com/api/1/pairs
+
+eg. 
+http://data.bter.com/api/1/depth/btsx_btc
+
+it would be really good to monitor these.
+
+
+
+----
+btx has public order book. it's traded in terms of btc. so losing value.
+
+https://bitcoinaverage.com/markets#USD
+
+t's possible to speculate on the exchange by holding, 
+then transfer back to btc blockchain to pull out.
+
+bter has very tight spread for cny / btc. 
+
+
+----
+
 Ok, we want to be able to change the number of ticks. 
 
 Our new state (stream)  - considered as a left fold.

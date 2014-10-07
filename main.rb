@@ -5,7 +5,7 @@ require './support/assets'
 require './domain/es_model'
 
 
-# needs to be more organised
+# TODO needs to be more organised
 require './controllers/log_request'
 require './controllers/auth'
 require './controllers/assets'
@@ -23,26 +23,29 @@ require 'logger'
 require 'securerandom'
 
 
+# rather than passing the sole x structure, we could separate out the request and response
+# arguments. the issue is other stuff eg. session, and socket. 
+
+# or we could do this for controller interfaces that only need this - eg. by introspection. 
+# call a method only if it exists...
+
+
 # the app at top level, is a lot like processing old win32 or apple OS message pumps
 
 # Ok aparently ruby blocks can reference their enclosing scope!
 # how are we going to pass a reference into into the processing block...
 
+# CEP, and ES Event Sourcing model running in javascript - because it can be shipped
+# to the server/data.  
 
+# MEMOIZATION ought to be a lot simpler, if put them in the same event stream.
+# eg. can compute at certain time, or id interval etc.
 
-
-  # CEP, and ES Event Sourcing model running in javascript. It's actually not too much
-  # data, if we have snapshots, running on the server. but then loose the power
-  # of customizing locally which is the only reason to run locally.
-
-  # what we're doing with checking for an id update - is very similar to ES.
+# what we're doing with checking for an id update - is very similar to ES.
 
 
 
 class Application
-
-  # model here is the event processor.
-  # this is not well named at all
 
   def initialize( log, controllers )
     @log = log
@@ -81,6 +84,7 @@ class Application
 
 
   def decode_request( x)
+    # TODO needs to separate multiple returned cookies into an array
     socket = x[:socket]
     x[:request] = socket.gets
     while line = socket.gets("\r\n")
@@ -89,29 +93,6 @@ class Application
       x[:request_headers][ s[0].strip] = s[1].strip
     end
   end
-
-  ## the Request response logger - ought to be factored out of here
-  ## as well...
-  ## have two methods...
-
-  
-#
-#   def handle_post_request( x)
-#     return if x[:response]
-#     # should we inject the socket straight in here ?
-#     # it makes instantiating the graph harder...
-#     if /^POST .*$/.match(x[:request])
-#
-#       @log.warn("Got post ")
-#       # we must read content , otherwise it gets muddled up
-#       # it gets read at the next http x[:request], when connection
-#       # is keep alive.
-#       # abort()
-#     end
-#   end
-
-
-
 
 end
 
@@ -138,11 +119,11 @@ http_log.formatter = myformatter
 
 
 db_params = { 
-    :host => '127.0.0.1', 
-    :dbname => 'prod', 
-    :port => 5432, 
-    :user => 'events_ro', 
-    :password => 'events_ro' 
+  :host => '127.0.0.1', 
+  :dbname => 'prod', 
+  :port => 5432, 
+  :user => 'events_ro', 
+  :password => 'events_ro' 
 }
 
 model_data = []
@@ -196,9 +177,6 @@ server.start(8000) do |socket|
   application.process_request( socket)
 end
 
-
-# MEMOIZATION ought to be a lot simpler, if put them in the same event stream.
-# eg. can compute at certain time, or id interval etc.
 
 # id = -1
 

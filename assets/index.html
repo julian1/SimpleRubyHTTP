@@ -100,7 +100,31 @@
   // IMPORTANT - we should be using backbone or something
   // if we request a series - we can get back the fully structured
 
-  
+ 
+  function find_index(a, predicate) {
+    for (var i = 0; i < a.length; i++) {
+      if(predicate(a[i])) 
+        return i;
+    }
+    return -1;
+  }
+
+
+  function merge_series( new_series ) {
+    i = find_index( all_series, function( elt) { 
+      return elt.series_name === new_series.series_name; 
+    }); 
+    //console.log( 'index is ' + i ); 
+    if(i === -1) { 
+      all_series.push( new_series );
+    }
+    else {
+      all_series[i] = new_series;
+    }
+    console.log( 'now all_series.length ' + all_series.length ); 
+  }
+
+ 
   function get_series( series_name_ ) {
     // only one 
     // should pass the name
@@ -130,8 +154,17 @@
             }),
             yaxis: 1
           }
-        all_series.push( new_series );
+
+        merge_series( new_series ); 
+
+       // all_series.push( new_series );
         refresh_chart_data();
+
+		// ok, now for update, nothing really changes, no 
+		// we just have to call ajax update on each series....
+		
+		// but we will need to merge the new series in
+		
 
         // now we should find and replace the series with a new one
         // and then call chart update 

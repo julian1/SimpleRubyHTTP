@@ -86,33 +86,30 @@
       url: "get_series.json",
       data: { ticks: $( "#myticks" )[0].value },
       success: function ( datax, textStatus, jqXHR ) {
+        // ok, 
         console.log( 'whoot got data' );
-        //data = [[0, 3], [4, 8], [8, 5], [9, 13]];
         var all_series = [
           {
             color: "red", 
             label: "top ask",
             data: datax.map( function(x) {
-                return [ new Date( x.time), x.top_ask ]
+              return [ new Date( x.time), x.top_ask ]
             }),
             yaxis: 1
           },
           {
             label: "top bid",
             data: datax.map( function(x) {
-                return [ new Date( x.time), x.top_bid ]
+              return [ new Date( x.time), x.top_bid ]
             }),
             yaxis: 1
           },
           {
             label: "sum ratio",
-            data:
-              datax.map( function(x) {
-                return [ new Date( x.time), x.sum_ratio ]
+            data: datax.map( function(x) {
+              return [ new Date( x.time), x.sum_ratio ]
             }),
-            yaxis: 2,
-            //points: { symbol: "circle", fillColor: "#7F7F7F", show: true },
-            lines: { color: "#7F7F7F" }
+            yaxis: 2
           }
         ];
         if( graph == null) {
@@ -155,9 +152,8 @@
           console.log( "require update");
           update_chart();
         }
-        }
       }
-    );
+    });
     setTimeout(continuous_update, 10 * 1000 );
   }
 

@@ -7,7 +7,7 @@ class LogResponseController
 
   def action( x)
     # ip = x[:socket].peeraddr[3]
-    # @log.info( "response from #{ip} '#{ x[:request] ? x[:request].strip : "nil"  }'" )
+    # @log.info( "response from #{ip} '#{ x[:response] ? x[:response].strip : "nil"  }'" )
   end
 end
 

@@ -4,8 +4,8 @@ require './assets'
 require './helper'
 require './es_model'
 
-
-# need to separate out custom from builtin
+# needs to be more organised
+require './controllers/log_request'
 require './controllers/auth'
 require './controllers/assets'
 require './controllers/time_series'
@@ -22,40 +22,13 @@ require 'logger'
 
 require 'securerandom'
 
-# chain together transforms...
 
 # the app at top level, is a lot like processing old win32 or apple OS message pumps
 
 # Ok aparently ruby blocks can reference their enclosing scope!
 # how are we going to pass a reference into into the processing block...
 
-# we can forget if user is logged in
 
-
-
-class HTTPLoggingController
-  # split this into HTTPRequestLogger and HTTPResponseLogger, to unify
-  # the interface
-
-  # just gives us a log more control over log redirection, consolidation 
-  # we shouldn't be passing in two loggers to the Applicationm class
-
-  def initialize(log)
-    @log = log
-  end
-
-  def log_request( x)
-    # getpeername, and getsockname are better, but unsupported for sslsocket
-    # see -> http://stackoverflow.com/questions/19315361/obtaining-client-address-with-ruby-sslsockets
-    # port, ip = Socket.unpack_sockaddr_in(x[:socket].getpeername)
-
-    ip = x[:socket].peeraddr[3]
-    @log.info( "request from #{ip} '#{ x[:request] ? x[:request].strip : "nil"  }'" )
-    #@log.info( "request_headers #{ x[:request_headers] }" )
-    # @log.info( "peer addr: #{ x[:socket].peeraddr } ) "
-  end
-
-end
 
 
   # CEP, and ES Event Sourcing model running in javascript. It's actually not too much
@@ -66,30 +39,14 @@ end
 
 
 
-
-class GeneralControllers
-
-  def initialize( controllers ) 
-    @controllers = controllers
-  end
-
-  def action(x)
-    @controllers.each do |controller|
-      controller.action(x)
-    end
-  end
-end
-
-
 class Application
 
   # model here is the event processor.
   # this is not well named at all
 
-  def initialize( log, general_controllers, http_logging_controller )
+  def initialize( log, controllers )
     @log = log
-    @general_controllers = general_controllers
-    @http_logging_controller = http_logging_controller
+    @controllers = controllers
     @log.warn("Application started")
   end
 
@@ -106,8 +63,8 @@ class Application
     }
 
     decode_request( x)
-  
-    log_request( x)
+
+    # note, we aren't logging nil which generally is close
 
     # no request, indicating connection close by remote
     # we don't actually need to log this
@@ -115,7 +72,10 @@ class Application
       return nil
     end
 
-    @general_controllers.action( x)
+    @controllers.each do |controller|
+      controller.action(x)
+    end
+
     true
   end
 
@@ -134,9 +94,6 @@ class Application
   ## as well...
   ## have two methods...
 
-  def log_request( x)
-    @http_logging_controller.log_request( x)
-  end
   
 #
 #   def handle_post_request( x)
@@ -206,12 +163,11 @@ time_series_controller = TimeSeriesController.new( model_data )
 
 report_controller = ReportController.new( log, report_conn )
 
-http_logging_controller = HTTPLoggingController.new( http_log)
-
 redirect_controller = RedirectController.new( log)
 
 
-general_controllers = GeneralControllers.new( [ 
+general_controllers = [ 
+  LogRequestController.new( http_log ),
   redirect_controller, 
   SessionController.new(),
   URLRewriteController.new(),
@@ -223,10 +179,10 @@ general_controllers = GeneralControllers.new( [
   NotFoundController.new(),
   SendResponseController.new(),
   LogResponseController.new( http_log)
-] ) 
+] 
 
 
-application = Application.new( log, general_controllers, http_logging_controller )
+application = Application.new( log, general_controllers )
 
 server = Server::Processor.new(http_log)
 

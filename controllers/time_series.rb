@@ -66,9 +66,14 @@ class TimeSeriesController
 
     matches = /^GET \/get_series.json\??(.*)$/.match(x[:request])
     if matches && matches.captures.length == 1
- 
+       fields = decode_url_args( matches.captures[0])
+	      puts "fields #{fields}"
 
-	end
+    end
+
+
+
+
     # this whole id thing, where client submits id to check for state change, is
     # almost equivalent to etag approach
 		

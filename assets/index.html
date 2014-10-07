@@ -19,6 +19,7 @@
   </form>
 
   <span><input class="submit" type="button" value="Submit" onclick="update_chart()"></span>
+  <span><input class="submit" type="button" value="get_series() test" onclick="get_series('bitstamp.topask')"></span>
 
   <span> 
     <div id="mytime" style="width:100px;height:30px;"></div>
@@ -77,8 +78,70 @@
     all_series = null;
     graph = null ;
     last_id = -1;
-  continuous_update();
+    continuous_update();
+
   });
+
+  // we could actually keep this entire model on the server side if we wanted. 
+  // but wouldn't it be better to be able to get individual series ...
+  // yes. 
+  // we could specify defaults - like {color, axis } 
+  // so would it be better to update asynchronously.
+
+  // eg. we have a bunch of series - when one of them are returned 
+  // we redraw the model
+  // we should know the name. 
+
+  // i think we need to fire of an ajax request for every series 
+  
+  // ok, all_series should be kept about so that we can edit it.
+  // it's actually a model.
+  
+  // IMPORTANT - we should be using backbone or something
+  // if we request a series - we can get back the fully structured
+
+  
+  function get_series( series_name_ ) {
+    // only one 
+    // should pass the name
+    // server should return the axis
+
+    // actually not sure if we shoudn't have the series all there...    
+    // and we then just keep the data up to date.
+ 
+    $.ajax({
+      dataType: "json",
+      url: "get_single_series.json",
+      data: { 
+        ticks: $( "#myticks" )[0].value, 
+        name: series_name_
+      },
+      success: function ( datax, textStatus, jqXHR ) {
+        // ok, 
+        console.log( 'whoot got series!!! ' + series_name_ );
+        new_series = [
+          {
+            series_name: series_name_, 
+            color: "red", 
+            label: "top ask",
+            data: datax.map( function(x) {
+              // its just going to be time value pairs
+              return [ new Date( x.time), x.value ]
+            }),
+            yaxis: 1
+          }
+        ]
+        // now we should find and replace the series with a new one
+        // and then call chart update 
+      },
+      error: function (jqXHR, textStatus, errorThrown ) {
+        console.log( textStatus  + errorThrown );
+      }
+    });
+  }
+
+
+
 
   function update_chart() {
     $.ajax({
@@ -88,7 +151,7 @@
       success: function ( datax, textStatus, jqXHR ) {
         // ok, 
         console.log( 'whoot got data' );
-        var all_series = [
+        all_series = [
           {
             color: "red", 
             label: "top ask",

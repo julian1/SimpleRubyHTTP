@@ -1,4 +1,8 @@
 
+ok, 
+
+
+
 - Use the listen interface to get time-synchronous stream. and replicate locally
 	from aws instance. 
 	- Might be possible to do it entirely in sql. if we can connect to two dbs 

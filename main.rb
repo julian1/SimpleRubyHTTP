@@ -15,6 +15,7 @@ require './controllers/session'
 require './controllers/redirect'
 require './controllers/cache_policy'
 require './controllers/not_found'
+require './controllers/send_response'
 
 require 'logger'
 
@@ -157,7 +158,7 @@ class Application
 
     # do_cache_control( x)
     #catch_all( x)
-    send_response( x )
+    #send_response( x )
     log_response( x)
     true
 
@@ -212,22 +213,22 @@ class Application
 # 
 #   end
 # 
-  def send_response( x)
-    # note that we could pass in the socket here from application,
-    # rather than keeping it around in x.
-
-    Helper.write_response( x )
-
-    x[:session][:last_access] = Time.now
-
-    begin
-      x[:session][:page_count] += 1
-    rescue
-      x[:session][:page_count] = 0
-    end
-
-  end
-
+#   def send_response( x)
+#     # note that we could pass in the socket here from application,
+#     # rather than keeping it around in x.
+# 
+#     Helper.write_response( x )
+# 
+#     x[:session][:last_access] = Time.now
+# 
+#     begin
+#       x[:session][:page_count] += 1
+#     rescue
+#       x[:session][:page_count] = 0
+#     end
+# 
+#   end
+# 
   def log_response( x)
 
     @http_logging_controller.log_response( x)
@@ -321,7 +322,8 @@ general_controllers = GeneralControllers.new( [
   AuthController.new(),
   report_controller ,
   CachePolicyController.new(),
-  NotFoundController.new()
+  NotFoundController.new(),
+  SendResponseController.new()
 ] ) 
 
 

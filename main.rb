@@ -14,6 +14,7 @@ require './controllers/url_rewrite'
 require './controllers/session'
 require './controllers/redirect'
 require './controllers/cache_policy'
+require './controllers/not_found'
 
 require 'logger'
 
@@ -155,7 +156,7 @@ class Application
 
 
     # do_cache_control( x)
-    catch_all( x)
+    #catch_all( x)
     send_response( x )
     log_response( x)
     true
@@ -196,22 +197,7 @@ class Application
 #     end
 #   end
 
-#   def do_cache_control( x)
-#     # this may need to be combined with other resource handling, and egg stuff.
-#     # caache constrol should be hanlded externally to this.
-#     # max-age=0
-# 
-#     # it's possible this might vary depending on the user-agent
-# 
-#     unless x[:response_headers]['Cache-Control']
-#       #x[:response_headers]['Cache-Control']= "private"
-#       x[:response_headers]['Cache-Control']= "private, max-age=0"
-#     end
-# 
-#     # headers['Cache-Control:']= "private,max-age=100000"
-#     # firefox will send 'If-None-Match' nicely. dont have to set cache-control flags
-#   end
-# 
+
 
   # CEP, and ES Event Sourcing model running in javascript. It's actually not too much
   # data, if we have snapshots, running on the server. but then loose the power
@@ -222,31 +208,10 @@ class Application
 
   # change name ResourceNotFoundPolicy or similar ? 
 
-  def catch_all( x)
-
-    # resource not found
-    if x[:response].nil?
-
-      if /^GET.*$/.match(x[:request])
-        # GET request
-        x[:response] = "HTTP/1.1 404 Not Found"
-        x[:response_headers]['Content-Type'] = "text/plain"
-        x[:body] = StringIO.new( <<-EOF
-  File not found!
-          EOF
-          )
-      else
-        # catch all, for non-implemented or badly formed request
-        x[:response] = "HTTP/1.1 400 Bad Request"
-        x[:response_headers]['Content-Type'] = "text/plain"
-        x[:body] = StringIO.new( <<-EOF
-  Your browser sent a request that this server could not understand
-          EOF
-          )
-      end
-    end
-  end
-
+#   def catch_all( x)
+# 
+#   end
+# 
   def send_response( x)
     # note that we could pass in the socket here from application,
     # rather than keeping it around in x.
@@ -361,7 +326,8 @@ general_controllers = GeneralControllers.new( [
   time_series_controller, 
   auth_controller, 
   report_controller ,
-  CachePolicyController.new()
+  CachePolicyController.new(),
+  NotFoundController.new()
 
 ] ) 
 

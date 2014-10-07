@@ -92,12 +92,6 @@ module Helper
 
   end
 
-  def Helper.ignore_exception
-     begin
-     yield
-     rescue Exception
-    end
-  end
 
 end
 

@@ -70,17 +70,35 @@ class TimeSeriesController
       fields = decode_url_args( matches.captures[0])
       puts "fields #{fields}"
       ticks = fields['ticks'] ? fields['ticks'].to_i : 100
+      name = fields['name'] 
       take = ticks
       n = @model.length
       m = @model[ (n - take > 0 ? n - take : 0) .. n - 1]
-      top_ask = m.map do |row| <<-EOF
-        { "id": "#{row[:id]}",
-          "time": "#{row[:time]}",
-          "value": #{row[:top_ask]} }
-        EOF
+
+      case name
+      when 'bitstamp.topask'
+       values = m.map do |row| <<-EOF
+          { "id": "#{row[:id]}",
+            "time": "#{row[:time]}",
+            "value": #{row[:top_ask]} 
+          }
+          EOF
+        end
+      when 'bitstamp.topbid'
+         values = m.map do |row| <<-EOF
+          { "id": "#{row[:id]}",
+            "time": "#{row[:time]}",
+            "value": #{row[:top_bid]} 
+          }
+          EOF
+        end
+      else
+        puts "**** not found!" 
       end
+
+
       ret = <<-EOF
-        [ #{top_ask.join(", ")} ]
+        [ #{values.join(", ")} ]
       EOF
       # puts ret
       x[:response] = "HTTP/1.1 200 OK"

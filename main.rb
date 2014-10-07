@@ -4,6 +4,7 @@ require './assets'
 require './helper'
 require './es_model'
 
+
 # needs to be more organised
 require './controllers/log_request'
 require './controllers/auth'
@@ -19,7 +20,6 @@ require './controllers/send_response'
 require './controllers/log_response'
 
 require 'logger'
-
 require 'securerandom'
 
 

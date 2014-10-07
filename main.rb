@@ -303,32 +303,25 @@ report_conn = PG::Connection.open( db_params )
 
 time_series_controller = TimeSeriesController.new( model_data )
 
-auth_controller = AuthController.new()
 
 report_controller = ReportController.new( log, report_conn )
 
 http_logging_controller = HTTPLoggingController.new( http_log)
 
 
-url_rewrite_controller = URLRewriteController.new()
-
-session_controller = SessionController.new()
-
 redirect_controller = RedirectController.new( log)
-
 
 
 general_controllers = GeneralControllers.new( [ 
   redirect_controller, 
-  session_controller, 
-  url_rewrite_controller, 
+  SessionController.new(),
+  URLRewriteController.new(),
   assets_controller, 
   time_series_controller, 
-  auth_controller, 
+  AuthController.new(),
   report_controller ,
   CachePolicyController.new(),
   NotFoundController.new()
-
 ] ) 
 
 

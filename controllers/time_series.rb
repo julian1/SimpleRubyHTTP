@@ -30,28 +30,20 @@ class TimeSeriesController
 
     # the ? isn't quite right here, it shouldn't be optional
     # if there's a param set. 
-    matches = /^GET \/get_series.json\??(.*)$/.match(x[:request])
+    matches = /^GET \/get_all_series.json\??(.*)$/.match(x[:request])
     if matches && matches.captures.length == 1
-
-      puts "raw query string #{ matches.captures[0] }"
-
+      #puts "raw query string #{ matches.captures[0] }"
       fields = decode_url_args( matches.captures[0])
- 
-      puts "fields #{fields}"
-
+      #puts "fields #{fields}"
       # defaults 
       ticks = fields['ticks'] ? fields['ticks'].to_i : 100
       interval = fields['interval'] ? fields['interval'].to_i : 1
-
-      puts "model length #{@model.length }"
-
+      #puts "model length #{@model.length }"
       # @model.get_series( x, ticks)
-
       # take up to 500 elts, with logic to handle fewer
       take = ticks 
       n = @model.length
       m = @model[ (n - take > 0 ? n - take : 0) .. n - 1]
-
       top_ask = m.map do |row| <<-EOF
         {
           "id": "#{row[:id]}",
@@ -62,24 +54,21 @@ class TimeSeriesController
         }
         EOF
       end
-
       ret = <<-EOF
         [ #{top_ask.join(", ")} ]
       EOF
-
       # puts ret
-
       x[:response] = "HTTP/1.1 200 OK"
       x[:response_headers]['Content-Type'] = "application/json"
       x[:body] = StringIO.new( ret, "r")
-
-
     end
 
 
+    matches = /^GET \/get_series.json\??(.*)$/.match(x[:request])
+    if matches && matches.captures.length == 1
+ 
 
-
-
+	end
     # this whole id thing, where client submits id to check for state change, is
     # almost equivalent to etag approach
 		

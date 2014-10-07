@@ -146,7 +146,7 @@
   function update_chart() {
     $.ajax({
       dataType: "json",
-      url: "get_series.json",
+      url: "get_all_series.json",
       data: { ticks: $( "#myticks" )[0].value },
       success: function ( datax, textStatus, jqXHR ) {
         // ok, 

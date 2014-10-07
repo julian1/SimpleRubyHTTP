@@ -18,7 +18,7 @@
     ticks: <input type="text" id="myticks"  value="500" ><br>
   </form>
 
-  <span><input class="submit" type="button" value="Submit" onclick="update_chart()"></span>
+  <!--span><input class="submit" type="button" value="Submit" onclick="update_chart()"></span-->
   <!-- span><input class="submit" type="button" value="get_series() test" onclick="get_series('bitstamp.topask')"></span -->
 
   <span> 
@@ -127,11 +127,14 @@
     else {
       all_series[i] = new_series;
     }
-    console.log( 'now all_series.length ' + all_series.length ); 
+    console.log( 'all_series.length after merge ' + all_series.length ); 
   }
 
  
   function get_series( series_name_ ) {
+    // MUST rename. this does more than get_series
+    // call it add_series or something
+    // it also updates the chart.
     // only one 
     // should pass the name
     // server should return the axis
@@ -186,56 +189,6 @@
       graph.setupGrid();       // Adjust axes to match new values
       graph.draw();            // Update actual plot
     }
-  }
-
-  function update_chart() {
-    $.ajax({
-      dataType: "json",
-      url: "get_all_series.json",
-      data: { ticks: $( "#myticks" )[0].value },
-      success: function ( datax, textStatus, jqXHR ) {
-        // ok, 
-        console.log( 'whoot got data' );
-        all_series = [
-          /*{
-            color: "red", 
-            label: "top ask",
-            data: datax.map( function(x) {
-              return [ new Date( x.time), x.top_ask ]
-            }),
-            yaxis: 1
-          },*/
-          {
-            label: "top bid",
-            data: datax.map( function(x) {
-              return [ new Date( x.time), x.top_bid ]
-            }),
-            yaxis: 1
-          },
-          {
-            label: "sum ratio",
-            data: datax.map( function(x) {
-              return [ new Date( x.time), x.sum_ratio ]
-            }),
-            yaxis: 2
-          }
-        ];
-        refresh_chart_data( );
-
-                // now we want to do update this thing
-        x = datax.slice(-1)[0];
-        y = new Date( x.time).toLocaleTimeString();
-        $( "#mytime" ).html( "<p>" + y + "</p>" );
-
-        x = datax.slice(0)[0];
-        y = new Date( x.time).toLocaleString();
-        $( "#starttime" ).html( "<p>" + y + "</p>" );
-        last_id = x.id;
-      } ,
-      error: function (jqXHR, textStatus, errorThrown ) {
-        console.log(   textStatus  + errorThrown );
-      }
-    });
   }
 
   function continuous_update() {

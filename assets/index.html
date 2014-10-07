@@ -18,8 +18,8 @@
     ticks: <input type="text" id="myticks"  value="500" ><br>
   </form>
 
-  <span><input class="submit" type="button" value="Submit" onclick="update_chart()"></span>
-  <span><input class="submit" type="button" value="get_series() test" onclick="get_series('bitstamp.topask')"></span>
+  <!--span><input class="submit" type="button" value="Submit" onclick="update_chart()"></span-->
+  <!-- span><input class="submit" type="button" value="get_series() test" onclick="get_series('bitstamp.topask')"></span -->
 
   <span> 
     <div id="mytime" style="width:100px;height:30px;"></div>
@@ -75,11 +75,16 @@
 
   $(function () {
     // start
-    all_series = null;
+    all_series = [];
     graph = null ;
     last_id = -1;
-    continuous_update();
+//    continuous_update();
 
+
+    get_series('bitstamp.topask'); 
+    get_series('bitstamp.topbid'); 
+
+    continuous_update();
   });
 
   // we could actually keep this entire model on the server side if we wanted. 
@@ -100,8 +105,36 @@
   // IMPORTANT - we should be using backbone or something
   // if we request a series - we can get back the fully structured
 
-  
+ 
+  function find_index(a, predicate) {
+    // must be a jquery equivalent
+    for (var i = 0; i < a.length; i++) {
+      if(predicate(a[i])) 
+        return i;
+    }
+    return -1;
+  }
+
+
+  function merge_series( new_series ) {
+    i = find_index( all_series, function( elt) { 
+      return elt.series_name === new_series.series_name; 
+    }); 
+    //console.log( 'index is ' + i ); 
+    if(i === -1) { 
+      all_series.push( new_series );
+    }
+    else {
+      all_series[i] = new_series;
+    }
+    console.log( 'all_series.length after merge ' + all_series.length ); 
+  }
+
+ 
   function get_series( series_name_ ) {
+    // MUST rename. this does more than get_series
+    // call it add_series or something
+    // it also updates the chart.
     // only one 
     // should pass the name
     // server should return the axis
@@ -111,16 +144,18 @@
  
     $.ajax({
       dataType: "json",
-      url: "get_single_series.json",
+      url: "get_series.json",
       data: { 
         ticks: $( "#myticks" )[0].value, 
         name: series_name_
       },
+
+        // change series_name to just name
       success: function ( datax, textStatus, jqXHR ) {
         // ok, 
         console.log( 'whoot got series!!! ' + series_name_ );
-        new_series = [
-          {
+
+        new_series = {
             series_name: series_name_, 
             color: "red", 
             label: "top ask",
@@ -129,10 +164,9 @@
               return [ new Date( x.time), x.value ]
             }),
             yaxis: 1
-          }
-        ]
-        // now we should find and replace the series with a new one
-        // and then call chart update 
+        };
+        merge_series( new_series ); 
+        refresh_chart_data();
       },
       error: function (jqXHR, textStatus, errorThrown ) {
         console.log( textStatus  + errorThrown );
@@ -141,64 +175,20 @@
   }
 
 
-
-
-  function update_chart() {
-    $.ajax({
-      dataType: "json",
-      url: "get_all_series.json",
-      data: { ticks: $( "#myticks" )[0].value },
-      success: function ( datax, textStatus, jqXHR ) {
-        // ok, 
-        console.log( 'whoot got data' );
-        all_series = [
-          {
-            color: "red", 
-            label: "top ask",
-            data: datax.map( function(x) {
-              return [ new Date( x.time), x.top_ask ]
-            }),
-            yaxis: 1
-          },
-          {
-            label: "top bid",
-            data: datax.map( function(x) {
-              return [ new Date( x.time), x.top_bid ]
-            }),
-            yaxis: 1
-          },
-          {
-            label: "sum ratio",
-            data: datax.map( function(x) {
-              return [ new Date( x.time), x.sum_ratio ]
-            }),
-            yaxis: 2
-          }
-        ];
-        if( graph == null) {
-          graph = $.plot($("#placeholder"), all_series, options );
-          console.log( 'plotting graph')
-        }
-        else {
-          console.log( 'already have graph')
-          graph.setData( all_series );  // Replace oldData with newData
-          graph.setupGrid();       // Adjust axes to match new values
-          graph.draw();            // Update actual plot
-        }
-        // now we want to do update this thing
-        x = datax.slice(-1)[0];
-        y = new Date( x.time).toLocaleTimeString();
-        $( "#mytime" ).html( "<p>" + y + "</p>" );
-
-        x = datax.slice(0)[0];
-        y = new Date( x.time).toLocaleString();
-        $( "#starttime" ).html( "<p>" + y + "</p>" );
-        last_id = x.id;
-      } ,
-      error: function (jqXHR, textStatus, errorThrown ) {
-        console.log(   textStatus  + errorThrown );
-      }
-    });
+  function refresh_chart_data() { 
+    // rather than lexically bind everything - should use param
+    // factor this into a function ...
+    // actually we should even pass the all_series as an argument
+    if( graph == null) {
+      graph = $.plot($("#placeholder"), all_series, options );
+      console.log( 'plotting graph')
+    }
+    else {
+      console.log( 'already have graph')
+      graph.setData( all_series );  // Replace oldData with newData
+      graph.setupGrid();       // Adjust axes to match new values
+      graph.draw();            // Update actual plot
+    }
   }
 
   function continuous_update() {
@@ -213,10 +203,19 @@
         }
         else {
           console.log( "require update");
-          update_chart();
+          // we have to go through each 
+          $.each( all_series, function( i, series) {
+            console.log( 'MUST UPDATE ' + series.series_name );
+            get_series( series.series_name ); 
+          });
         }
+      
+        last_id = id;
       }
     });
+    // IMPORTANT - we don't want to do this 
+    // until everything has updated. like a 
+    // thread join
     setTimeout(continuous_update, 10 * 1000 );
   }
 

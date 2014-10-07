@@ -13,8 +13,6 @@ class ReportController
   def action( x) 
 	return if x[:response]
 
-    puts "*** WHOOT report controller action " 
-
     matches = /^GET \/report.json\?field1=(.*)$/.match( x[:request])
     if matches and matches.captures.length == 1
 

@@ -19,7 +19,7 @@
   </form>
 
   <span><input class="submit" type="button" value="Submit" onclick="update_chart()"></span>
-  <span><input class="submit" type="button" value="get_series() test" onclick="get_series('bitstamp.topask')"></span>
+  <!-- span><input class="submit" type="button" value="get_series() test" onclick="get_series('bitstamp.topask')"></span -->
 
   <span> 
     <div id="mytime" style="width:100px;height:30px;"></div>
@@ -80,6 +80,9 @@
     last_id = -1;
 //    continuous_update();
 
+
+    get_series('bitstamp.topask'); 
+
   });
 
   // we could actually keep this entire model on the server side if we wanted. 
@@ -102,6 +105,7 @@
 
  
   function find_index(a, predicate) {
+    // must be a jquery equivalent
     for (var i = 0; i < a.length; i++) {
       if(predicate(a[i])) 
         return i;
@@ -143,8 +147,7 @@
       success: function ( datax, textStatus, jqXHR ) {
         // ok, 
         console.log( 'whoot got series!!! ' + series_name_ );
-        new_series = 
-          {
+        new_series = {
             series_name: series_name_, 
             color: "red", 
             label: "top ask",
@@ -153,21 +156,9 @@
               return [ new Date( x.time), x.value ]
             }),
             yaxis: 1
-          }
-
+        };
         merge_series( new_series ); 
-
-       // all_series.push( new_series );
         refresh_chart_data();
-
-		// ok, now for update, nothing really changes, no 
-		// we just have to call ajax update on each series....
-		
-		// but we will need to merge the new series in
-		
-
-        // now we should find and replace the series with a new one
-        // and then call chart update 
       },
       error: function (jqXHR, textStatus, errorThrown ) {
         console.log( textStatus  + errorThrown );

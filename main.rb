@@ -13,6 +13,7 @@ require './controllers/report'
 require './controllers/url_rewrite'
 require './controllers/session'
 require './controllers/redirect'
+require './controllers/cache_policy'
 
 require 'logger'
 
@@ -153,7 +154,7 @@ class Application
     @general_controllers.action( x)
 
 
-    do_cache_control( x)
+    # do_cache_control( x)
     catch_all( x)
     send_response( x )
     log_response( x)
@@ -195,22 +196,22 @@ class Application
 #     end
 #   end
 
-  def do_cache_control( x)
-    # this may need to be combined with other resource handling, and egg stuff.
-    # caache constrol should be hanlded externally to this.
-    # max-age=0
-
-    # it's possible this might vary depending on the user-agent
-
-    unless x[:response_headers]['Cache-Control']
-      #x[:response_headers]['Cache-Control']= "private"
-      x[:response_headers]['Cache-Control']= "private, max-age=0"
-    end
-
-    # headers['Cache-Control:']= "private,max-age=100000"
-    # firefox will send 'If-None-Match' nicely. dont have to set cache-control flags
-  end
-
+#   def do_cache_control( x)
+#     # this may need to be combined with other resource handling, and egg stuff.
+#     # caache constrol should be hanlded externally to this.
+#     # max-age=0
+# 
+#     # it's possible this might vary depending on the user-agent
+# 
+#     unless x[:response_headers]['Cache-Control']
+#       #x[:response_headers]['Cache-Control']= "private"
+#       x[:response_headers]['Cache-Control']= "private, max-age=0"
+#     end
+# 
+#     # headers['Cache-Control:']= "private,max-age=100000"
+#     # firefox will send 'If-None-Match' nicely. dont have to set cache-control flags
+#   end
+# 
 
   # CEP, and ES Event Sourcing model running in javascript. It's actually not too much
   # data, if we have snapshots, running on the server. but then loose the power
@@ -350,6 +351,8 @@ session_controller = SessionController.new()
 
 redirect_controller = RedirectController.new( log)
 
+
+
 general_controllers = GeneralControllers.new( [ 
   redirect_controller, 
   session_controller, 
@@ -357,7 +360,9 @@ general_controllers = GeneralControllers.new( [
   assets_controller, 
   time_series_controller, 
   auth_controller, 
-  report_controller 
+  report_controller ,
+  CachePolicyController.new()
+
 ] ) 
 
 

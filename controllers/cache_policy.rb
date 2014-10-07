@@ -5,8 +5,10 @@
 class CachePolicyController
 
   def action( x)
-
-
-	end
+    unless x[:response_headers]['Cache-Control']
+        #x[:response_headers]['Cache-Control']= "private"
+        x[:response_headers]['Cache-Control']= "private, max-age=0"
+    end
+  end
 end
 

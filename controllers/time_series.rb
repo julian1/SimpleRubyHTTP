@@ -75,27 +75,19 @@ class TimeSeriesController
       n = @model.length
       m = @model[ (n - take > 0 ? n - take : 0) .. n - 1]
 
-      case name
-      when 'bitstamp.topask'
-       values = m.map do |row| <<-EOF
-          { "id": "#{row[:id]}",
-            "time": "#{row[:time]}",
-            "value": #{row[:top_ask]} 
-          }
-          EOF
-        end
-      when 'bitstamp.topbid'
-         values = m.map do |row| <<-EOF
-          { "id": "#{row[:id]}",
-            "time": "#{row[:time]}",
-            "value": #{row[:top_bid]} 
-          }
-          EOF
-        end
-      else
-        puts "**** not found!" 
-      end
+      # we kind of
 
+      values = m.map do |row| 
+        time = row[name.split('.')[0] + '.time']  # eg 'bitstamp.top_ask' -> bitstamp.time' 
+        value = row[name]
+        # puts "time #{time} value #{value}" 
+        <<-EOF
+        { 
+          "time": "#{time }",
+          "value": #{value} 
+        }
+        EOF
+      end
 
       ret = <<-EOF
         [ #{values.join(", ")} ]

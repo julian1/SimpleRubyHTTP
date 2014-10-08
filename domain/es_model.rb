@@ -4,6 +4,14 @@ require 'pg'
 require 'date'
 require 'logger'
 
+
+# VERY IMPORTANT Ok, there is no one-to-one correspondance between id's in different streams
+# eg. we monitor multiple urls. only one in four events is actually a specific for the url
+# when we monitor four urls.
+
+# we need to refine the idea of the main event stream and then derivative streams.
+
+
 # THE SERIES WE PRODUCE IS A PROJECTION - A lazy LEFT-FOLD. 
 # IDEALLY WE'D LIKE TO BE ABLE TO CREATE MULTIPLE PROJECTIONS
 # AND USE THEM INDEPENDENTLY.
@@ -71,6 +79,7 @@ module Model
       id
     end
 
+
     # channel to wait on
     POSTGRES_CHANNEL = 'events_insert'
 
@@ -128,13 +137,17 @@ module Model
         asks_sum = compute_sum(orderbook['asks'])
         sum_ratio = ((bids_sum.to_f / asks_sum.to_f) * 100 ) .round(1) 
 
+		# ok, how do we do this...
+		# with unique namespaces ...
+		# think we should probably keep a new id
         @model << {
-          :id => id,
-          :time => time,
-          :top_bid => top_bid,
-          :top_ask => top_ask,
-          :ratio => ratio,
-          :sum_ratio => sum_ratio
+          #'bitstamp.originating_id' => id,
+          'bitstamp.id' => id,
+          'bitstamp.time' => time,
+          'bitstamp.top_bid' => top_bid,
+          'bitstamp.top_ask' => top_ask,
+          'bitstamp.ratio' => ratio,
+          'bitstamp.sum_ratio' => sum_ratio
         }
       rescue
           @log.info( "Failed to decode bitstamp orderbook orderbook error: #{$!}" )

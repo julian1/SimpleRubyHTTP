@@ -135,7 +135,12 @@ module Model
 
         bids_sum = compute_sum(orderbook['bids'])
         asks_sum = compute_sum(orderbook['asks'])
+
+        # this calculation isn't really correct. 
+        # it should be bids / (bids + asks ) * 100 
         sum_ratio = ((bids_sum.to_f / asks_sum.to_f) * 100 ) .round(1) 
+
+
 
 		# ok, how do we do this...
 		# with unique namespaces ...
@@ -182,9 +187,9 @@ module Model
         top_ask = orderbook['asks'][0][0]
        # puts orderbook['bids'][0]
         (@model['btcmarkets'] ||= []) << { 
-          :time => time, 
-          :top_bid => top_bid, 
-          :top_ask => top_ask
+          'time' => time, 
+          'top_bid' => top_bid, 
+          'top_ask' => top_ask
         }
 
         # puts @model.last

@@ -32,6 +32,9 @@ class TimeSeriesController
     # if there's a param set.
     matches = /^GET \/get_all_series.json\??(.*)$/.match(x[:request])
     if matches && matches.captures.length == 1
+
+      abort('not supported anymore' )
+
       #puts "raw query string #{ matches.captures[0] }"
       fields = decode_url_args( matches.captures[0])
       #puts "fields #{fields}"
@@ -67,15 +70,23 @@ class TimeSeriesController
     # an individual series
     matches = /^GET \/get_series.json\??(.*)$/.match(x[:request])
     if matches && matches.captures.length == 1
+
       fields = decode_url_args( matches.captures[0])
       puts "fields #{fields}"
       ticks = fields['ticks'] ? fields['ticks'].to_i : 100
       name = fields['name'] 
       take = ticks
 
+      puts "here0"
       series = @model[name]
+      puts series
+      puts "here1"
+      
+
       n = series.length
       m = series[ (n - take > 0 ? n - take : 0) .. n - 1]
+
+      puts "n is #{n}"
 
       # we kind of need to specify the axis unit - usd, aud, percentage, 
       # and the presentation color.
@@ -93,7 +104,7 @@ class TimeSeriesController
       ret = <<-EOF
         [ #{values.join(", ")} ]
       EOF
-      # puts ret
+       puts ret
       x[:response] = "HTTP/1.1 200 OK"
       x[:response_headers]['Content-Type'] = "application/json"
       x[:body] = StringIO.new( ret, "r")

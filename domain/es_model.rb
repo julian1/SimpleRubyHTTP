@@ -170,7 +170,6 @@ module Model
     # maybe that's ok, we do the combination immediate when we are organized by time...
 
     def process_btcmarkets_orderbook_event( id, orderbook )
-      return
       begin
         #puts orderbook
         time = Time.at(orderbook['timestamp'].to_i).to_datetime
@@ -178,12 +177,9 @@ module Model
         top_bid = orderbook['bids'][0][0]
         top_ask = orderbook['asks'][0][0]
        # puts orderbook['bids'][0]
-        @model << {
-          'btcmarkets.id' => id,
-          'btcmarkets.time' => time,
-          'btcmarkets.top_bid' => top_bid,
-          'btcmarkets.top_ask' => top_ask,
-        }
+        (@model['btcmarkets.top_bid'] ||= []) << { :time => time, :value => top_bid } 
+        (@model['btcmarkets.top_ask'] ||= []) << { :time => time, :value => top_ask } 
+
         # puts @model.last
         #abort
 	    rescue

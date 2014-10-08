@@ -126,7 +126,7 @@ db_params = {
   :password => 'events_ro' 
 }
 
-model_data = []
+model_data = { } 
 
 event_sink = Model::EventSink.new( log, model_data )
 

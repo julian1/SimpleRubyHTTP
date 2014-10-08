@@ -140,21 +140,30 @@ module Model
 		# ok, how do we do this...
 		# with unique namespaces ...
 		# think we should probably keep a new id
-        @model << {
-          #'bitstamp.originating_id' => id,
-          'bitstamp.id' => id,
-          'bitstamp.time' => time,
-          'bitstamp.top_bid' => top_bid,
-          'bitstamp.top_ask' => top_ask,
-          'bitstamp.ratio' => ratio,
-          'bitstamp.sum_ratio' => sum_ratio
-        }
+
+        (@model['bitstamp.top_bid'] ||= []) << { :time => time, :value => top_bid } 
+
+
+#         @model << {
+#           #'bitstamp.originating_id' => id,
+#           'bitstamp.id' => id,
+#           'bitstamp.time' => time,
+#           'bitstamp.top_bid' => top_bid,
+#           'bitstamp.top_ask' => top_ask,
+#           'bitstamp.ratio' => ratio,
+#           'bitstamp.sum_ratio' => sum_ratio
+#         }
       rescue
           @log.info( "Failed to decode bitstamp orderbook orderbook error: #{$!}" )
       end
     end
 
-    
+    # ok, i think we need to organize the series in terms of { time, value } pairs.  
+    # and stuff them in the model as a complete list...
+
+    #   @model['btcmarkets.top_bid'] << { time => time, value => value} 
+    # but then we have problems combining. 
+    # maybe that's ok, we do the combination immediate when we are organized by time...
 
     def process_btcmarkets_orderbook_event( id, orderbook )
       return

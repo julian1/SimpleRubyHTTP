@@ -112,6 +112,7 @@ module Model
     ### VERY IMPORTANT any fold operation has an initial argument.
     ### we really need this. could be used to set axis data
 
+    # change name to just event() ?
     def process_event( id, msg, t, content)
         @sinks.each do |sink|
           sink.process_event( id, msg, t, content) 

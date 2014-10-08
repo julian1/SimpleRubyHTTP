@@ -9,7 +9,8 @@ class BTCMarketsModel
   # rather than try to combine the data and metadata, do them 
   # with separate javascript calls ?
 
-  def initialize( model)
+  def initialize( log, model)
+    @log = log
     @model = model
     @model['btcmarkets'] = { } 
     @model['btcmarkets']['data'] = [ ] 
@@ -27,6 +28,7 @@ class BTCMarketsModel
     # yes with an init...
   end
 
+  # change name to just event() ?
   def process_event( id, msg, t, content)
 
     if msg == 'order2' \

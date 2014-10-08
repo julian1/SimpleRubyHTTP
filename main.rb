@@ -133,8 +133,8 @@ model_data = { }
 
 sinks = [
     # ESModel::BitstampModel.new( model_data ),
-    BitstampModel.new( model_data ),
-    BTCMarketsModel.new( model_data)
+    BitstampModel.new( log, model_data ),
+    BTCMarketsModel.new( log, model_data)
 ]
 
 event_sink = Model::EventSink.new( sinks )

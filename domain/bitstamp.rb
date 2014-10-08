@@ -3,7 +3,8 @@ class BitstampModel
   # change name to stream, or sink, 
   # this is really just the target of a fold
 
-  def initialize( model)
+  def initialize( log, model)
+    @log = log
     @model = model
 
     # set up data andjjj metadata here.

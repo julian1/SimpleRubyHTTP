@@ -1,6 +1,7 @@
 
 require './support/server'
 require './support/assets'
+require './support/application'
 
 
 require './domain/es_model'
@@ -45,59 +46,6 @@ require 'securerandom'
 # eg. can compute at certain time, or id interval etc.
 
 # what we're doing with checking for an id update - is very similar to ES.
-
-
-
-class Application
-
-  def initialize( log, controllers )
-    @log = log
-    @controllers = controllers
-    @log.warn("Application started")
-  end
-
-  def process_request( socket)
-
-    # init message structure
-    x = {
-      :request => nil,
-      :request_headers => {},
-      :socket => socket,
-      :response => nil,
-      :response_headers => {},
-      :body => nil
-    }
-
-    decode_request( x)
-
-    # note, we aren't logging nil which generally is close
-
-    # no request, indicating connection close by remote
-    # we don't actually need to log this
-    if x[:request].nil?
-      return nil
-    end
-
-    @controllers.each do |controller|
-      controller.action(x)
-    end
-
-    true
-  end
-
-
-  def decode_request( x)
-    # TODO needs to separate multiple returned cookies into an array
-    socket = x[:socket]
-    x[:request] = socket.gets
-    while line = socket.gets("\r\n")
-      break if line == "\r\n"
-      s = line.split(':')
-      x[:request_headers][ s[0].strip] = s[1].strip
-    end
-  end
-
-end
 
 
 http_log_file = File.new('log.txt', 'w')
@@ -188,6 +136,9 @@ server.start(8000) do |socket|
   application.process_request( socket)
 end
 
+
+## IMPORTANT this code including id and event_conn should be pushed
+## into the event processor.
 
 # id = -1
 

@@ -169,6 +169,10 @@ module Model
     # but then we have problems combining. 
     # maybe that's ok, we do the combination immediate when we are organized by time...
 
+
+    ### ok, very important we can still partially group.
+    ### it's just that the series will have unique times
+
     def process_btcmarkets_orderbook_event( id, orderbook )
       begin
         #puts orderbook
@@ -177,8 +181,11 @@ module Model
         top_bid = orderbook['bids'][0][0]
         top_ask = orderbook['asks'][0][0]
        # puts orderbook['bids'][0]
-        (@model['btcmarkets.top_bid'] ||= []) << { :time => time, :value => top_bid } 
-        (@model['btcmarkets.top_ask'] ||= []) << { :time => time, :value => top_ask } 
+        (@model['btcmarkets'] ||= []) << { 
+          :time => time, 
+          :top_bid => top_bid, 
+          :top_ask => top_ask
+        }
 
         # puts @model.last
         #abort

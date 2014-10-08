@@ -113,7 +113,7 @@ module Model
       @model = model
       @model['btcmarkets'] = { } 
       @model['btcmarkets']['data'] = [ ] 
-      @model['bitstamp']['color'] = { 
+      @model['btcmarkets']['color'] = { 
         'top_bid' => 'blue',
         'top_ask' => 'red'
       }

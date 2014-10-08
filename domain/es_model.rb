@@ -141,7 +141,11 @@ module Model
 		# with unique namespaces ...
 		# think we should probably keep a new id
 
+        #(@model['bitstamp.original_id'] ||= []) << { :time => time, :value => top_bid } 
         (@model['bitstamp.top_bid'] ||= []) << { :time => time, :value => top_bid } 
+        (@model['bitstamp.top_ask'] ||= []) << { :time => time, :value => top_ask } 
+        (@model['bitstamp.ratio'] ||= []) << { :time => time, :value => ratio } 
+        (@model['bitstamp.sum_ratio'] ||= []) << { :time => time, :value => sum_ratio } 
 
 
 #         @model << {

@@ -93,7 +93,7 @@ class TimeSeriesController
       ret = <<-EOF
         [ #{values.join(", ")} ]
       EOF
-       puts ret
+      # puts ret
       x[:response] = "HTTP/1.1 200 OK"
       x[:response_headers]['Content-Type'] = "application/json"
       x[:body] = StringIO.new( ret, "r")

@@ -77,20 +77,17 @@ class TimeSeriesController
       name = fields['name'] 
       take = ticks
 
-      series = @model[name]
+      series_name, field_name = name.split('.')
 
+      series = @model[series_name]
       n = series.length
       m = series[ (n - take > 0 ? n - take : 0) .. n - 1]
-
-      # we kind of need to specify the axis unit - usd, aud, percentage, 
-      # and the presentation color.
-      # we can't derive this except from the model.
 
       values = m.map do |row| 
         <<-EOF
         { 
-          "time": "#{row[:time] }",
-          "value": #{row[:value]} 
+          "time": "#{row['time'] }",
+          "value": #{row[field_name]} 
         }
         EOF
       end

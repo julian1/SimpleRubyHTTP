@@ -35,6 +35,78 @@ require 'logger'
 module Model
 
 
+  class BitstampModel
+    # change name to stream, or sink, 
+    # this is really just the target of a fold
+
+    def initialize( model)
+      @model = model
+
+      @model['bitstamp'] = []
+      # set up metadata here.
+    end
+
+    def compute_sum(data)
+      bids_sum = 0
+      data.each do |i|
+        price = i[0].to_f
+        quantity = i[1].to_f
+        bids_sum += price * quantity
+      end
+      bids_sum.to_i
+    end
+
+    # we should be using different clases, for the
+    # different event sources that we use.
+
+    def process_event( id, msg, t, content)
+      case msg
+        when 'order2'
+          # new style order event
+          # puts "url #{content['url']}"
+          if content['url'] == 'https://www.bitstamp.net/api/order_book/'
+              process( id, content['data'] )
+          end
+        when 'order'
+          # old style - order
+          process( id, content )
+        end
+    end
+
+    def process( id, orderbook)
+      begin
+        time = Time.at(orderbook['timestamp'].to_i).to_datetime
+        top_bid = orderbook['bids'][0][0]
+        top_ask = orderbook['asks'][0][0]
+
+        bids = orderbook['bids'].length
+        asks = orderbook['asks'].length
+        ratio = (bids.to_f / asks.to_f * 100 ).round(1) # percent
+
+        bids_sum = compute_sum(orderbook['bids'])
+        asks_sum = compute_sum(orderbook['asks'])
+
+        # this calculation isn't really correct. 
+        # it should be bids / (bids + asks ) * 100 
+        sum_ratio = ((bids_sum.to_f / asks_sum.to_f) * 100 ) .round(1) 
+
+        @model['bitstamp'] << { 
+          'originating_id' => id,
+          'time' => time,
+          'top_bid' => top_bid,
+          'top_ask' => top_ask,
+          'ratio' => ratio,
+          'sum_ratio' => sum_ratio
+        }
+      rescue
+        @log.info( "Failed to decode bitstamp orderbook orderbook error: #{$!}" )
+      end
+    end
+  end
+
+
+
+
   class EventProcessor
 
     def initialize( log, conn, event_sink)
@@ -107,73 +179,13 @@ module Model
 
     def initialize( log, model)
       @log = log
-      @model = model
+
+      # shouldn't really init here - but do it for now. 
+      @sinks = [
+        BitstampModel.new( model)
+      ]
+
     end
-
-    def compute_sum(data)
-      bids_sum = 0
-      data.each do |i|
-        price = i[0].to_f
-        quantity = i[1].to_f
-        bids_sum += price * quantity
-      end
-      bids_sum.to_i
-    end
-
-    # we should be using different clases, for the
-    # different event sources that we use.
-
-    def process_bitstamp_orderbook_event( id, orderbook)
-      begin
-        time = Time.at(orderbook['timestamp'].to_i).to_datetime
-        top_bid = orderbook['bids'][0][0]
-        top_ask = orderbook['asks'][0][0]
-
-        bids = orderbook['bids'].length
-        asks = orderbook['asks'].length
-        ratio = (bids.to_f / asks.to_f * 100 ).round(1) # percent
-
-        bids_sum = compute_sum(orderbook['bids'])
-        asks_sum = compute_sum(orderbook['asks'])
-
-        # this calculation isn't really correct. 
-        # it should be bids / (bids + asks ) * 100 
-        sum_ratio = ((bids_sum.to_f / asks_sum.to_f) * 100 ) .round(1) 
-
-
-
-		# ok, how do we do this...
-		# with unique namespaces ...
-		# think we should probably keep a new id
-
-#         #(@model['bitstamp.original_id'] ||= []) << { :time => time, :value => top_bid } 
-#         (@model['bitstamp.top_bid'] ||= []) << { :time => time, :value => top_bid } 
-#         (@model['bitstamp.top_ask'] ||= []) << { :time => time, :value => top_ask } 
-#         (@model['bitstamp.ratio'] ||= []) << { :time => time, :value => ratio } 
-#         (@model['bitstamp.sum_ratio'] ||= []) << { :time => time, :value => sum_ratio } 
- 
-
-        (@model['bitstamp'] ||= []) << { 
-          #'bitstamp.originating_id' => id,
-          'id' => id,
-          'time' => time,
-          'top_bid' => top_bid,
-          'top_ask' => top_ask,
-          'ratio' => ratio,
-          'sum_ratio' => sum_ratio
-        }
-      rescue
-          @log.info( "Failed to decode bitstamp orderbook orderbook error: #{$!}" )
-      end
-    end
-
-    # ok, i think we need to organize the series in terms of { time, value } pairs.  
-    # and stuff them in the model as a complete list...
-
-    #   @model['btcmarkets.top_bid'] << { time => time, value => value} 
-    # but then we have problems combining. 
-    # maybe that's ok, we do the combination immediate when we are organized by time...
-
 
     ### ok, very important we can still partially group.
     ### it's just that the series will have unique times
@@ -198,9 +210,8 @@ module Model
         }
 
         # can we set the axis ?
+        # yes with an init...
 
-        # puts @model.last
-        #abort
 	    rescue
           @log.info( "Failed to decode btcmarkets orderbook orderbook error: #{$!}" )
       end		 
@@ -209,39 +220,43 @@ module Model
     # process an event
     #def process_event( id, msg, t, content)
     def process_event( id, msg, t, content)
-      case msg
-        when "error"
-          # an error here, is treated as operational
-          @log.info( "got event error type")
 
-        when 'order2'
-          # new style order event
-          # puts "url #{content['url']}"
-          case content['url']
-            when 'https://www.bitstamp.net/api/order_book/'
-              process_bitstamp_orderbook_event( id, content['data'] )
-            when 'https://www.bitstamp.net/api/ticker/'
-            when 'https://api.btcmarkets.net/market/BTC/AUD/orderbook'
-              process_btcmarkets_orderbook_event( id, content['data'] )
-
-            when 'https://api.btcmarkets.net/market/BTC/AUD/trades'
-            else
-              @log.warn( "got something unknown")
-            end
-
-        when 'order'
-          # old style - order
-          process_bitstamp_orderbook_event( id, content )
-
-        when 'ticker'
-          # old style bitstamp ticker
-        else
-
-            @log.warn( puts "unknown event msg #{msg}" )
+        @sinks.each do |sink|
+          sink.process_event( id, msg, t, content) 
         end
     end
-  end
-
+#       case msg
+#         when "error"
+#           # an error here, is treated as operational
+#           @log.info( "got event error type")
+# 
+#         when 'order2'
+#           # new style order event
+#           # puts "url #{content['url']}"
+#           case content['url']
+#             when 'https://www.bitstamp.net/api/order_book/'
+#               process_bitstamp_orderbook_event( id, content['data'] )
+#             when 'https://www.bitstamp.net/api/ticker/'
+#             when 'https://api.btcmarkets.net/market/BTC/AUD/orderbook'
+#               process_btcmarkets_orderbook_event( id, content['data'] )
+# 
+#             when 'https://api.btcmarkets.net/market/BTC/AUD/trades'
+#             else
+#               @log.warn( "got something unknown")
+#             end
+# 
+#         when 'order'
+#           # old style - order
+#           process_bitstamp_orderbook_event( id, content )
+# 
+#         when 'ticker'
+#           # old style bitstamp ticker
+#         else
+# 
+#             @log.warn( puts "unknown event msg #{msg}" )
+#         end
+    end
+end
 
 
 #   # cqrs, this is like a view - read only
@@ -301,5 +316,4 @@ module Model
 # 
 #   end
 # 
-end
 

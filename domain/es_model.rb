@@ -102,7 +102,8 @@ module Model
     end
   end
 
-
+  ## these are specific instances of sinks, should perhaps move
+  ## to separate files.
 
   class BTCMarketsModel
 
@@ -117,6 +118,8 @@ module Model
         'top_bid' => 'blue',
         'top_ask' => 'red'
       }
+      @model['bitstamp']['uni'] = 'aud'
+
    #   @model['btcmarkets'].axis = 123
 
       # the parameters could use different axis, colors, 
@@ -169,6 +172,10 @@ module Model
         'ratio' => 'grey',
         'sum_ratio' => 'grey'
       }
+      # rather than specify the axis - we should specify the unit
+      # then, client can map to axis. because we don't know axis1 axis2 are not named. 
+      # we should label the axis on client side with unit to make this easy.
+      @model['bitstamp']['uni'] = 'usd'
 
     end
 
@@ -233,14 +240,9 @@ module Model
 
   class EventSink
 
-    def initialize( log, model)
-      @log = log
-
+    def initialize( sinks )
       # shouldn't really init here - but do it for now. 
-      @sinks = [
-        BitstampModel.new( model),
-        BTCMarketsModel.new( model)
-      ]
+      @sinks = sinks 
     end
     ### VERY IMPORTANT any fold operation has an initial argument.
     ### we really need this. could be used to set axis data

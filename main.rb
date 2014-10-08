@@ -2,6 +2,7 @@
 require './support/server'
 require './support/assets'
 
+
 require './domain/es_model'
 
 
@@ -128,7 +129,12 @@ db_params = {
 
 model_data = { } 
 
-event_sink = Model::EventSink.new( log, model_data )
+sinks = [
+    Model::BitstampModel.new( model_data ),
+    Model::BTCMarketsModel.new( model_data)
+]
+
+event_sink = Model::EventSink.new( sinks )
 
 event_conn = PG::Connection.open( db_params ) 
 
@@ -146,6 +152,8 @@ report_controller = ReportController.new( log, report_conn )
 
 redirect_controller = RedirectController.new( log)
 
+# these controllers ought to be put in the constroller module namespace
+# then we can refer to them Controller::Session 
 
 general_controllers = [ 
   LogRequestController.new( http_log ),

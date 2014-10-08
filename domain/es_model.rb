@@ -106,9 +106,18 @@ module Model
 
   class BTCMarketsModel
 
+    # rather than try to combine the data and metadata, do them 
+    # with separate javascript calls ?
+
     def initialize( model)
       @model = model
-      @model['btcmarkets'] = []
+      @model['btcmarkets'] = { } 
+      @model['btcmarkets']['data'] = [ ] 
+
+   #   @model['btcmarkets'].axis = 123
+
+      # the parameters could use different axis, colors, 
+
       # set up metadata here.
       # can we set the axis ?
       # yes with an init...
@@ -126,7 +135,7 @@ module Model
           top_bid = orderbook['bids'][0][0]
           top_ask = orderbook['asks'][0][0]
          # puts orderbook['bids'][0]
-          @model['btcmarkets'] << { 
+          @model['btcmarkets']['data'] << { 
             'time' => time, 
             'top_bid' => top_bid, 
             'top_ask' => top_ask
@@ -146,7 +155,9 @@ module Model
 
     def initialize( model)
       @model = model
-      @model['bitstamp'] = []
+      @model['bitstamp'] = { } 
+      @model['bitstamp']['data'] = [ ] 
+
       # set up metadata here.
     end
 
@@ -194,7 +205,7 @@ module Model
         # it should be bids / (bids + asks ) * 100 
         sum_ratio = ((bids_sum.to_f / asks_sum.to_f) * 100 ) .round(1) 
 
-        @model['bitstamp'] << { 
+        @model['bitstamp']['data'] << { 
           'originating_id' => id,
           'time' => time,
           'top_bid' => top_bid,

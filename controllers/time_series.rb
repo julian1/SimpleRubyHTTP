@@ -79,7 +79,7 @@ class TimeSeriesController
 
       series_name, field_name = name.split('.')
 
-      series = @model[series_name]
+      series = @model[series_name]['data']
       n = series.length
       m = series[ (n - take > 0 ? n - take : 0) .. n - 1]
 

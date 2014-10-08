@@ -1,5 +1,12 @@
 
+# these controllers ought to be put in the constroller module namespace
+# then we can refer to them Controller::Session 
+
+
+
 ok, 
+
+
 
 
 

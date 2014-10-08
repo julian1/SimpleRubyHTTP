@@ -35,13 +35,54 @@ require 'logger'
 module Model
 
 
+
+  class BTCMarketsModel
+
+    def initialize( model)
+      @model = model
+      @model['bitstamp'] = []
+      # set up metadata here.
+    end
+
+
+    def process_event( id, msg, t, content)
+      # move this to make one function
+      if msg == 'order2' && content['url'] == 'https://api.btcmarkets.net/market/BTC/AUD/orderbook'
+        process( id, content['data'] )
+      end
+    end 
+
+    def process( id, orderbook )
+      begin
+        #puts orderbook
+        time = Time.at(orderbook['timestamp'].to_i).to_datetime
+        #puts "time #{time}"
+        top_bid = orderbook['bids'][0][0]
+        top_ask = orderbook['asks'][0][0]
+       # puts orderbook['bids'][0]
+        (@model['btcmarkets'] ||= []) << { 
+          'time' => time, 
+          'top_bid' => top_bid, 
+          'top_ask' => top_ask
+        }
+
+        # can we set the axis ?
+        # yes with an init...
+
+	    rescue
+          @log.info( "Failed to decode btcmarkets orderbook orderbook error: #{$!}" )
+      end		 
+    end
+  end
+
+
+
   class BitstampModel
     # change name to stream, or sink, 
     # this is really just the target of a fold
 
     def initialize( model)
       @model = model
-
       @model['bitstamp'] = []
       # set up metadata here.
     end
@@ -103,7 +144,6 @@ module Model
       end
     end
   end
-
 
 
 
@@ -182,7 +222,8 @@ module Model
 
       # shouldn't really init here - but do it for now. 
       @sinks = [
-        BitstampModel.new( model)
+        BitstampModel.new( model),
+        BTCMarketsModel.new( model)
       ]
 
     end
@@ -195,27 +236,6 @@ module Model
     ## etc.
     ## also i think we want classes - rather than these functions 
 
-    def process_btcmarkets_orderbook_event( id, orderbook )
-      begin
-        #puts orderbook
-        time = Time.at(orderbook['timestamp'].to_i).to_datetime
-        #puts "time #{time}"
-        top_bid = orderbook['bids'][0][0]
-        top_ask = orderbook['asks'][0][0]
-       # puts orderbook['bids'][0]
-        (@model['btcmarkets'] ||= []) << { 
-          'time' => time, 
-          'top_bid' => top_bid, 
-          'top_ask' => top_ask
-        }
-
-        # can we set the axis ?
-        # yes with an init...
-
-	    rescue
-          @log.info( "Failed to decode btcmarkets orderbook orderbook error: #{$!}" )
-      end		 
-    end
 
     # process an event
     #def process_event( id, msg, t, content)

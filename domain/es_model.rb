@@ -146,22 +146,22 @@ module Model
 		# with unique namespaces ...
 		# think we should probably keep a new id
 
-        #(@model['bitstamp.original_id'] ||= []) << { :time => time, :value => top_bid } 
-        (@model['bitstamp.top_bid'] ||= []) << { :time => time, :value => top_bid } 
-        (@model['bitstamp.top_ask'] ||= []) << { :time => time, :value => top_ask } 
-        (@model['bitstamp.ratio'] ||= []) << { :time => time, :value => ratio } 
-        (@model['bitstamp.sum_ratio'] ||= []) << { :time => time, :value => sum_ratio } 
+#         #(@model['bitstamp.original_id'] ||= []) << { :time => time, :value => top_bid } 
+#         (@model['bitstamp.top_bid'] ||= []) << { :time => time, :value => top_bid } 
+#         (@model['bitstamp.top_ask'] ||= []) << { :time => time, :value => top_ask } 
+#         (@model['bitstamp.ratio'] ||= []) << { :time => time, :value => ratio } 
+#         (@model['bitstamp.sum_ratio'] ||= []) << { :time => time, :value => sum_ratio } 
+ 
 
-
-#         @model << {
-#           #'bitstamp.originating_id' => id,
-#           'bitstamp.id' => id,
-#           'bitstamp.time' => time,
-#           'bitstamp.top_bid' => top_bid,
-#           'bitstamp.top_ask' => top_ask,
-#           'bitstamp.ratio' => ratio,
-#           'bitstamp.sum_ratio' => sum_ratio
-#         }
+        (@model['bitstamp'] ||= []) << { 
+          #'bitstamp.originating_id' => id,
+          'id' => id,
+          'time' => time,
+          'top_bid' => top_bid,
+          'top_ask' => top_ask,
+          'ratio' => ratio,
+          'sum_ratio' => sum_ratio
+        }
       rescue
           @log.info( "Failed to decode bitstamp orderbook orderbook error: #{$!}" )
       end
@@ -178,6 +178,11 @@ module Model
     ### ok, very important we can still partially group.
     ### it's just that the series will have unique times
 
+    ### VERY IMPORTANT any fold operation has an initial argument.
+    ### we really need this. could be used to set axis data
+    ## etc.
+    ## also i think we want classes - rather than these functions 
+
     def process_btcmarkets_orderbook_event( id, orderbook )
       begin
         #puts orderbook
@@ -191,6 +196,8 @@ module Model
           'top_bid' => top_bid, 
           'top_ask' => top_ask
         }
+
+        # can we set the axis ?
 
         # puts @model.last
         #abort

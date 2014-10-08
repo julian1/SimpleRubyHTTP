@@ -42,43 +42,38 @@ module Model
       @model = model
       @model['bitstamp'] = []
       # set up metadata here.
+      # can we set the axis ?
+      # yes with an init...
     end
 
-
     def process_event( id, msg, t, content)
-      # move this to make one function
-      if msg == 'order2' && content['url'] == 'https://api.btcmarkets.net/market/BTC/AUD/orderbook'
-        process( id, content['data'] )
+
+      if msg == 'order2' \
+        && content['url'] == 'https://api.btcmarkets.net/market/BTC/AUD/orderbook'
+        begin
+          orderbook = content['data']
+          #puts orderbook
+          time = Time.at(orderbook['timestamp'].to_i).to_datetime
+          #puts "time #{time}"
+          top_bid = orderbook['bids'][0][0]
+          top_ask = orderbook['asks'][0][0]
+         # puts orderbook['bids'][0]
+          @model['btcmarkets'] << { 
+            'time' => time, 
+            'top_bid' => top_bid, 
+            'top_ask' => top_ask
+          }
+        rescue
+            @log.info( "Failed to decode btcmarkets orderbook orderbook error: #{$!}" )
+        end		 
       end
-    end 
-
-    def process( id, orderbook )
-      begin
-        #puts orderbook
-        time = Time.at(orderbook['timestamp'].to_i).to_datetime
-        #puts "time #{time}"
-        top_bid = orderbook['bids'][0][0]
-        top_ask = orderbook['asks'][0][0]
-       # puts orderbook['bids'][0]
-        (@model['btcmarkets'] ||= []) << { 
-          'time' => time, 
-          'top_bid' => top_bid, 
-          'top_ask' => top_ask
-        }
-
-        # can we set the axis ?
-        # yes with an init...
-
-	    rescue
-          @log.info( "Failed to decode btcmarkets orderbook orderbook error: #{$!}" )
-      end		 
     end
   end
 
 
 
   class BitstampModel
-    # change name to stream, or sink, 
+    # change name to stream, or sink, or fold
     # this is really just the target of a fold
 
     def initialize( model)

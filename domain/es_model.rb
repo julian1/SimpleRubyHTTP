@@ -154,6 +154,29 @@ module Model
       end
     end
 
+    
+
+    def process_btcmarkets_orderbook_event( id, orderbook )
+      return
+      begin
+        #puts orderbook
+        time = Time.at(orderbook['timestamp'].to_i).to_datetime
+        #puts "time #{time}"
+        top_bid = orderbook['bids'][0][0]
+        top_ask = orderbook['asks'][0][0]
+       # puts orderbook['bids'][0]
+        @model << {
+          'btcmarkets.id' => id,
+          'btcmarkets.time' => time,
+          'btcmarkets.top_bid' => top_bid,
+          'btcmarkets.top_ask' => top_ask,
+        }
+        # puts @model.last
+        #abort
+	    rescue
+          @log.info( "Failed to decode btcmarkets orderbook orderbook error: #{$!}" )
+      end		 
+    end
 
     # process an event
     #def process_event( id, msg, t, content)
@@ -171,6 +194,8 @@ module Model
               process_bitstamp_orderbook_event( id, content['data'] )
             when 'https://www.bitstamp.net/api/ticker/'
             when 'https://api.btcmarkets.net/market/BTC/AUD/orderbook'
+              process_btcmarkets_orderbook_event( id, content['data'] )
+
             when 'https://api.btcmarkets.net/market/BTC/AUD/trades'
             else
               @log.warn( "got something unknown")

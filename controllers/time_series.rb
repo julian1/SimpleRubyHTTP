@@ -75,7 +75,9 @@ class TimeSeriesController
       n = @model.length
       m = @model[ (n - take > 0 ? n - take : 0) .. n - 1]
 
-      # we kind of
+      # we kind of need to specify the axis unit - usd, aud, percentage, 
+      # and the presentation color.
+      # we can't derive this except from the model.
 
       values = m.map do |row| 
         time = row[name.split('.')[0] + '.time']  # eg 'bitstamp.top_ask' -> bitstamp.time' 
@@ -92,7 +94,7 @@ class TimeSeriesController
       ret = <<-EOF
         [ #{values.join(", ")} ]
       EOF
-      # puts ret
+       puts ret
       x[:response] = "HTTP/1.1 200 OK"
       x[:response_headers]['Content-Type'] = "application/json"
       x[:body] = StringIO.new( ret, "r")

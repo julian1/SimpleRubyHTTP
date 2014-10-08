@@ -83,6 +83,9 @@ class TimeSeriesController
       n = series.length
       m = series[ (n - take > 0 ? n - take : 0) .. n - 1]
 
+      
+      color = @model[series_name]['color'][field_name]
+
       values = m.map do |row| 
         <<-EOF
         { 
@@ -91,12 +94,14 @@ class TimeSeriesController
         }
         EOF
       end
+
       ret = <<-EOF
         {
-          "color": "blue",
+          "color": "#{color}",
           "data": [ #{values.join(", ")} ]
         }
       EOF
+
       # puts ret
       x[:response] = "HTTP/1.1 200 OK"
       x[:response_headers]['Content-Type'] = "application/json"

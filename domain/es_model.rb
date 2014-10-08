@@ -113,11 +113,13 @@ module Model
       @model = model
       @model['btcmarkets'] = { } 
       @model['btcmarkets']['data'] = [ ] 
-
+      @model['bitstamp']['color'] = { 
+        'top_bid' => 'blue',
+        'top_ask' => 'red'
+      }
    #   @model['btcmarkets'].axis = 123
 
       # the parameters could use different axis, colors, 
-
       # set up metadata here.
       # can we set the axis ?
       # yes with an init...
@@ -156,7 +158,7 @@ module Model
     def initialize( model)
       @model = model
 
-      # set up data and metadata here.
+      # set up data andjjj metadata here.
       @model['bitstamp'] = { } 
       @model['bitstamp']['data'] = [ ] 
       # we can now specify some semantic meaning

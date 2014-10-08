@@ -155,10 +155,19 @@ module Model
 
     def initialize( model)
       @model = model
+
+      # set up data and metadata here.
       @model['bitstamp'] = { } 
       @model['bitstamp']['data'] = [ ] 
+      # we can now specify some semantic meaning
+      # axis, etc
+      @model['bitstamp']['color'] = { 
+        'top_bid' => 'blue',
+        'top_ask' => 'red',
+        'ratio' => 'grey',
+        'sum_ratio' => 'grey'
+      }
 
-      # set up metadata here.
     end
 
     def compute_sum(data)

@@ -159,9 +159,9 @@
 
         new_series = {
             series_name: series_name_, 
-            color: "red", 
-            label: "top ask",
-            data: datax.map( function(x) {
+            color: datax.color, 
+            label: series_name_,
+            data: datax.data.map( function(x) {
               // its just going to be time value pairs
               return [ new Date( x.time), x.value ]
             }),

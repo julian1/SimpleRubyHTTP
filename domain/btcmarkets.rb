@@ -18,14 +18,12 @@ class BTCMarketsModel
       'top_bid' => 'blue',
       'top_ask' => 'red'
     }
-    @model['bitstamp']['uni'] = 'aud'
+    @model['btcmarkets']['unit'] = { 
+      'top_ask' => 'aud',
+      'top_bid' => 'aud'
+    }
 
- #   @model['btcmarkets'].axis = 123
 
-    # the parameters could use different axis, colors, 
-    # set up metadata here.
-    # can we set the axis ?
-    # yes with an init...
   end
 
   # change name to just event() ?

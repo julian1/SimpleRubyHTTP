@@ -49,9 +49,13 @@
     },
     yaxes: [
       {
+		show: true,
+		label: "usd",
         position: "right"
       },
       {
+		show: true,
+		label: "aud",
         position: "left"
       }
     ],
@@ -59,7 +63,8 @@
       mode: "time",
       // tickSize: [3, "minute"],
       tickLength: 0,
-      // axisLabel: "2012",
+      axisLabel: "time",
+      label: "time",
       axisLabelUseCanvas: true,
       axisLabelFontSizePixels: 12,
       axisLabelFontFamily: 'Verdana, Arial',
@@ -78,10 +83,11 @@
     all_series = [];
     graph = null ;
     last_id = -1;
-//    continuous_update();
 
-   // get_series( 'btcmarkets.top_bid' );
-   //get_series( 'btcmarkets.top_ask' );
+
+
+    get_series( 'btcmarkets.top_bid' );
+   get_series( 'btcmarkets.top_ask' );
 
     get_series('bitstamp.top_ask'); 
     get_series('bitstamp.top_bid'); 
@@ -157,15 +163,26 @@
         // ok, 
         console.log( 'whoot got series!!! ' + series_name_ );
 
+
+		console.log( ' options.yaxes ' +  options.yaxes.length );
+		var axis_to_use = find_index( options.yaxes, function( axis ) { 
+			console.log( axis.label);	
+			return axis.label === datax.unit 
+		} ); 
+
+
+
         new_series = {
             series_name: series_name_, 
             color: datax.color, 
-            label: series_name_,
+            label: series_name_ + '\(' + datax.unit + '\)',
+            unit: datax.unit,
+
             data: datax.data.map( function(x) {
               // its just going to be time value pairs
               return [ new Date( x.time), x.value ]
             }),
-            yaxis: 1
+            yaxis: axis_to_use + 1
         };
 
         // need to update validity

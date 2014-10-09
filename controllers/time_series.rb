@@ -85,7 +85,10 @@ class TimeSeriesController
 
       
       color = @model[series_name]['color'][field_name]
+      unit = @model[series_name]['unit'][field_name]
 
+      puts "color: #{color}, unit: #{unit}"
+  
       values = m.map do |row| 
         <<-EOF
         { 
@@ -98,6 +101,7 @@ class TimeSeriesController
       ret = <<-EOF
         {
           "color": "#{color}",
+          "unit": "#{unit}",
           "data": [ #{values.join(", ")} ]
         }
       EOF

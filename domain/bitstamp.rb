@@ -21,7 +21,12 @@ class BitstampModel
     # rather than specify the axis - we should specify the unit
     # then, client can map to axis. because we don't know axis1 axis2 are not named. 
     # we should label the axis on client side with unit to make this easy.
-    @model['bitstamp']['unit'] = 'usd'
+    @model['bitstamp']['unit'] = { 
+      'top_ask' => 'usd',
+      'top_bid' => 'usd',
+      'ratio' => 'percent',
+      'sum_ratio' => 'percent'
+    }
 
   end
 

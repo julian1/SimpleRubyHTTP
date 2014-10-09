@@ -129,12 +129,16 @@ class TimeSeriesController
       fields = decode_url_args( matches.captures[0])
       name = fields['name'] 
 
-      puts "get_id -> #{name}"
+      series_name, field_name = name.split('.')
+      series = @model[series_name]['data']
+
+      puts "id for #{name} is #{ series.last['id'] } " 
 
 #      @model.get_id( x )
       x[:response] = "HTTP/1.1 200 OK"
       x[:response_headers]['Content-Type'] = "application/json"
-      x[:body] = StringIO.new( "\"#{@model.last[:id]}\"" )
+      # shouldn't need quoting
+      x[:body] = StringIO.new( "\"#{series.last['id']}\"" )
 
     end
 

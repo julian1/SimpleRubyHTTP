@@ -216,6 +216,9 @@
     }
   }
 
+
+	var pending = 0;
+
   function continuous_update() {
 	// last id is no good. 
 	// instead we should compare the id with the one from the series
@@ -223,22 +226,34 @@
 
 	console.log('*** continuous_update ' + all_series.length );
 
-	var pending = 0;
+	if( pending != 0) {
+		return;	
+	}	
 
 	// store it on the series - layer. 	
 	$.each( all_series, function( i, series) {
 	 
 		console.log('*** calling update for ' + series['name'] );
+		pending++;
 		$.ajax({
 		  dataType: "json",
 		  data: { name: series['name'] },
 		  url: "get_id.json",
 		  success: function ( id, textStatus, jqXHR ) {
 			console.log( "id is " + id  );
+		  },
+		  complete: function ( id, textStatus, jqXHR ) {
+			pending--;
+			console.log( 'pending is ' + pending );
 		  }
+
 		});
 	});
-    setTimeout(continuous_update, 3 * 1000 );
+
+	// this has to be here, because the first time nothing
+	// will be scheduled. 
+	// but this causes potential queuing issues
+	setTimeout(continuous_update, 3 * 1000 );
   }
 
 

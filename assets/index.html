@@ -97,9 +97,9 @@
  //   add_series( 'btcmarkets.top_bid' );
 //	add_series( 'btcmarkets.top_ask' );
 
-//	add_series( 'bitstamp.sum_ratio' );
+	add_series( 'bitstamp.sum_ratio' );
 
- //   add_series('bitstamp.top_ask'); 
+    add_series('bitstamp.top_ask'); 
     add_series('bitstamp.top_bid'); 
 
 
@@ -207,10 +207,10 @@
     // actually we should even pass the all_series as an argument
     if( graph == null) {
       graph = $.plot($("#placeholder"), all_series, options );
-      console.log( 'plotting graph')
+      //console.log( 'plotting graph')
     }
     else {
-      console.log( 'already have graph')
+      //console.log( 'already have graph')
       graph.setData( all_series );  // Replace oldData with newData
       graph.setupGrid();       // Adjust axes to match new values
       graph.draw();            // Update actual plot
@@ -222,41 +222,33 @@
 
   function continuous_update() {
 	// change name to heartbeat or something?
-	// last id is no good. 
-	// instead we should compare the id with the one from the series
-	// to determine if we need to update.
-
-	console.log('*** continuous_update ' + all_series.length );
-
+	//console.log('*** continuous_update ' + all_series.length );
 	if( pending != 0) {
 		return;	
 	}	
-
 	// store it on the series - layer. 	
 	$.each( all_series, function( i, series) {
-	 
-		console.log('*** calling update for ' + series['name'] );
+		// console.log('*** calling update for ' + series['name'] );
 		pending++;
 		$.ajax({
 		  dataType: "json",
 		  data: { name: series['name'] },
 		  url: "get_series_id.json",
 		  success: function ( id, textStatus, jqXHR ) {
-			console.log( "id is " + id  );
-			console.log( 'last_id is ' + series['last_id'] );
+			//console.log( "id is " + id  );
+			//console.log( 'last_id is ' + series['last_id'] );
 			if( id != series['last_id'] ) {
-				console.log( "updating!!" );
+				//console.log( "updating!!" );
 				add_series( series['name']); 
 			}
 		  },
 		  complete: function ( id, textStatus, jqXHR ) {
 			pending--;
-			console.log( 'pending is ' + pending );
+			//console.log( 'pending is ' + pending );
 		  }
 		});
 	});
-
-	setTimeout(continuous_update, 3 * 1000 );
+	setTimeout(continuous_update, 10 * 1000 );
   }
 
 

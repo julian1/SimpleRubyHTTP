@@ -132,9 +132,8 @@ class TimeSeriesController
       series_name, field_name = name.split('.')
       series = @model[series_name]['data']
 
-      puts "id for #{name} is #{ series.last['id'] } " 
+#      puts "id for #{name} is #{ series.last['id'] } " 
 
-#      @model.get_id( x )
       x[:response] = "HTTP/1.1 200 OK"
       x[:response_headers]['Content-Type'] = "application/json"
       # shouldn't need quoting

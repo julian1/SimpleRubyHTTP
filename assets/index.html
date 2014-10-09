@@ -7,6 +7,7 @@
     <!--[if lte IE 8]><script language="javascript" type="text/javascript" src="../excanvas.min.js"></script><![endif]-->
     <script language="javascript" type="text/javascript" src="jquery.js"></script>
     <script language="javascript" type="text/javascript" src="jquery.flot.js"></script>
+    <script language="javascript" type="text/javascript" src="jquery-dateFormat.js"></script>
  </head>
     <body>
 
@@ -72,6 +73,7 @@
       tickLength: 0,
       axisLabel: "time",
       label: "time",
+		  // these don't look correctly named
       axisLabelUseCanvas: true,
       axisLabelFontSizePixels: 12,
       axisLabelFontFamily: 'Verdana, Arial',
@@ -90,7 +92,7 @@
     all_series = [];
     graph = null ;
     last_id = -1;
-	last_timestamp1 = null;
+	last_timestamp = null;
 
  //   get_series( 'btcmarkets.top_bid' );
 //	get_series( 'btcmarkets.top_ask' );
@@ -139,8 +141,7 @@
     //console.log( 'index is ' + i ); 
     if(i === -1) { 
       all_series.push( new_series );
-    }
-    else {
+    } else {
       all_series[i] = new_series;
     }
     console.log( 'all_series.length after merge ' + all_series.length ); 
@@ -185,12 +186,14 @@
         };
 
 		last_timestamp1 = $( new_series.data).last()[0][0] 
+		// multiple series - means there's no definitive
+		if( !last_timestamp || last_timestamp1 > last_timestamp) { 
+			last_timestamp = last_timestamp1;
+		}
 
-		console.log( 'last ' + last_timestamp1 )
-
-        // need to update validity
-        // new_series.data.
-        // new_series.data[ new_series.data.length - 1][0 ] 
+		$( "#starttime" ).html( '<p>Valid: ' 
+			+ 	$.format.date(last_timestamp, "dd-MM-yyyy HH:mm")
+			+ "</p>" );
 
         merge_series( new_series ); 
         refresh_chart_data();

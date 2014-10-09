@@ -170,14 +170,9 @@
         // ok, 
         console.log( 'whoot got series!!! ' + series_name_ );
 
-
-		console.log( ' options.yaxes ' +  options.yaxes.length );
 		var axis_to_use = find_index( options.yaxes, function( axis ) { 
-			console.log( axis.label);	
 			return axis.label === datax.unit 
 		} ); 
-
-
 
         new_series = {
             series_name: series_name_, 

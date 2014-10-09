@@ -72,7 +72,8 @@ class TimeSeriesController
     if matches && matches.captures.length == 1
 
       fields = decode_url_args( matches.captures[0])
-      puts "fields #{fields}"
+      #puts "fields #{fields}"
+
       ticks = fields['ticks'] ? fields['ticks'].to_i : 100
       name = fields['name'] 
       take = ticks
@@ -87,11 +88,12 @@ class TimeSeriesController
       color = @model[series_name]['color'][field_name]
       unit = @model[series_name]['unit'][field_name]
 
-      puts "color: #{color}, unit: #{unit}"
+      # puts "color: #{color}, unit: #{unit}"
   
       values = m.map do |row| 
         <<-EOF
         { 
+          "name": "#{name}",
           "time": "#{row['time'] }",
           "value": #{row[field_name]} 
         }

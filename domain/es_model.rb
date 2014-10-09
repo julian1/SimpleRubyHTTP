@@ -38,6 +38,9 @@ module Model
 
   class EventProcessor
 
+    # channel to wait on
+    POSTGRES_CHANNEL = 'events_insert'
+
     def initialize( log, conn, event_sink)
       @log = log
       @conn = conn
@@ -81,10 +84,7 @@ module Model
     end
 
 
-    # channel to wait on
-    POSTGRES_CHANNEL = 'events_insert'
-
-    # need to pass the id
+    
     def process_current_events( id)
       @log.info( "current events - next id to process #{id}")
       while true

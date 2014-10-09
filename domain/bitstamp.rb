@@ -13,15 +13,15 @@ class BitstampModel
     # we can now specify some semantic meaning
     # axis, etc
     @model['bitstamp']['color'] = { 
-      'top_bid' => 'blue',
-      'top_ask' => 'red',
+      'top_ask' => 'blue',
+      'top_bid' => 'red',
       'ratio' => 'grey',
       'sum_ratio' => 'grey'
     }
     # rather than specify the axis - we should specify the unit
     # then, client can map to axis. because we don't know axis1 axis2 are not named. 
     # we should label the axis on client side with unit to make this easy.
-    @model['bitstamp']['uni'] = 'usd'
+    @model['bitstamp']['unit'] = 'usd'
 
   end
 

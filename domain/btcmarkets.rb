@@ -12,6 +12,7 @@ class BTCMarketsModel
   def initialize( log, model)
     @log = log
     @model = model
+    @count = 0
     @model['btcmarkets'] = { } 
     @model['btcmarkets']['data'] = [ ] 
     @model['btcmarkets']['color'] = { 
@@ -22,8 +23,6 @@ class BTCMarketsModel
       'top_ask' => 'aud',
       'top_bid' => 'aud'
     }
-
-
   end
 
   # change name to just event() ?
@@ -40,12 +39,14 @@ class BTCMarketsModel
         top_ask = orderbook['asks'][0][0]
        # puts orderbook['bids'][0]
         @model['btcmarkets']['data'] << { 
+          'id' => @count,
           'time' => time, 
           'top_bid' => top_bid, 
           'top_ask' => top_ask
         }
+        @count += 1
       rescue
-          @log.info( "Failed to decode btcmarkets orderbook orderbook error: #{$!}" )
+        @log.info( "Failed to decode btcmarkets orderbook orderbook error: #{$!}" )
       end		 
     end
   end

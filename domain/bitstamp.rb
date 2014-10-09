@@ -6,6 +6,7 @@ class BitstampModel
   def initialize( log, model)
     @log = log
     @model = model
+    @count = 0
 
     # set up data andjjj metadata here.
     @model['bitstamp'] = { } 
@@ -27,7 +28,6 @@ class BitstampModel
       'ratio' => 'percent',
       'sum_ratio' => 'percent'
     }
-
   end
 
   def compute_sum(data)
@@ -59,6 +59,7 @@ class BitstampModel
 
   def process( id, orderbook)
     begin
+    
       time = Time.at(orderbook['timestamp'].to_i).to_datetime
       top_bid = orderbook['bids'][0][0]
       top_ask = orderbook['asks'][0][0]
@@ -75,6 +76,7 @@ class BitstampModel
       sum_ratio = ((bids_sum.to_f / asks_sum.to_f) * 100 ) .round(1) 
 
       @model['bitstamp']['data'] << { 
+        'id' => @count,
         'originating_id' => id,
         'time' => time,
         'top_bid' => top_bid,
@@ -82,6 +84,8 @@ class BitstampModel
         'ratio' => ratio,
         'sum_ratio' => sum_ratio
       }
+      @count += 1
+
     rescue
       @log.info( "Failed to decode bitstamp orderbook orderbook error: #{$!}" )
     end

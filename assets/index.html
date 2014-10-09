@@ -91,7 +91,7 @@
     // start
     all_series = [];
     graph = null ;
-    last_id = -1;
+  //  last_id = -1;
 	last_timestamp = null;
 
  //   add_series( 'btcmarkets.top_bid' );
@@ -101,6 +101,11 @@
 
     add_series('bitstamp.top_ask'); 
     add_series('bitstamp.top_bid'); 
+
+
+	// if we do separate ajax requests ...
+	// ok. - over the same connection.
+	// when we add a layer we'll have to do it all again...
 
     continuous_update();
   });
@@ -136,7 +141,7 @@
 
   function merge_series( new_series ) {
     i = find_index( all_series, function( elt) { 
-      return elt.series_name === new_series.series_name; 
+      return elt.name === new_series.name; 
     }); 
     //console.log( 'index is ' + i ); 
     if(i === -1) { 
@@ -164,8 +169,9 @@
 		var axis_to_use = find_index( options.yaxes, function( axis ) { 
 			return axis.label === result.unit 
 		}); 
+		// why not call it name not series_name ??
         new_series = {
-            series_name: result.name, 
+            name:	result.name, 
             color:	result.color, 
             label:	result.name + '\(' + result.unit + '\)',
             unit:	result.unit,
@@ -215,33 +221,35 @@
 	// last id is no good. 
 	// instead we should compare the id with the one from the series
 	// to determine if we need to update.
-	
-	
-    console.log('calling update');
-    $.ajax({
-      dataType: "json",
-      url: "get_id.json",
-      success: function ( id, textStatus, jqXHR ) {
-        console.log( "id is " + id + " last_id " + last_id );
-        if( id <= last_id ) {
-          console.log( "nothing to update");
-        }
-        else {
-          console.log( "require update");
-          // we have to go through each 
-          $.each( all_series, function( i, series) {
-            console.log( 'MUST UPDATE ' + series.series_name );
-            add_series( series.series_name ); 
-          });
-        }
-      
-        last_id = id;
-      }
-    });
-    // IMPORTANT - we don't want to do this 
-    // until everything has updated. like a 
+
+	pending = 0;
+
+	// store it on the series - layer. 	
+	$.each( all_series, function( i, series) {
+	  
+
+		console.log('calling update for ' + series['name'] );
+		$.ajax({
+		  dataType: "json",
+		  data: { name: series['name'] },
+		  url: "get_id.json",
+		  success: function ( id, textStatus, jqXHR ) {
+			console.log( "id is " + id  );
+//			if( id <= last_id ) {
+//			  console.log( "nothing to update");
+//			}
+//			else {
+//			  console.log( "require update");
+//			  // we have to go through each 
+//			}
+//			last_id = id;
+		  }
+		});
+
+	});
+
     // thread join
-    setTimeout(continuous_update, 10 * 1000 );
+    //setTimeout(continuous_update, 10 * 1000 );
   }
 
 

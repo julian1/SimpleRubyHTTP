@@ -102,13 +102,15 @@ class TimeSeriesController
       ret = <<-EOF
         {
           "name": "#{name}",
+          "first_id": #{ m.first['id'] },
+          "last_id": #{ m.last['id'] },
           "color": "#{color}",
           "unit": "#{unit}",
           "data": [ #{values.join(", ")} ]
         }
       EOF
 
-      # puts ret
+       #puts ret
       x[:response] = "HTTP/1.1 200 OK"
       x[:response_headers]['Content-Type'] = "application/json"
       x[:body] = StringIO.new( ret, "r")

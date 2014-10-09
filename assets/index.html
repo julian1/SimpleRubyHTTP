@@ -90,6 +90,7 @@
     all_series = [];
     graph = null ;
     last_id = -1;
+	last_timestamp1 = null;
 
  //   get_series( 'btcmarkets.top_bid' );
 //	get_series( 'btcmarkets.top_ask' );
@@ -166,26 +167,26 @@
       },
 
         // change series_name to just name
-      success: function ( datax, textStatus, jqXHR ) {
+      success: function ( result, textStatus, jqXHR ) {
         // ok, 
         console.log( 'whoot got series!!! ' + series_name_ );
-
 		var axis_to_use = find_index( options.yaxes, function( axis ) { 
-			return axis.label === datax.unit 
-		} ); 
-
+			return axis.label === result.unit 
+		}); 
         new_series = {
-            series_name: series_name_, 
-            color: datax.color, 
-            label: series_name_ + '\(' + datax.unit + '\)',
-            unit: datax.unit,
-
-            data: datax.data.map( function(x) {
-              // its just going to be time value pairs
+            series_name: result.name, 
+            color:	result.color, 
+            label:	result.name + '\(' + result.unit + '\)',
+            unit:	result.unit,
+            yaxis:	axis_to_use + 1,
+            data:	result.data.map( function(x) {
               return [ new Date( x.time), x.value ]
-            }),
-            yaxis: axis_to_use + 1
+            })
         };
+
+		last_timestamp1 = $( new_series.data).last()[0][0] 
+
+		console.log( 'last ' + last_timestamp1 )
 
         // need to update validity
         // new_series.data.

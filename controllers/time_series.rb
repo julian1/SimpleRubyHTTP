@@ -93,7 +93,6 @@ class TimeSeriesController
       values = m.map do |row| 
         <<-EOF
         { 
-          "name": "#{name}",
           "time": "#{row['time'] }",
           "value": #{row[field_name]} 
         }
@@ -102,6 +101,7 @@ class TimeSeriesController
 
       ret = <<-EOF
         {
+          "name": "#{name}",
           "color": "#{color}",
           "unit": "#{unit}",
           "data": [ #{values.join(", ")} ]

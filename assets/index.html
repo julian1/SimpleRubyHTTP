@@ -21,7 +21,7 @@
   </form>
 
   <!--span><input class="submit" type="button" value="Submit" onclick="update_chart()"></span-->
-  <!-- span><input class="submit" type="button" value="get_series() test" onclick="get_series('bitstamp.topask')"></span -->
+  <!-- span><input class="submit" type="button" value="add_series() test" onclick="add_series('bitstamp.topask')"></span -->
 
   <span> 
     <div id="mytime" style="width:100px;height:30px;"></div>
@@ -94,13 +94,13 @@
     last_id = -1;
 	last_timestamp = null;
 
- //   get_series( 'btcmarkets.top_bid' );
-//	get_series( 'btcmarkets.top_ask' );
+ //   add_series( 'btcmarkets.top_bid' );
+//	add_series( 'btcmarkets.top_ask' );
 
-	get_series( 'bitstamp.sum_ratio' );
+	add_series( 'bitstamp.sum_ratio' );
 
-    get_series('bitstamp.top_ask'); 
-    get_series('bitstamp.top_bid'); 
+    add_series('bitstamp.top_ask'); 
+    add_series('bitstamp.top_bid'); 
 
     continuous_update();
   });
@@ -148,17 +148,7 @@
   }
 
  
-  function get_series( series_name_ ) {
-    // MUST rename. this does more than get_series
-    // call it add_series or something
-    // it also updates the chart.
-    // only one 
-    // should pass the name
-    // server should return the axis
-
-    // actually not sure if we shoudn't have the series all there...    
-    // and we then just keep the data up to date.
- 
+  function add_series( series_name_ ) {
     $.ajax({
       dataType: "json",
       url: "get_series.json",
@@ -167,7 +157,7 @@
         name: series_name_
       },
 
-        // change series_name to just name
+		// change series_name to just name
       success: function ( result, textStatus, jqXHR ) {
         // ok, 
         console.log( 'whoot got series!!! ' + series_name_ );
@@ -222,6 +212,11 @@
   }
 
   function continuous_update() {
+	// last id is no good. 
+	// instead we should compare the id with the one from the series
+	// to determine if we need to update.
+	
+	
     console.log('calling update');
     $.ajax({
       dataType: "json",
@@ -236,7 +231,7 @@
           // we have to go through each 
           $.each( all_series, function( i, series) {
             console.log( 'MUST UPDATE ' + series.series_name );
-            get_series( series.series_name ); 
+            add_series( series.series_name ); 
           });
         }
       

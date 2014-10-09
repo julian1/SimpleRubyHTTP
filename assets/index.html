@@ -106,8 +106,7 @@
 	// if we do separate ajax requests ...
 	// ok. - over the same connection.
 	// when we add a layer we'll have to do it all again...
-
-    continuous_update();
+	continuous_update();
   });
 
   // we could actually keep this entire model on the server side if we wanted. 
@@ -149,7 +148,7 @@
     } else {
       all_series[i] = new_series;
     }
-    console.log( 'all_series.length after merge ' + all_series.length ); 
+    //console.log( 'all_series.length after merge ' + all_series.length ); 
   }
 
  
@@ -165,7 +164,7 @@
 		// change series_name to just name
       success: function ( result, textStatus, jqXHR ) {
         // ok, 
-        console.log( 'whoot got series!!! ' + series_name_ );
+        //console.log( 'whoot got series!!! ' + series_name_ );
 		var axis_to_use = find_index( options.yaxes, function( axis ) { 
 			return axis.label === result.unit 
 		}); 
@@ -222,34 +221,24 @@
 	// instead we should compare the id with the one from the series
 	// to determine if we need to update.
 
-	pending = 0;
+	console.log('*** continuous_update ' + all_series.length );
+
+	var pending = 0;
 
 	// store it on the series - layer. 	
 	$.each( all_series, function( i, series) {
-	  
-
-		console.log('calling update for ' + series['name'] );
+	 
+		console.log('*** calling update for ' + series['name'] );
 		$.ajax({
 		  dataType: "json",
 		  data: { name: series['name'] },
 		  url: "get_id.json",
 		  success: function ( id, textStatus, jqXHR ) {
 			console.log( "id is " + id  );
-//			if( id <= last_id ) {
-//			  console.log( "nothing to update");
-//			}
-//			else {
-//			  console.log( "require update");
-//			  // we have to go through each 
-//			}
-//			last_id = id;
 		  }
 		});
-
 	});
-
-    // thread join
-    //setTimeout(continuous_update, 10 * 1000 );
+    setTimeout(continuous_update, 3 * 1000 );
   }
 
 

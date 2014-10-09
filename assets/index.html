@@ -97,9 +97,9 @@
  //   add_series( 'btcmarkets.top_bid' );
 //	add_series( 'btcmarkets.top_ask' );
 
-	add_series( 'bitstamp.sum_ratio' );
+//	add_series( 'bitstamp.sum_ratio' );
 
-    add_series('bitstamp.top_ask'); 
+ //   add_series('bitstamp.top_ask'); 
     add_series('bitstamp.top_bid'); 
 
 
@@ -171,6 +171,7 @@
 		// why not call it name not series_name ??
         new_series = {
             name:	result.name, 
+			last_id: result.last_id,
             color:	result.color, 
             label:	result.name + '\(' + result.unit + '\)',
             unit:	result.unit,
@@ -242,8 +243,11 @@
 		  url: "get_series_id.json",
 		  success: function ( id, textStatus, jqXHR ) {
 			console.log( "id is " + id  );
-
-			
+			console.log( 'last_id is ' + series['last_id'] );
+			if( id != series['last_id'] ) {
+				console.log( "updating!!" );
+				add_series( series['name']); 
+			}
 		  },
 		  complete: function ( id, textStatus, jqXHR ) {
 			pending--;

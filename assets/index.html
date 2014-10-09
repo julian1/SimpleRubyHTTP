@@ -10,10 +10,11 @@
  </head>
     <body>
 
-    <h2>Home</h2>
+    <!--h2>Home</h2-->
 
+	<h4>
   <a href="/report.html">report</a>
-
+	</h4>
   <form action="">
     ticks: <input type="text" id="myticks"  value="500" ><br>
   </form>
@@ -26,7 +27,7 @@
     <div id="starttime" ></div>
   </span> 
 
-    <div id="placeholder" style="width:800px;height:400px;"></div>
+    <div id="placeholder" style="width:900px;height:500px;"></div>
 
     <p>Simple example. </p>
 
@@ -49,15 +50,21 @@
     },
     yaxes: [
       {
-		show: true,
+//		show: true,
 		label: "usd",
         position: "right"
       },
       {
-		show: true,
+//		show: true,
 		label: "aud",
         position: "left"
+      },
+     {
+		label: "percent",
+        position: "left"
       }
+
+    
     ],
     xaxis: {
       mode: "time",
@@ -84,10 +91,10 @@
     graph = null ;
     last_id = -1;
 
+ //   get_series( 'btcmarkets.top_bid' );
+//	get_series( 'btcmarkets.top_ask' );
 
-
-    get_series( 'btcmarkets.top_bid' );
-   get_series( 'btcmarkets.top_ask' );
+	get_series( 'bitstamp.sum_ratio' );
 
     get_series('bitstamp.top_ask'); 
     get_series('bitstamp.top_bid'); 

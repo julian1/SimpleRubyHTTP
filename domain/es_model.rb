@@ -70,7 +70,7 @@ module Model
             rescue
               @log.warn( "Error decoding json content: #{id} error: #{$!}" )
             end
-            @event_sink.process_event(id, msg, t, content)
+            @event_sink.event(id, msg, t, content)
           rescue
             # for some reason we aer getting errors
             @log.warn( "Error processing message id: #{id} error: #{$!}" )
@@ -113,9 +113,9 @@ module Model
     ### we really need this. could be used to set axis data
 
     # change name to just event() ?
-    def process_event( id, msg, t, content)
+    def event( id, msg, t, content)
         @sinks.each do |sink|
-          sink.process_event( id, msg, t, content) 
+          sink.event( id, msg, t, content) 
         end
     end
   end

@@ -29,7 +29,7 @@ class BTCMarketsModel
   end
 
   # change name to just event() ?
-  def process_event( id, msg, t, content)
+  def event( id, msg, t, content)
 
     if msg == 'order2' \
       && content['url'] == 'https://api.btcmarkets.net/market/BTC/AUD/orderbook'

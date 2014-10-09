@@ -38,7 +38,7 @@ class BitstampModel
   # we should be using different clases, for the
   # different event sources that we use.
 
-  def process_event( id, msg, t, content)
+  def event( id, msg, t, content)
     case msg
       when 'order2'
         # new style order event

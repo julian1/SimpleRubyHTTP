@@ -123,7 +123,14 @@ class TimeSeriesController
     # almost equivalent to etag approach
 
 	# it's a substitute for haskell type laziness - where we just request.
-    if /^GET \/get_id.json$/.match(x[:request])
+    matches = /^GET \/get_series_id.json\??(.*)$/.match(x[:request])
+    if matches && matches.captures.length == 1
+
+      fields = decode_url_args( matches.captures[0])
+      name = fields['name'] 
+
+      puts "get_id -> #{name}"
+
 #      @model.get_id( x )
       x[:response] = "HTTP/1.1 200 OK"
       x[:response_headers]['Content-Type'] = "application/json"

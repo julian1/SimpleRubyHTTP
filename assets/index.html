@@ -220,6 +220,7 @@
 	var pending = 0;
 
   function continuous_update() {
+	// change name to heartbeat or something?
 	// last id is no good. 
 	// instead we should compare the id with the one from the series
 	// to determine if we need to update.
@@ -238,21 +239,19 @@
 		$.ajax({
 		  dataType: "json",
 		  data: { name: series['name'] },
-		  url: "get_id.json",
+		  url: "get_series_id.json",
 		  success: function ( id, textStatus, jqXHR ) {
 			console.log( "id is " + id  );
+
+			
 		  },
 		  complete: function ( id, textStatus, jqXHR ) {
 			pending--;
 			console.log( 'pending is ' + pending );
 		  }
-
 		});
 	});
 
-	// this has to be here, because the first time nothing
-	// will be scheduled. 
-	// but this causes potential queuing issues
 	setTimeout(continuous_update, 3 * 1000 );
   }
 

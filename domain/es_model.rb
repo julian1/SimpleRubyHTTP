@@ -33,6 +33,7 @@ require 'logger'
 #
 
 # change name ESModel?
+# or Events or Queue ? or Stream  
 module Model
 
   class EventProcessor
@@ -117,6 +118,7 @@ module Model
 
 
   class EventSink
+    ## change name EventSinkDelegator
     ## this specific sink shouldn't really be defined here.
     ## it's actually a Sink delegator/ fan-out
 
@@ -134,6 +136,39 @@ module Model
         end
     end
   end
+
+  class Consumer
+
+    class ConsumerSink
+      # helper class for consumer
+      def initialize( code )
+        @code = code
+      end
+      def event( id, msg, t, content)
+        #puts "event #{id} #{msg} #{t}" 
+        @code.call( id, msg, t, content) 
+      end
+    end
+
+    def initialize( log, conn )
+      @log = log
+      @conn = conn 
+      @event_processor = Model::EventProcessor.new( @log, @conn, nil )
+    end
+
+    def each( &code )
+      @event_processor.event_sink = ConsumerSink.new( code )
+      # id = -1
+      # start processing at event tip less 2000
+      id = @conn.exec_params( "select max(id) - 100 as max_id from events" )[0]['max_id']
+      @log.warn( "processing historic events from #{id}")
+      id = @event_processor.process_events( id )
+      @log.warn( "waiting for current events at #{id}")
+      @event_processor.process_current_events( id )
+    end
+  end
+
+
 
 end
 

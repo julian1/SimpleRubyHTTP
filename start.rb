@@ -1,3 +1,5 @@
+#!/usr/bin/ruby
+
 
 require './support/server'
 require './support/assets'
@@ -136,22 +138,9 @@ server.start(8000) do |socket|
   application.process_request( socket)
 end
 
+# start sync and process events
+event_processor.sync_and_process_current_events()
 
-## IMPORTANT this code including id and event_conn should be pushed
-## into the event processor.
-
-# id = -1
-
-# start processing at event tip less 2000
-#id = event_conn.exec_params( "select max(id) - 10000 as max_id from events" )[0]['max_id']
-id = event_conn.exec_params( "select max(id) - 1000 as max_id from events" )[0]['max_id']
-#id = 63464 
-
-log.warn( "processing historic events from #{id}")
-id = event_processor.process_events( id )
-
-log.warn( "waiting for current events at #{id}")
-event_processor.process_current_events( id )
 
 # block
 server.run()

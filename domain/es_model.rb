@@ -37,6 +37,8 @@ module Model
 
   class EventProcessor
 
+    attr_accessor :event_sink
+
     # channel to wait on
     POSTGRES_CHANNEL = 'events_insert'
 

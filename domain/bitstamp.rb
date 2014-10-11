@@ -14,8 +14,8 @@ class BitstampModel
     # we can now specify some semantic meaning
     # axis, etc
     @model['bitstamp']['color'] = { 
-      'top_ask' => 'blue',
-      'top_bid' => 'red',
+      'top_ask' => 'red',
+      'top_bid' => 'blue',
       'ratio' => 'grey',
       'sum_ratio' => 'grey'
     }

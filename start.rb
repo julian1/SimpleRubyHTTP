@@ -131,8 +131,8 @@ application = Application.new( log, general_controllers )
 server = Server::Processor.new(http_log)
 
 
-
-server.start_ssl(1443) do |socket|
+# ssl
+server.start_ssl(8001) do |socket|
   application.process_request( socket)
 end
 

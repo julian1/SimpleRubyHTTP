@@ -11,25 +11,30 @@
     <script language="javascript" type="text/javascript" src="h.js"></script>
  </head>
     <body>
-
-    <!--h2>Home</h2-->
-
 	<h4>
-
   <a href="/index.html">home</a>
-  <a href="/bitstamp.html">bitstamp</a>
-  <a href="/btcmarkets.html">btcmarkets</a>
   <a href="/btsx_btc.html">btsx_btc</a>
-	<p>
-  <a href="/report.html">report</a>
-
 	</h4>
-
+  <form action="">
+    ticks: <input type="text" id="myticks"  value="500" ><br>
+  </form>
+  <span> 
+    <div id="mytime" style="width:100px;height:30px;"></div>
+    <div id="starttime" ></div>
+  </span> 
+    <div id="placeholder" style="width:900px;height:500px;"></div>
     <p>Simple example. </p>
-
-
   <!-- ok, we want to try to load a json file -->
+<script type="text/javascript">
+  $(function () {
+    all_series = [];
+    graph = null ;
+	last_timestamp = null;
 
-
+    add_series('btsx_btc.top_ask'); 
+    add_series('btsx_btc.top_bid'); 
+	continuous_update();
+  });
+</script>
  </body>
 </html>

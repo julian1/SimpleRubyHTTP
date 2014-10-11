@@ -9,6 +9,7 @@ require './support/application'
 require './domain/es_model'
 require './domain/btcmarkets'
 require './domain/bitstamp'
+require './domain/bter'
 
 
 # TODO needs to be more organised
@@ -84,7 +85,8 @@ model_data = { }
 sinks = [
     # ESModel::BitstampModel.new( model_data ),
     BitstampModel.new( log, model_data ),
-    BTCMarketsModel.new( log, model_data)
+    BTCMarketsModel.new( log, model_data),
+	BterModel.new( log, model_data)
 ]
 
 event_sink = Model::EventSink.new( sinks )

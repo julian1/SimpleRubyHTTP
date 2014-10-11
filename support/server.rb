@@ -75,7 +75,7 @@ module Server
     def start( listeningPort, &code)
       @threads << Thread.new {
         begin
-          server = TCPServer.new('127.0.0.1', listeningPort)
+          server = TCPServer.new('0.0.0.0', listeningPort)
           @log.info( "https listening on port #{listeningPort}")
           process_accept( server, &code)
         rescue

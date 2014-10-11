@@ -61,11 +61,30 @@ $(function () {
 		$('#myresultform')[0].value = '';
 		var query = $('#myinputform')[0].value ;
 		$.ajax({
-			dataType: "text",
+			dataType: "json",
+			//dataType: "text",
 			url: "report.json",
 			data: { field1: query },
 			success: function ( value, textStatus, jqXHR ) {
 				// console.log( "success value is: " + value );
+
+				
+				console.log( 'object is a ' + typeof value ) ;
+
+			//	$('#myresultform')[0].value = $.each( value, function( key, val) { 
+			//		return '123' ;
+			//	} ) ; 
+
+				//value = JSON.parse( value );
+
+				//console.log( 'object now a ' + typeof value ) ;
+
+
+				 //value = JSON.stringify(value, undefined, 4);
+					// is it an array or is it a string. /? there is no each -- 
+				//$('#myresultform')[0].value = $.each( value, function( key, val) { 
+				//	console.log( key + ' ' + val ); //return '123' ;
+				//} ) ; 
 				$('#myresultform')[0].value = value;
 			},
 			error: function (jqXHR, textStatus, errorThrown ) {
@@ -129,7 +148,9 @@ $(function () {
 
 	function submitShowOrders( x)
 	{
-		$('#myinputform')[0].value = "select id, t, content->'url' as url\nfrom events\nwhere msg = 'order2'\norder by id desc limit 10";
+		$('#myinputform')[0].value = "select id,msg, content->'url':: varchar as url, left( (content->'data')::varchar, 50) from events where msg = 'order2' order by id desc  limit 10";
+
+//			 "select id, t, content->'url' as url\nfrom events\nwhere msg = 'order2'\norder by id desc limit 10";
 		submitTryit( 'dummy'  );
 	}
 
@@ -138,6 +159,9 @@ $(function () {
 		$('#myinputform')[0].value = "select id, t, left( content::varchar, 30) as error\nfrom events\nwhere msg = 'error'\norder by id desc limit 10";
 		submitTryit( 'dummy'  );
 	}
+
+
+
 
 
 </script>

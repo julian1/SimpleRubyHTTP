@@ -138,14 +138,12 @@ module Model
   end
 
   class Consumer
-
     class ConsumerSink
       # helper class for consumer
       def initialize( code )
         @code = code
       end
       def event( id, msg, t, content)
-        #puts "event #{id} #{msg} #{t}" 
         @code.call( id, msg, t, content) 
       end
     end
@@ -169,6 +167,16 @@ module Model
   end
 
 
+  class Producer
+    def initialize( conn)
+      @conn = conn
+    end
+    def enqueue( msg, content )
+      # we should not be exposing this, instead use a queue/stream/events writer. 
+      #@conn.exec_params( 'select enqueue( $$order2$$, $1::json )', [json] )
+      @conn.exec_params( 'select enqueue( $1::varchar, $2::json )', [msg, json] )
+    end 
+  end
 
 end
 

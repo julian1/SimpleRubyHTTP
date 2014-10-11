@@ -17,18 +17,24 @@ require './domain/es_model'
 log = Logger.new(STDOUT)
 log.level = Logger::INFO
 
-db_params = { 
-  :host => '127.0.0.1', 
+
+consumer_db_params = { 
+  :host => '147.69.40.170', 
   :dbname => 'prod', 
   :port => 5432, 
   :user => 'events_ro', 
   :password => 'events_ro' 
 }
 
-conn = PG::Connection.open( db_params )
-Model::Consumer.new( log, conn ).each do |id, msg, t, content|
+myid = -1
 
-    puts "id #{id} t #{t}"
+consumer_conn = PG::Connection.open( consumer_db_params )
+
+Model::Consumer.new( log, consumer_conn ).each do |id, msg, t, content|
+    myid = id if myid == -1
+    abort( 'mismatch' ) if id != myid
+    myid += 1
+    puts "id #{id}, t #{t}"
 end
 
 

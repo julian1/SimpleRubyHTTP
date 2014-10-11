@@ -49,7 +49,7 @@ $(function () {
 
 	console.log( 'hithere' );
 
-	order_query = "select id,\n t,\n now() - t as duration,\n content->'url':: varchar as url,\n left( (content->'data')::varchar, 50) as data\nfrom events\nwhere msg = 'order2'\norder by id desc  limit 10";
+	order_query = "select id,\n t,\n now() - t as duration,\n content->'url':: varchar as url,\n left( (content->'data')::varchar, 50)||'...' as data\nfrom events\nwhere msg = 'order2'\norder by id desc  limit 10";
 
 	error_query = "select id, t,\n now() - t as duration, content::varchar as content\nfrom events\nwhere msg = 'error'\norder by id desc limit 10";
 

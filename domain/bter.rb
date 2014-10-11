@@ -19,8 +19,8 @@ class BterModel
 
     @model_['data'] = [] 
     @model_['color'] = { 
-      'top_bid' => 'blue',
       'top_ask' => 'red'
+      'top_bid' => 'blue',
     }
     @model_['unit'] = { 
       'top_ask' => 'aud',

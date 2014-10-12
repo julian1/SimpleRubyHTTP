@@ -22,12 +22,16 @@ class BterModel
 
     @model_['data'] = [] 
     @model_['color'] = { 
+      'ask_30' => '#ffb0f0',
+      'ask_10' => '#ff7ff7',
       'top_ask' => 'red',
       'top_bid' => '#0000ff',
       'bid_10' => '#7f7fff',
       'bid_30' => '#b0b0ff'
     }
     @model_['unit'] = { 
+      'ask_30' => 'aud',
+      'ask_10' => 'aud',
       'top_ask' => 'aud',
       'top_bid' => 'aud',
       'bid_10' => 'aud',
@@ -98,37 +102,34 @@ class BterModel
 #        top_bid = orderbook['bids'].first[0]
         top_ask = orderbook['asks'].first[0]
 
-#         puts "ask first #{orderbook['asks'].first[0]} last #{orderbook['asks'].first[0]}"
-# 
-#         orderbook['asks'].each do |row| 
-#           puts "ask -> #{ row}" 
-#         end
-# 
-
-        bid_sum = orderbook['bids'].inject(0.0) do |xs, row |
-          xs + row[0].to_f * row[1].to_f
-        end
-        ask_sum = orderbook['asks'].inject(0.0) do |xs, row |
-          xs + row[0].to_f * row[1].to_f
-        end
+ 
 
         total_sum = sum_book( orderbook['bids']) + sum_book( orderbook['asks']) 
 
-        result = myfunction( orderbook['bids'], total_sum )
+        bids = myfunction( orderbook['bids'], total_sum )
+        asks = myfunction( orderbook['asks'], total_sum )
 
         #puts "bid_sum #{bid_sum}, ask_sum #{ask_sum}"
 
 #         puts "top_bid #{top_bid} top_ask #{top_ask}  "
 #         puts "\n\n"
 # 
-        @model_['data'] << { 
+        elt = { 
           'id' => @count,
           'time' => t, 
-          'top_ask' => top_ask,
-          'top_bid' => result[:price_0],
-          'bid_10' => result[:price_10],
-          'bid_30' => result[:price_30]
+
+          'ask_30' => asks[:price_30],
+          'ask_10' => asks[:price_10],
+          'top_ask' => asks[:price_0],
+          'top_bid' => bids[:price_0],
+          'bid_10' => bids[:price_10],
+          'bid_30' => bids[:price_30]
         }
+
+        puts elt
+
+      @model_['data'] << elt
+
         @count += 1
       rescue
         @log.info( "Failed to decode orderbook error: #{$!}" )

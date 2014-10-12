@@ -46,7 +46,7 @@ class BterModel
         orderbook['bids'] = orderbook['bids'].sort { |a,b| b[0] <=> a[0] } # largest value first
         orderbook['asks'] = orderbook['asks'].sort { |a,b| a[0] <=> b[0] } # smallest value first
 
-        top_bid = orderbook['bids'].first[0]
+#        top_bid = orderbook['bids'].first[0]
         top_ask = orderbook['asks'].first[0]
 
 #         puts "ask first #{orderbook['asks'].first[0]} last #{orderbook['asks'].first[0]}"
@@ -73,22 +73,22 @@ class BterModel
         result = orderbook['bids'].inject( init) do |xs, row |
           sum = xs[:sum] + row[0].to_f * row[1].to_f
 
-          if( init[:price_0].nil?)
-            init[:price_0] = row[0]
+          if( xs[:price_0].nil?)
+            xs[:price_0] = row[0]
           end
-          if( init[:price_10].nil? && sum > total_sum * 0.1)
-            init[:price_10] = row[0]
+          if( xs[:price_10].nil? && sum > total_sum * 0.1)
+            xs[:price_10] = row[0]
           end
-          if( init[:price_30].nil? && sum > total_sum * 0.3)
-            init[:price_30] = row[0]
+          if( xs[:price_30].nil? && sum > total_sum * 0.3)
+            xs[:price_30] = row[0]
           end
  
 #           puts "price #{row[0]},  sum #{xs}"
 # 
           { :sum => sum, 
-            :price_0 => init[:price_0], 
-            :price_10 => init[:price_10], 
-            :price_30 => init[:price_30]  
+            :price_0 => xs[:price_0], 
+            :price_10 => xs[:price_10], 
+            :price_30 => xs[:price_30]  
           }
         end
 

@@ -23,11 +23,15 @@ class BterModel
     @model_['data'] = [] 
     @model_['color'] = { 
       'top_ask' => 'red',
-      'top_bid' => 'blue'
+      'top_bid' => '#0000ff',
+      'bid_10' => '#7f7fff',
+      'bid_30' => '#b0b0ff'
     }
     @model_['unit'] = { 
       'top_ask' => 'aud',
-      'top_bid' => 'aud'
+      'top_bid' => 'aud',
+      'bid_10' => 'aud',
+      'bid_30' => 'aud'
     }
   end
 
@@ -41,7 +45,7 @@ class BterModel
 #        puts orderbook
 #         time = Time.at(orderbook['timestamp'].to_i).to_datetime
 #         #puts "time #{time}"
-        top_bid = orderbook['bids'].last[0]
+        top_bid = orderbook['bids'].first[0]
         top_ask = orderbook['asks'].last[0] 
 
         # why isn't there a fucking fold? 
@@ -60,29 +64,40 @@ class BterModel
         end
         total_sum = bid_sum + ask_sum
           
-        init = { :sum => 0.0, :price_10 => nil }
+        init = { 
+          :sum => 0.0, 
+          :price_10 => nil, 
+          :price_30 => nil
+        }
         result = orderbook['bids'].inject( init) do |xs, row |
           sum = xs[:sum] + row[0].to_f * row[1].to_f
 
           if( init[:price_10].nil? && sum > total_sum * 0.1)
             init[:price_10] = row[0]
-            puts "whoot #{row[0]}"
           end
+          if( init[:price_30].nil? && sum > total_sum * 0.3)
+            init[:price_30] = row[0]
+          end
+ 
           puts "price #{row[0]},  sum #{xs}"
-          { :sum => sum, :price_10 => init[:price_10] } 
+          { :sum => sum, 
+            :price_10 => init[:price_10], 
+            :price_30 => init[:price_30]  
+          }
         end
 
+        #puts "bid_sum #{bid_sum}, ask_sum #{ask_sum}"
 
-        puts "bid_sum #{bid_sum}, ask_sum #{ask_sum}"
-
+        puts "top_bid #{top_bid} top_ask #{top_ask}  "
         puts "\n\n"
 
-        # puts "top_bid #{top_bid} top_ask #{top_ask}  "
         @model_['data'] << { 
           'id' => @count,
           'time' => t, 
           'top_bid' => top_bid, 
-          'top_ask' => top_ask
+          'top_ask' => top_ask,
+          'bid_10' => result[:price_10],
+          'bid_30' => result[:price_30]
         }
         @count += 1
       rescue

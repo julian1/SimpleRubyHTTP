@@ -42,19 +42,19 @@ class BterModel
       && content['url'] == 'http://data.bter.com/api/1/depth/btsx_btc'
       begin
         orderbook = content['data']
-#        puts orderbook
-#         time = Time.at(orderbook['timestamp'].to_i).to_datetime
-#         #puts "time #{time}"
+
+        orderbook['bids'] = orderbook['bids'].sort { |a,b| b[0] <=> a[0] } # largest value first
+        orderbook['asks'] = orderbook['asks'].sort { |a,b| a[0] <=> b[0] } # smallest value first
+
         top_bid = orderbook['bids'].first[0]
-        top_ask = orderbook['asks'].last[0] 
+        top_ask = orderbook['asks'].first[0]
 
-        # why isn't there a fucking fold? 
-        # orderbook['bids'] = [[2,3],[4,5]]
-
-        # we should actually ensure they are sorted correctly by price
-
-        orderbook['bids'].sort { |a,b| a[0] <=> b[0] }
-        orderbook['asks'].sort { |a,b| a[0] <=> b[0] } # might want to reverse ...
+#         puts "ask first #{orderbook['asks'].first[0]} last #{orderbook['asks'].first[0]}"
+# 
+#         orderbook['asks'].each do |row| 
+#           puts "ask -> #{ row}" 
+#         end
+# 
 
         bid_sum = orderbook['bids'].inject(0.0) do |xs, row |
           xs + row[0].to_f * row[1].to_f
@@ -79,7 +79,8 @@ class BterModel
             init[:price_30] = row[0]
           end
  
-          puts "price #{row[0]},  sum #{xs}"
+#           puts "price #{row[0]},  sum #{xs}"
+# 
           { :sum => sum, 
             :price_10 => init[:price_10], 
             :price_30 => init[:price_30]  
@@ -88,9 +89,9 @@ class BterModel
 
         #puts "bid_sum #{bid_sum}, ask_sum #{ask_sum}"
 
-        puts "top_bid #{top_bid} top_ask #{top_ask}  "
-        puts "\n\n"
-
+#         puts "top_bid #{top_bid} top_ask #{top_ask}  "
+#         puts "\n\n"
+# 
         @model_['data'] << { 
           'id' => @count,
           'time' => t, 

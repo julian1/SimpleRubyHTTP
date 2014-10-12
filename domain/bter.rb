@@ -35,6 +35,55 @@ class BterModel
     }
   end
 
+
+
+  # sum the depth
+  # what is price * order size = ? 
+
+  def sum_book( half_orderbook )
+
+      half_orderbook.inject(0.0) do |xs, row |
+        xs + row[0].to_f * row[1].to_f
+      end
+  end
+
+
+  def myfunction( half_orderbook, orderbook_sum )
+
+    init = { 
+      :sum => 0.0, 
+      :price_0 => nil,
+      :price_10 => nil, 
+      :price_30 => nil
+    }
+
+    half_orderbook.inject( init) do |acc, row |
+
+      sum = acc[:sum] + row[0].to_f * row[1].to_f
+
+      if( acc[:price_0].nil?)
+        acc[:price_0] = row[0]
+      end
+      if( acc[:price_10].nil? && sum > orderbook_sum * 0.1)
+        acc[:price_10] = row[0]
+      end
+      if( acc[:price_30].nil? && sum > orderbook_sum * 0.3)
+        acc[:price_30] = row[0]
+      end
+
+#           puts "price #{row[0]},  sum #{acc}"
+# 
+      { :sum => sum, 
+        :price_0 => acc[:price_0], 
+        :price_10 => acc[:price_10], 
+        :price_30 => acc[:price_30]  
+      }
+    end
+  end
+
+
+
+
   # change name to just event() ?
   def event( id, msg, t, content)
 
@@ -62,35 +111,10 @@ class BterModel
         ask_sum = orderbook['asks'].inject(0.0) do |xs, row |
           xs + row[0].to_f * row[1].to_f
         end
-        total_sum = bid_sum + ask_sum
-          
-        init = { 
-          :sum => 0.0, 
-          :price_0 => nil,
-          :price_10 => nil, 
-          :price_30 => nil
-        }
-        result = orderbook['bids'].inject( init) do |xs, row |
-          sum = xs[:sum] + row[0].to_f * row[1].to_f
 
-          if( xs[:price_0].nil?)
-            xs[:price_0] = row[0]
-          end
-          if( xs[:price_10].nil? && sum > total_sum * 0.1)
-            xs[:price_10] = row[0]
-          end
-          if( xs[:price_30].nil? && sum > total_sum * 0.3)
-            xs[:price_30] = row[0]
-          end
- 
-#           puts "price #{row[0]},  sum #{xs}"
-# 
-          { :sum => sum, 
-            :price_0 => xs[:price_0], 
-            :price_10 => xs[:price_10], 
-            :price_30 => xs[:price_30]  
-          }
-        end
+        total_sum = sum_book( orderbook['bids']) + sum_book( orderbook['asks']) 
+
+        result = myfunction( orderbook['bids'], total_sum )
 
         #puts "bid_sum #{bid_sum}, ask_sum #{ask_sum}"
 

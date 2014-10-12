@@ -105,7 +105,7 @@ time_series_controller = TimeSeriesController.new( model_data )
 
 report_controller = ReportController.new( log, report_conn )
 
-redirect_controller = RedirectController.new( log)
+redirect_controller = RedirectController.new( log, 8000, '127.0.0.1', 8443)
 
 # these controllers ought to be put in the constroller module namespace
 # then we can refer to them Controller::Session 
@@ -132,7 +132,7 @@ server = Server::Processor.new(http_log)
 
 
 # ssl
-server.start_ssl(8001) do |socket|
+server.start_ssl(8443) do |socket|
   application.process_request( socket)
 end
 

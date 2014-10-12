@@ -22,7 +22,7 @@ class BterModel
 
     @model_['data'] = [] 
     @model_['color'] = { 
-      'ask_30' => '#ffb0f0',
+      'ask_30' => '#ffb0b0',
       'ask_10' => '#ff7ff7',
       'top_ask' => 'red',
       'top_bid' => '#0000ff',

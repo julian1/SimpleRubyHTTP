@@ -1,14 +1,14 @@
 
-# We need to organise into { exchange,  pair,  field } 
+# We need to organise into { exchange,  pair,  field }
 # if we really want to construct a group with intersecting time,
-# then we can reparse the model stuff. 
+# then we can reparse the model stuff.
 
 ## these BTCMarkets and Bitstamp are specific instances of sinks, they should move
 ## to separate files in the domain .
 
 class BterModel
 
-  # rather than try to combine the data and metadata, do them 
+  # rather than try to combine the data and metadata, do them
   # with separate javascript calls ?
 
   def initialize( log, model)
@@ -16,33 +16,35 @@ class BterModel
     @model = model
     @count = 0
 
-    @model['btsx_btc'] = {} 
+    @model['btsx_btc'] = {}
 
 	@model_  = @model['btsx_btc']
 
-    @model_['data'] = [] 
-    @model_['color'] = { 
+    @model_['data'] = []
+    @model_['color'] = {
       'ask_30' => '#ffb0b0',
       'ask_10' => '#ff7ff7',
       'top_ask' => 'red',
       'top_bid' => '#0000ff',
       'bid_10' => '#7f7fff',
-      'bid_30' => '#b0b0ff'
+      'bid_30' => '#b0b0ff',
+      'bids_percent' => 'grey'
     }
-    @model_['unit'] = { 
+    @model_['unit'] = {
       'ask_30' => 'aud',
       'ask_10' => 'aud',
       'top_ask' => 'aud',
       'top_bid' => 'aud',
       'bid_10' => 'aud',
-      'bid_30' => 'aud'
+      'bid_30' => 'aud',
+      'bids_percent' => 'percent'
     }
   end
 
 
 
   # sum the depth
-  # what is price * order size = ? 
+  # what is price * order size = ?
 
   def sum_book( half_orderbook )
 
@@ -54,10 +56,10 @@ class BterModel
 
   def myfunction( half_orderbook, orderbook_sum )
 
-    init = { 
-      :sum => 0.0, 
+    init = {
+      :sum => 0.0,
       :price_0 => nil,
-      :price_10 => nil, 
+      :price_10 => nil,
       :price_30 => nil
     }
 
@@ -76,11 +78,11 @@ class BterModel
       end
 
       #puts "price #{row[0]}, vol #{row[1].to_i},  sum #{acc}"
-# 
-      { :sum => sum, 
-        :price_0 => acc[:price_0], 
-        :price_10 => acc[:price_10], 
-        :price_30 => acc[:price_30]  
+#
+      { :sum => sum,
+        :price_0 => acc[:price_0],
+        :price_10 => acc[:price_10],
+        :price_30 => acc[:price_30]
       }
     end
 
@@ -111,28 +113,33 @@ class BterModel
 #        top_bid = orderbook['bids'].first[0]
         top_ask = orderbook['asks'].first[0]
 
- 
 
-        total_sum = sum_book( orderbook['bids']) + sum_book( orderbook['asks']) 
+
+        bids_sum = sum_book( orderbook['bids'])
+        asks_sum = sum_book( orderbook['asks'])
+        total_sum = bids_sum + asks_sum
 
         bids = myfunction( orderbook['bids'], total_sum )
         asks = myfunction( orderbook['asks'], total_sum )
+
+        bids_percent = bids_sum / total_sum * 100 # of total book, not asks
 
         #puts "bid_sum #{bid_sum}, ask_sum #{ask_sum}"
 
 #         puts "top_bid #{top_bid} top_ask #{top_ask}  "
 ##         puts "\n\n"
-# 
-        elt = { 
+#
+        elt = {
           'id' => @count,
-          'time' => t, 
+          'time' => t,
 
           'ask_30' => asks[:price_30],
           'ask_10' => asks[:price_10],
           'top_ask' => asks[:price_0],
           'top_bid' => bids[:price_0],
           'bid_10' => bids[:price_10],
-          'bid_30' => bids[:price_30]
+          'bid_30' => bids[:price_30],
+          'bids_percent' => bids_percent
         }
 
         #puts elt
@@ -142,7 +149,7 @@ class BterModel
         @count += 1
       rescue
         @log.info( "Failed to decode orderbook error: #{$!}" )
-      end		 
+      end
     end
   end
 end

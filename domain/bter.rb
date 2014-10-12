@@ -61,7 +61,7 @@ class BterModel
       :price_30 => nil
     }
 
-    half_orderbook.inject( init) do |acc, row |
+    result = half_orderbook.inject( init) do |acc, row |
 
       sum = acc[:sum] + row[0].to_f * row[1].to_f
 
@@ -75,7 +75,7 @@ class BterModel
         acc[:price_30] = row[0]
       end
 
-#           puts "price #{row[0]},  sum #{acc}"
+      #puts "price #{row[0]}, vol #{row[1].to_i},  sum #{acc}"
 # 
       { :sum => sum, 
         :price_0 => acc[:price_0], 
@@ -83,6 +83,15 @@ class BterModel
         :price_30 => acc[:price_30]  
       }
     end
+
+    if( result[:price_10] === nil )
+      result[:price_10] = half_orderbook.last[0]
+    end
+
+    if( result[:price_30] === nil )
+      result[:price_30] = half_orderbook.last[0]
+    end
+    result
   end
 
 
@@ -112,7 +121,7 @@ class BterModel
         #puts "bid_sum #{bid_sum}, ask_sum #{ask_sum}"
 
 #         puts "top_bid #{top_bid} top_ask #{top_ask}  "
-#         puts "\n\n"
+         puts "\n\n"
 # 
         elt = { 
           'id' => @count,

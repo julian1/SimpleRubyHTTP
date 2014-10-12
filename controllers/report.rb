@@ -3,12 +3,12 @@ require 'json'
 
 
 def map_query( conn, query, args, &code )
-  # map a proc/block over postgres query result
-  xs = []
-  conn.exec( query, args ).each do |row|
-    xs << code.call( row )
-  end
-  xs
+	# map a proc/block over postgres query result
+	xs = []
+	conn.exec( query, args ).each do |row|
+	xs << code.call( row )
+	end
+	xs
 end
 
 
@@ -38,16 +38,14 @@ class ReportController
         # we should return json, or decode the json
         res = @conn .exec_params( query )
 
-      # we could change this to avoid encoding the content field
-      # which is already json as json. which would be interesting
-      # that would enable us to actually see the message as well
-      # rather than truncating it.
+        # we could have a field that controls whether the content field
+        # which is already json should be further encoded as a json string.
+        # not doing so would be a nice return option.
+        rows = res.map do |row|
+          row.to_json
+        end
 
-      rows = res.map do |row|
-        row.to_json
-      end
-
-      s = " [ #{rows.join(', ')} ]"
+        s = " [ #{rows.join(', ')} ]"
 
         #   @log.info( "result is #{ w.string } ")
         x[:response] = "HTTP/1.1 200 OK"

@@ -121,7 +121,7 @@ class BterModel
         #puts "bid_sum #{bid_sum}, ask_sum #{ask_sum}"
 
 #         puts "top_bid #{top_bid} top_ask #{top_ask}  "
-         puts "\n\n"
+##         puts "\n\n"
 # 
         elt = { 
           'id' => @count,
@@ -135,7 +135,7 @@ class BterModel
           'bid_30' => bids[:price_30]
         }
 
-        puts elt
+        #puts elt
 
       @model_['data'] << elt
 

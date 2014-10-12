@@ -66,12 +66,16 @@ class BterModel
           
         init = { 
           :sum => 0.0, 
+          :price_0 => nil,
           :price_10 => nil, 
           :price_30 => nil
         }
         result = orderbook['bids'].inject( init) do |xs, row |
           sum = xs[:sum] + row[0].to_f * row[1].to_f
 
+          if( init[:price_0].nil?)
+            init[:price_0] = row[0]
+          end
           if( init[:price_10].nil? && sum > total_sum * 0.1)
             init[:price_10] = row[0]
           end
@@ -82,6 +86,7 @@ class BterModel
 #           puts "price #{row[0]},  sum #{xs}"
 # 
           { :sum => sum, 
+            :price_0 => init[:price_0], 
             :price_10 => init[:price_10], 
             :price_30 => init[:price_30]  
           }
@@ -95,8 +100,8 @@ class BterModel
         @model_['data'] << { 
           'id' => @count,
           'time' => t, 
-          'top_bid' => top_bid, 
           'top_ask' => top_ask,
+          'top_bid' => result[:price_0],
           'bid_10' => result[:price_10],
           'bid_30' => result[:price_30]
         }

@@ -54,7 +54,7 @@ require 'securerandom'
 http_log_file = File.new('log.txt', 'w')
 http_log_file.sync = 1
 http_log = Logger.new( http_log_file  )
-http_log.level = Logger::INFO
+http_log.level = Logger::DEBUG
 #http_log_file = Logger.new(STDOUT)
 #http_log.level = Logger::INFO
 
@@ -62,7 +62,7 @@ http_log.level = Logger::INFO
 # just creating two loggers
 log = Logger.new(STDOUT)
 #log.level = Logger::WARN
-log.level = Logger::INFO
+log.level = Logger::DEBUG
 
 myformatter = proc do |severity, datetime, progname, msg|
   "#{severity}: #{datetime}: #{msg}\n"
@@ -105,7 +105,7 @@ time_series_controller = TimeSeriesController.new( model_data )
 
 report_controller = ReportController.new( log, report_conn )
 
-redirect_controller = RedirectController.new( log, 8000, '127.0.0.1', 8443)
+redirect_controller = RedirectController.new( log, '127.0.0.1', 8443)
 
 # these controllers ought to be put in the constroller module namespace
 # then we can refer to them Controller::Session 

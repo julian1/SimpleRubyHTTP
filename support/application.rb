@@ -8,6 +8,16 @@ class Application
     @log.warn("Application started")
   end
 
+
+
+  def process_request_new( conn, data)
+
+    puts "application received #{data}" 
+
+    conn.send_data("helo\n")
+	end
+
+
   def process_request( socket)
 
     # init message structure

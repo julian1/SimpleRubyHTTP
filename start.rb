@@ -1,10 +1,9 @@
 #!/usr/bin/ruby
 
 
-require './support/server'
+#require './support/server'
 require './support/assets'
 require './support/application'
-
 
 require './domain/es_model'
 require './domain/btcmarkets'
@@ -28,6 +27,8 @@ require './controllers/log_response'
 
 require 'logger'
 require 'securerandom'
+require 'rubygems'
+require 'eventmachine'
 
 
 # rather than passing the sole x structure, we could separate out the request and response
@@ -146,23 +147,47 @@ general_controllers = [
 
 application = Application.new( log, general_controllers )
 
-server = Server::Processor.new(http_log)
+# server = Server::Processor.new(http_log)
+# 
+# 
+# # ssl
+# server.start_ssl(8443) do |socket|
+#   application.process_request( socket)
+# end
+# 
+# server.start(8000) do |socket|
+#   application.process_request( socket)
+# end
+# 
 
+class Server < EventMachine::Connection
+    #attr_accessor :options, :status
+    attr_accessor :application
 
-# ssl
-server.start_ssl(8443) do |socket|
-  application.process_request( socket)
+    def receive_data(data)
+		# now pass the data and ourselves(so we can send a response) to the application. so the app has the connection	
+		@application.process_request_new( self, data)
+    end
 end
 
-server.start(8000) do |socket|
-  application.process_request( socket)
+EM.run do
+    EM.start_server 'localhost', 8000, Server do |server|
+		
+		server.application = application
+
+     #   server.options = {:my => 'options'}
+     #   server.status = :OK
+    end
 end
 
-# start sync and process events
-event_processor.sync_and_process_current_events()
 
-
-# block
-server.run()
-
-
+# 
+# 
+# # start sync and process events
+# event_processor.sync_and_process_current_events()
+# 
+# 
+# # block
+# server.run()
+# 
+# 

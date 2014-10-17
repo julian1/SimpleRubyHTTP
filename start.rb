@@ -124,14 +124,14 @@ time_series_controller = TimeSeriesController.new( model_data )
 
 report_controller = ReportController.new( log, report_conn )
 
-redirect_controller = RedirectController.new( log, '127.0.0.1', 8443)
+#redirect_controller = RedirectController.new( log, '127.0.0.1', 8443)
 
 # these controllers ought to be put in the constroller module namespace
 # then we can refer to them Controller::Session 
 
 general_controllers = [ 
-  LogRequestController.new( http_log ),
-  redirect_controller, 
+#  LogRequestController.new( http_log ),
+#  redirect_controller, 
   SessionController.new(),
   URLRewriteController.new(),
   assets_controller, 
@@ -161,22 +161,16 @@ application = Application.new( log, general_controllers )
 # 
 
 class Server < EventMachine::Connection
-    #attr_accessor :options, :status
     attr_accessor :application
-
     def receive_data(data)
-		# now pass the data and ourselves(so we can send a response) to the application. so the app has the connection	
+		# now pass the data and ourselves(so we can send a response) to the application.
 		@application.process_request_new( self, data)
     end
 end
 
 EM.run do
     EM.start_server 'localhost', 8000, Server do |server|
-		
 		server.application = application
-
-     #   server.options = {:my => 'options'}
-     #   server.status = :OK
     end
 end
 

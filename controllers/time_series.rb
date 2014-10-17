@@ -67,6 +67,17 @@ class TimeSeriesController
 #     end
 # 
 # 
+
+
+# we want a tick interval.. 1m 10m 1hr 1day
+# perhaps we should be creating these as separate streams/series rather than trying to filter them ?  
+# it would be faster.
+# it just becomes another event. 
+
+# event( { type 'series' :name  :value } ); 
+
+# EXTREMELY IMPORTANT - how we store it - eg. to @model should be done by the end of the chain 
+
     # an individual series
     matches = /^GET \/get_series.json\??(.*)$/.match(x[:request])
     if matches && matches.captures.length == 1

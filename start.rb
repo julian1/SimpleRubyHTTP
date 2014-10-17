@@ -147,6 +147,13 @@ general_controllers = [
 
 application = Application.new( log, general_controllers )
 
+
+Thread.new {
+
+ event_processor.sync_and_process_current_events()
+}
+
+
 # server = Server::Processor.new(http_log)
 # 
 # 
@@ -174,8 +181,8 @@ EM.run do
     end
 end
 
+## ok, this thing is on another thread ????
 
-# 
 # 
 # # start sync and process events
 # event_processor.sync_and_process_current_events()

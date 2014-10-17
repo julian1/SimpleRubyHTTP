@@ -175,10 +175,32 @@ class Server < EventMachine::Connection
     end
 end
 
+
+require 'pg/em'
+
+pg = PG::EM::Client.new db_params 
+
+
 EM.run do
-    EM.start_server 'localhost', 8000, Server do |server|
-		server.application = application
-    end
+
+  EM.start_server '0.0.0.0', 8000, Server do |server|
+    server.application = application
+  end
+
+
+	  # asynchronous + deferrable
+  EM.run do
+    df = pg.query_defer('select count(*) from events')
+    df.callback { |result|
+      puts Array(result).inspect
+      #EM.stop
+    }
+    df.errback {|ex|
+      raise ex
+    }
+    puts "sent"
+  end
+
 end
 
 ## ok, this thing is on another thread ????

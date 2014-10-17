@@ -80,6 +80,24 @@ db_params = {
   :password => 'events_ro' 
 }
 
+# it's not just the model data, it's also the logger, that's shared
+# between threads. and the assets class, etc 
+# basically everything that's shared has to start having mutexes put around
+# it. 
+# unless we put the processing on a queue. 
+
+# even if we put it on a queue - the socket.gets is designed to block, until 
+# it gets a connection. 
+
+# can we write this async.
+
+# Ok, very important - we successfully do the accept - without having to 
+# throw a new thread. 
+# so perhaps we can throw it into a select statement or something. 
+
+# except socket read and socket write probably aren:w
+
+
 model_data = { } 
 
 sinks = [

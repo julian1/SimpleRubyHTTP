@@ -1,8 +1,10 @@
 
 require 'json'
-require 'pg'
+#require 'pg'
 require 'date'
 require 'logger'
+
+require 'pg/em'
 
 # these classes can be used to set up stream synchronization quite simply.
 
@@ -45,44 +47,86 @@ module Model
 
     def initialize( log, conn, event_sink)
       @log = log
-      @conn = conn
+#      @conn = conn
       @event_sink = event_sink
     end
 
+    ## ok, the issue is that we cannot return a value to indicate that there's 
+    ## nothing more to process
 
-    def process_events( id )
-      # process from id, and return the next unprocessed id
-      # could use postgres cursors or something more complicated to batch/stream, but
-      # this will do for now
+    def process_events( conn, id )
+
       batch = 50
-      count = 0
-      begin
-        # puts "retrieving events - from #{id}"
-        res = @conn.exec_params( "select id, t, msg, content from events where id >= $1 order by id limit $2", [id, batch] )
-        count = 0
-        res.each do |row|
-          begin
-            # process id, first to avoid exceptions being rechanged
-            count += 1
-            id = row['id'].to_i
-            t = DateTime.parse( row['t'] )
-            msg = row['msg']
-            begin
-              content = JSON.parse( row['content'] )
-            rescue
-              @log.warn( "Error decoding json content: #{id} error: #{$!}" )
+
+      EM.run do
+
+        df = conn.query_defer("select id, t, msg, content from events where id >= $1 order by id limit $2", [id, batch] )
+        df.callback { |result|
+          count = 0
+          #puts Array(result).inspect
+          #EM.stop
+          result.each do |row|
+              begin
+                # process id, first to avoid exceptions being rechanged
+                count += 1
+                id = row['id'].to_i
+                t = DateTime.parse( row['t'] )
+                msg = row['msg']
+                begin
+                  content = JSON.parse( row['content'] )
+                rescue
+                  @log.warn( "Error decoding json content: #{id} error: #{$!}" )
+                end
+                @event_sink.event(id, msg, t, content)
+              rescue
+                # for some reason we aer getting errors
+                @log.warn( "Error processing message id: #{id} error: #{$!}" )
+              end
             end
-            @event_sink.event(id, msg, t, content)
-          rescue
-            # for some reason we aer getting errors
-            @log.warn( "Error processing message id: #{id} error: #{$!}" )
-          end
-        end
-        # puts "count is #{count}"
-        id += 1 if count > 0
-      end while count > 0
-      # return the next event to process
-      id
+        
+            puts "processed records - count is #{count}"
+        }
+        df.errback {|ex|
+          raise ex
+        }
+
+      end
+
+
+# 
+# 
+#       # process from id, and return the next unprocessed id
+#       # could use postgres cursors or something more complicated to batch/stream, but
+#       # this will do for now
+#       batch = 50
+#       count = 0
+#       begin
+#         # puts "retrieving events - from #{id}"
+#         res = @conn.exec_params( "select id, t, msg, content from events where id >= $1 order by id limit $2", [id, batch] )
+#         count = 0
+#         res.each do |row|
+#           begin
+#             # process id, first to avoid exceptions being rechanged
+#             count += 1
+#             id = row['id'].to_i
+#             t = DateTime.parse( row['t'] )
+#             msg = row['msg']
+#             begin
+#               content = JSON.parse( row['content'] )
+#             rescue
+#               @log.warn( "Error decoding json content: #{id} error: #{$!}" )
+#             end
+#             @event_sink.event(id, msg, t, content)
+#           rescue
+#             # for some reason we aer getting errors
+#             @log.warn( "Error processing message id: #{id} error: #{$!}" )
+#           end
+#         end
+#         # puts "count is #{count}"
+#         id += 1 if count > 0
+#       end while count > 0
+#       # return the next event to process
+#       id
     end
 
 

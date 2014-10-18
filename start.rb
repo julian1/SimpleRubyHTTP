@@ -148,11 +148,11 @@ general_controllers = [
 application = Application.new( log, general_controllers )
 
 
-Thread.new {
-
- event_processor.sync_and_process_current_events()
-}
-
+# Thread.new {
+# 
+#  event_processor.sync_and_process_current_events()
+# }
+# 
 
 # server = Server::Processor.new(http_log)
 # 
@@ -236,7 +236,9 @@ EM.run do
 
   # if we put this in a function then we can just call recursively? 
   
-  myfunc( pg)
+#  myfunc( pg)
+
+ event_processor.process_events( pg , 0 )
 
 end
 

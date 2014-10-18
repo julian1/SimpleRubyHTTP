@@ -180,6 +180,30 @@ require 'pg/em'
 
 pg = PG::EM::Client.new db_params 
 
+POSTGRES_CHANNEL = 'events_insert'
+
+# does this set up a recursion that don't want 
+# and will it miss listening events
+def myfunc( pg)
+  EM.run do
+    # set up the call back first
+    pg.wait_for_notify_defer(3).callback do |notify|
+      if notify
+        puts "Someone spoke to us on channel: #{notify[:relname]} from #{notify[:be_pid]}"
+        # how do we stay subscribed ...
+        # continuing to listen for events ...
+        myfunc( pg)
+      else
+        puts "Too late, 7 seconds passed"
+        myfunc( pg)
+      end
+    end.errback do |ex|
+      puts "Connection to db lost... #{ex} "
+    end
+    pg.query_defer("LISTEN #{POSTGRES_CHANNEL}")
+  end
+end
+
 
 EM.run do
 
@@ -188,18 +212,23 @@ EM.run do
   end
 
 
-	  # asynchronous + deferrable
-  EM.run do
-    df = pg.query_defer('select count(*) from events')
-    df.callback { |result|
-      puts Array(result).inspect
-      #EM.stop
-    }
-    df.errback {|ex|
-      raise ex
-    }
-    puts "sent"
-  end
+# 	  # asynchronous + deferrable
+#   EM.run do
+#     df = pg.query_defer('select count(*) from events')
+#     df.callback { |result|
+#       puts Array(result).inspect
+#       #EM.stop
+#     }
+#     df.errback {|ex|
+#       raise ex
+#     }
+#     puts "finished"
+#   end
+# 
+
+  # if we put this in a function then we can just call recursively? 
+  
+  myfunc( pg)
 
 end
 

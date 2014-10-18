@@ -220,33 +220,15 @@ EM.run do
   end
 
 
-# 	  # asynchronous + deferrable
-#   EM.run do
-#     df = pg.query_defer('select count(*) from events')
-#     df.callback { |result|
-#       puts Array(result).inspect
-#       #EM.stop
-#     }
-#     df.errback {|ex|
-#       raise ex
-#     }
-#     puts "finished"
-#   end
-# 
-
-  # if we put this in a function then we can just call recursively? 
-  # myfunc( conn)
-  # event_processor.process_events( conn , 0 )
-  # it's not working ???!!!
-
-  ## issue might be multiple arguments
-
   event_processor.get_event_tip( conn) do |conn,id|  
       puts "done id #{id}"
-
       event_processor.process_events( conn, id)  do |conn,id|  
-
           puts "processed events #{id}"
+          event_processor.myfunc( conn, id) 
+            # now we want to process any more events
+            # passing the continuation is a problem ...
+            # because it becomes - self referential.
+            #puts "whoot got event! #{id}"
       end
   end
 

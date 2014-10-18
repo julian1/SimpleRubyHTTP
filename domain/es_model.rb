@@ -64,6 +64,39 @@ module Model
    
 
     ## ruby partial application...
+
+    ## again we should pass a code block
+
+    def myfunc( conn, id )
+        # set up the call back first
+        conn.wait_for_notify_defer(nil).callback do |notify|
+            puts "Someone spoke to us on channel: #{notify[:relname]} from #{notify[:be_pid]}"
+            # how do we stay subscribed ...
+            # continuing to listen for events ...
+            #myfunc( conn)
+
+            ## if this is async... then it's no good...
+            ## then we can't recurse here
+
+            ## call process events 
+            
+            ## ugghh, but we can't pass the id? 
+            # actually it might work 
+  
+            process_events( conn, id) do |conn, id|
+              myfunc(conn, id)
+            end
+
+            #code.call( conn) 
+            # myfunc( conn, & code)
+        end.errback do |ex|
+          puts "Connection to db lost... #{ex} "
+        end
+        conn.query_defer("LISTEN #{POSTGRES_CHANNEL}")
+    end
+
+
+
  
     def get_event_tip( conn, &code )
   #    EM.run do

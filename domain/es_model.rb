@@ -54,17 +54,39 @@ module Model
     ## ok, the issue is that we cannot return a value to indicate that there's 
     ## nothing more to process
 
+    ## actually we could pass a continuation to run ? 
+    ## if we can bind over stuff. 
+    ## eg. so when we've processed all the historic events. 
+    ## we instead 
+  
+    ## a completion continuation. - if we could partially bind. 
+    ## select 
+   
+
+    ## ruby partial application...
+ 
+    def get_event_tip( conn )
+      EM.run do
+        df = conn.query_defer("select max(id) - 1000 as max_id from events" )
+        df.callback { |result|
+          id = result[0]['max_id']
+          puts "max_id is #{id} !!"
+        } 
+        df.errback {|ex|
+          raise ex
+        }
+      end
+    end
+
+
     def process_events( conn, id )
 
       batch = 50
 
       EM.run do
-
         df = conn.query_defer("select id, t, msg, content from events where id >= $1 order by id limit $2", [id, batch] )
         df.callback { |result|
           count = 0
-          #puts Array(result).inspect
-          #EM.stop
           result.each do |row|
               begin
                 # process id, first to avoid exceptions being rechanged
@@ -85,11 +107,15 @@ module Model
             end
         
             puts "processed records - count is #{count}"
+            if count > 0
+              process_events( conn, id )
+            else
+              ## call the continuation - but we  
+            end
         }
         df.errback {|ex|
           raise ex
         }
-
       end
 
 

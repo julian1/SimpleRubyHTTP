@@ -178,25 +178,25 @@ end
 
 require 'pg/em'
 
-pg = PG::EM::Client.new db_params 
+conn = PG::EM::Client.new db_params 
 
 POSTGRES_CHANNEL = 'events_insert'
 
 # does this set up a recursion that don't want 
 # and will it miss listening events - actually doesn't matter if we miss
 # because we always gobble up missing ids ...
-def myfunc( pg)
+def myfunc( conn )
   EM.run do
     # set up the call back first
-    pg.wait_for_notify_defer(3).callback do |notify|
+    conn.wait_for_notify_defer(3).callback do |notify|
       if notify
         puts "Someone spoke to us on channel: #{notify[:relname]} from #{notify[:be_pid]}"
         # how do we stay subscribed ...
         # continuing to listen for events ...
-        myfunc( pg)
+        myfunc( conn)
       else
         puts "Too late, 7 seconds passed"
-        myfunc( pg)
+        myfunc( conn)
       end
     end.errback do |ex|
       puts "Connection to db lost... #{ex} "
@@ -236,9 +236,13 @@ EM.run do
 
   # if we put this in a function then we can just call recursively? 
   
-#  myfunc( pg)
+#  myfunc( conn)
 
- event_processor.process_events( pg , 0 )
+  #event_processor.process_events( conn , 0 )
+
+  event_processor.get_event_tip( conn )
+
+
 
 end
 

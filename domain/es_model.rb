@@ -65,25 +65,25 @@ module Model
 
     ## ruby partial application...
  
-    def get_event_tip( conn )
-      EM.run do
+    def get_event_tip( conn, &code )
+  #    EM.run do
         df = conn.query_defer("select max(id) - 1000 as max_id from events" )
         df.callback { |result|
-          id = result[0]['max_id']
+          id = result[0]['max_id'].to_i
           puts "max_id is #{id} !!"
+          code.call( conn, id )
         } 
         df.errback {|ex|
           raise ex
         }
-      end
+  #    end
     end
 
 
-    def process_events( conn, id )
-
+    def process_events( conn, id, &code )
       batch = 50
 
-      EM.run do
+  #    EM.run do
         df = conn.query_defer("select id, t, msg, content from events where id >= $1 order by id limit $2", [id, batch] )
         df.callback { |result|
           count = 0
@@ -108,16 +108,23 @@ module Model
         
             puts "processed records - count is #{count}"
             if count > 0
-              process_events( conn, id )
+          
+              ### ok, the reason it's not getting called is because
+              ### we have recusion. 
+
+              ### note we use & to turn it into a block again..
+              process_events( conn, id + 1, &code )
             else
               ## call the continuation - but we  
+              code.call( conn, id )
             end
         }
         df.errback {|ex|
           raise ex
         }
-      end
+    #  end
 
+    end
 
 # 
 # 
@@ -153,7 +160,6 @@ module Model
 #       end while count > 0
 #       # return the next event to process
 #       id
-    end
 
 
     

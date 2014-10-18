@@ -235,12 +235,20 @@ EM.run do
 # 
 
   # if we put this in a function then we can just call recursively? 
-  
-#  myfunc( conn)
+  # myfunc( conn)
+  # event_processor.process_events( conn , 0 )
+  # it's not working ???!!!
 
-  #event_processor.process_events( conn , 0 )
+  ## issue might be multiple arguments
 
-  event_processor.get_event_tip( conn )
+  event_processor.get_event_tip( conn) do |conn,id|  
+      puts "done id #{id}"
+
+      event_processor.process_events( conn, id)  do |conn,id|  
+
+          puts "processed events #{id}"
+      end
+  end
 
 
 

@@ -183,7 +183,8 @@ pg = PG::EM::Client.new db_params
 POSTGRES_CHANNEL = 'events_insert'
 
 # does this set up a recursion that don't want 
-# and will it miss listening events
+# and will it miss listening events - actually doesn't matter if we miss
+# because we always gobble up missing ids ...
 def myfunc( pg)
   EM.run do
     # set up the call back first
@@ -203,6 +204,13 @@ def myfunc( pg)
     pg.query_defer("LISTEN #{POSTGRES_CHANNEL}")
   end
 end
+
+
+## ok, now rather than having linear code, 
+## we have to structure all this with callbacks ...
+## eg. get historic 
+
+## the get 50 results, will need to be a recursion rather than a loop.
 
 
 EM.run do

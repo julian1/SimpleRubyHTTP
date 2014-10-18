@@ -30,17 +30,18 @@ class SessionController
 
     session_id = -1
 
-    if x[:socket].is_a?( OpenSSL::SSL::SSLSocket)
+#    if x[:socket].is_a?( OpenSSL::SSL::SSLSocket)
 
         sent_cookie = x[:request_headers]['Cookie']
         begin
           id, session_id = sent_cookie.split('=')
         rescue
           session_id = SecureRandom.uuid
-          new_cookie = "id=#{ session_id }; path=/; Secure"
+#          new_cookie = "id=#{ session_id }; path=/; Secure"
+          new_cookie = "id=#{ session_id }; path=/"
           x[:response_headers]['Set-Cookie'] = new_cookie
         end
-    end
+#    end
     #puts "session_id is #{session_id}"
 
     # create new session

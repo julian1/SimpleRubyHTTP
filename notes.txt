@@ -1,14 +1,65 @@
 
+websockets with event machine
+http://lorefnon.me/2012/08/15/a-websocket-powered-tic-tac-toe-game-using-ruby-eventmachine--part-1.html
+
+
+
+
+- we still have a problem that the model is being updated
+	in a different thread...
+	uggh.
+
+ok basic event machine support for concurrency.
+
+- what we need is to to log the address it comes from.  
+
+----
+
+Ok, it looks like we have some kind of thread contention - on the model structure. 
+
+can we deal with this, by passing the socket back into a single threaded app processing queue? 
+	- eg. we have a thread to handle connection opening. 
+
+	and another to process and write? which should make everything sequential...
+	we just have to push the message into the queue.
+
+	alternatively we try and rewrite the socket code,  
+
+	- but it's not very good from the pov, of the final socket write/stream - that it could block?
+
+	- in a normal web app, it's the db that handles all the parallelism.
+	alternatively we have to force 
+-----
+
+todo.
+
+rather than @model << elt. Should we push the thing as an event . eg event_sink.event( ) ; 
+
+	and then let some other writer handle it? 
+	eg. to go to db storage or in memory db, rdf etc.
+	
+	eg. streams on streams model. it's a fold. 
+
+	the metadata - style, name, etc - can also be pushed as attributes.
+
+	we should definitately abstract the end result. so there's one
+	aggregator for all derivative streams.
+
+when there's an ingest error. we need to encode the url.
+	so we can tell which exchange was the problem
+
+also don't encode json fields as string - eg id is an integer
+	content - is already json.
+
+we can do this, by looking at the type of each field before outputting.
+
+
+
+-------
 # these controllers ought to be put in the constroller module namespace
 # then we can refer to them Controller::Session 
 
-
-
 ok, 
-
-
-
-
 
 - Use the listen interface to get time-synchronous stream. and replicate locally
 	from aws instance. 

@@ -67,28 +67,32 @@ module Helper
     # Ok, we don't really have to wrap the stream to do chuncked encoding etc.
     # instead we can localise the behavior here.
 
-    socket = x[:socket]
 
+
+    #socket = x[:socket]
+    socket = StringIO.new("w")
     ### socket operations, could have exception if client disconnected
     ### without following http protocol
-
     # write http response
     socket.print x[:response]
-
     socket.print "\r\n"
-
     # write other header fields
     headers.keys.each do |key|
       socket.print "#{key}: #{headers[key]}\r\n"
     end
-
     socket.print "\r\n"
-
     if x[:body]
-
       # write content
       socket.print content
     end
+
+    socket.rewind
+    buf = socket.read
+
+    # puts "whoot in send response #{buf}"
+    
+    x[:conn].send_data(  buf )
+
 
   end
 

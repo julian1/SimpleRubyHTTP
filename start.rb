@@ -1,10 +1,9 @@
 #!/usr/bin/ruby
 
 
-require './support/server'
+#require './support/server'
 require './support/assets'
 require './support/application'
-
 
 require './domain/es_model'
 require './domain/btcmarkets'
@@ -28,6 +27,8 @@ require './controllers/log_response'
 
 require 'logger'
 require 'securerandom'
+require 'rubygems'
+require 'eventmachine'
 
 
 # rather than passing the sole x structure, we could separate out the request and response
@@ -117,20 +118,22 @@ assets_content = Assets::FileContent.new( log, "#{Dir.pwd}/assets" )
 
 assets_controller = AssetsController.new( assets_content )
 
+# ok, this is a non async connection 
+# but it's ok, because in-memory state is not modified
 report_conn = PG::Connection.open( db_params ) 
 
 time_series_controller = TimeSeriesController.new( model_data )
 
 report_controller = ReportController.new( log, report_conn )
 
-redirect_controller = RedirectController.new( log, '127.0.0.1', 8443)
+#redirect_controller = RedirectController.new( log, '127.0.0.1', 8443)
 
 # these controllers ought to be put in the constroller module namespace
 # then we can refer to them Controller::Session 
 
 general_controllers = [ 
-  LogRequestController.new( http_log ),
-  redirect_controller, 
+#  LogRequestController.new( http_log ),
+#  redirect_controller, 
   SessionController.new(),
   URLRewriteController.new(),
   assets_controller, 
@@ -146,23 +149,71 @@ general_controllers = [
 
 application = Application.new( log, general_controllers )
 
-server = Server::Processor.new(http_log)
 
+# Thread.new {
+# 
+#  event_processor.sync_and_process_current_events()
+# }
+# 
 
-# ssl
-server.start_ssl(8443) do |socket|
-  application.process_request( socket)
+# server = Server::Processor.new(http_log)
+# 
+# 
+# # ssl
+# server.start_ssl(8443) do |socket|
+#   application.process_request( socket)
+# end
+# 
+# server.start(8000) do |socket|
+#   application.process_request( socket)
+# end
+# 
+
+class Server < EventMachine::Connection
+    attr_accessor :application
+    def receive_data(data)
+		# now pass the data and ourselves(so we can send a response) to the application.
+		@application.process_request_new( self, data)
+    end
 end
 
-server.start(8000) do |socket|
-  application.process_request( socket)
+
+require 'pg/em'
+
+conn = PG::EM::Client.new db_params 
+
+
+
+## ok, now rather than having linear code, 
+## we have to structure all this with callbacks ...
+## eg. get historic 
+
+
+EM.run do
+
+  EM.start_server '0.0.0.0', 8000, Server do |server|
+    server.application = application
+  end
+
+  event_processor.get_event_tip( conn) do |conn,id|  
+    id -= 1000
+    puts "processing from #{id}"
+    event_processor.process_events( conn, id)  do |conn,id|  
+      puts "listen and process events, id #{id}"
+      event_processor.listen_and_process_events( conn, id) 
+    end
+  end
+
 end
 
-# start sync and process events
-event_processor.sync_and_process_current_events()
+## ok, this thing is on another thread ????
 
-
-# block
-server.run()
-
-
+# 
+# # start sync and process events
+# event_processor.sync_and_process_current_events()
+# 
+# 
+# # block
+# server.run()
+# 
+# 
